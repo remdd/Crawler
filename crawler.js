@@ -9,6 +9,10 @@ $(function() {
 	var level;											//	Current level object, loaded from levels.js
 	var player = {};									//	Player object
 	var playerSprite = document.getElementById('playerSpriteImg');
+	var playerWeapons = [];
+	var attacks = [];
+	var entities = [];
+
 	var focused = true;									//	Track whether browser tab is focused by user
 
 	var playerCanvas = $('<canvas id="playerCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
@@ -29,6 +33,54 @@ $(function() {
 	var bgCanvas = $('<canvas id="bgCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
 	var bgCtx = bgCanvas.get(0).getContext('2d');
 	bgCanvas.appendTo('body');
+
+	var StateEnum = {
+		RESTING_R: 0,
+		RESTING_L: 1,
+		MOVING_R: 2,
+		MOVING_L: 3
+	}
+
+
+
+	//	Player controls
+	//	Keyboard input helper object
+	var Key = {
+		_pressed: {},
+		MOVE_LEFT: 'KeyA',
+		MOVE_RIGHT: 'KeyD',
+		MOVE_UP: 'KeyW',
+		MOVE_DOWN: 'KeyS',
+		ATTACK_LEFT: 'ArrowLeft',
+		ATTACK_RIGHT: 'ArrowRight',
+		ATTACK_UP: 'ArrowUp',
+		ATTACK_DOWN: 'ArrowDown',
+		isDown: function(keyCode) {
+			return this._pressed[keyCode];
+		},
+		noneDown: function() {
+			return $.isEmptyObject(this._pressed); 
+		},
+		onKeydown: function(event) {
+			this._pressed[event.code] = true;
+		},
+		onKeyup: function(event) {
+			delete this._pressed[event.code];
+		},
+		clearPressed: function() {
+			this._pressed = {};
+		} 
+	}
+
+	//	Input control event listeners
+	window.addEventListener('keyup', function(event) {
+		Key.onKeyup(event);
+	}, false);
+	window.addEventListener('keydown', function(event) {
+		Key.onKeydown(event);
+	}, false);
+
+
 
 
 	//	Level setup
@@ -126,14 +178,73 @@ $(function() {
 		}
 	}
 
+	function setupPlayerWeapons() {
+		playerWeapons = [
+			{
+				name: 'Knife',
+				spriteSheet: playerSprite,
+				spriteSize: {
+					x: 0.5,
+					y: 1
+				},
+				position: {
+					x: player.position.x,
+					y: player.position.y
+				},
+				frames: [
+					{ x: 0, y: 4 },							//	Right facing
+					{ x: 0.5, y: 4 }						//	Left facing
+				],
+				sprite: { x: 0, y: 4 },						//	Starting sprite
+				reach: TILE_SIZE * 3 / 4,
+				attackDisplayTime: 100,
+				attackSwipeColor1: 'rgba(255,255,255,0)',
+				attackSwipeColor2: 'rgb(70,0,160)'
+			}
+		];
+	}
+
+	//	Set up player
+	function setUpPlayer() {
+		player = new Creature('Player', playerSprite, 2, 5, 1, 1, 10, 14);
+		player.ctx = playerCtx;
+		player.speed = 1.2;
+		player.state = StateEnum.RESTING_R;
+		player.frames = [
+			{ x: 0, y: 0 },		//	0	Resting 0 - facing R
+			{ x: 1, y: 0 },		//	1	Resting 1 - facing R
+			{ x: 2, y: 0 },		//	2	Walking 0 - facing R
+			{ x: 3, y: 0 },		//	3	Walking 1 - facing R
+			{ x: 4, y: 0 },		//	4	Walking 2 - facing R
+			{ x: 5, y: 0 },		//	5	Walking 3 - facing R
+			{ x: 0, y: 1 },		//	6	Resting 0 - facing L
+			{ x: 1, y: 1 },		//	7	Resting 1 - facing L
+			{ x: 2, y: 1 },		//	8	Walking 0 - facing L
+			{ x: 3, y: 1 },		//	9	Walking 1 - facing L
+			{ x: 4, y: 1 },		//	10	Walking 2 - facing L
+			{ x: 5, y: 1 }		//	11	Walking 3 - facing L
+		];
+		player.sprite = player.frames[0];						//	Holds current sprite for rendering
+		player.animations = [									//	Format: Loop time in ms, end time of each frame in ms, frame numbers
+			[ 1000, [600, 1000], [0, 1] ],						//	Resting, facing R
+			[ 1000, [600, 1000], [6, 7] ],						//	Resting, facing L
+			[ 400, [100, 200, 300, 400], [5, 4, 3, 2 ] ],		//	Walking, facing R
+			[ 400, [100, 200, 300, 400], [8, 9, 10,11] ]		//	Walking, facing L
+		];
+		setupPlayerWeapons();
+		player.weapon = playerWeapons[0];						//	Assign starting weapon
+		player.lastAttackTime = 0;
+		player.attackRate = 500;								//	Time between attacks
+	}
+
 	function drawOnCanvas(entity, ctx) {
 		ctx.drawImage(entity.spriteSheet,
 			entity.sprite.x * TILE_SIZE, 		//	x-coord to start clipping
 			entity.sprite.y * TILE_SIZE, 		//	y-coord to start clipping
 			entity.spriteSize.x * TILE_SIZE, 			//	width of clipped image
 			entity.spriteSize.y * TILE_SIZE, 			//	height of clipped image
-			entity.position.x,  				//	x-coord of canvas placement
-			entity.position.y, 					//	y-coord of canvas placement
+			entity.position.x - TILE_SIZE / 2,  				//	x-coord of canvas placement
+			entity.position.y - TILE_SIZE / 2, 					//	y-coord of canvas placement
 			entity.spriteSize.x * TILE_SIZE, 			//	width of image on canvas
 			entity.spriteSize.y * TILE_SIZE			//	height of image on canvas
 		);
@@ -159,15 +270,40 @@ $(function() {
 		}
 		this.width = width;				//	of collision box - in px
 		this.height = height;			//	of collision box - in px
+		this.animstart = performance.now();
 	}
+	Entity.prototype.animate = function() {
+		var pointInAnimLoop = Math.floor((performance.now() - this.animstart) % this.animations[this.state][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
+		// console.log(pointInAnimLoop);
+		//	Need to generalize this - only works for animations with 5 or less frames
+		if(pointInAnimLoop <= this.animations[this.state][1][0]) {
+			this.sprite = this.frames[this.animations[this.state][2][0]];
+		} else if(pointInAnimLoop <= this.animations[this.state][1][1]) {
+			this.sprite = this.frames[this.animations[this.state][2][1]];
+		} else if(pointInAnimLoop <= this.animations[this.state][1][2]) {
+			this.sprite = this.frames[this.animations[this.state][2][2]];
+		} else if(pointInAnimLoop <= this.animations[this.state][1][3]) {
+			this.sprite = this.frames[this.animations[this.state][2][3]];
+		} else if(pointInAnimLoop <= this.animations[this.state][1][4]) {
+			this.sprite = this.frames[this.animations[this.state][2][4]];
+		}
+		// console.log(this.sprite);
+	}
+
+	Creature.prototype = Object.create(Entity.prototype);
+	Creature.prototype.constructor = Creature;
 
 	function Creature(name, spriteSheet, start_x, start_y, spriteSize_x, spriteSize_y, width, height ) {
 		Entity.apply(this, arguments);
 		this.isMoving = false;
 		this.facingRight = true;
 		this.ctx = creatureCtx;
+		this.animstart = performance.now();
+		this.animations = [];
+		this.state = StateEnum.RESTING_R;
 		setupCreature(this);
 	}
+
 	Creature.prototype.move = function(direction, speed) {
 		var tryX = Math.floor(this.position.x + 0.5 + (speed * Math.cos(direction)));
 		var tryY = Math.floor(this.position.y + 0.5 + (speed * Math.sin(direction)));
@@ -176,191 +312,152 @@ $(function() {
 		this.position.y = newCoords.y;
 	}
 
+	Creature.prototype.attack = function(direction) {
+		if(performance.now() - this.lastAttackTime > this.attackRate) {
+			if((direction < Math.PI * 2 && direction > Math.PI * 1.5) || (direction >= 0 && direction < Math.PI * 0.5) && !this.facingRight) {
+				this.facingRight = true;
+			} else if((direction < Math.PI * 1.5 && direction > Math.PI / 2 ) && this.facingRight) {
+				this.facingRight = false;
+			} 
+			new Attack(this, direction);
+			this.lastAttackTime = performance.now();
+		}
+	}
+
 	function setupCreature(obj) {
 		if(obj.name === 'Player') {
 			obj.speed = 1.2;
-			obj.frames = [
-				{ x: 0, y: 0 },		//	0	Resting 0 - facing R
-				{ x: 1, y: 0 },		//	1	Resting 1 - facing R
-				{ x: 2, y: 0 },		//	2	Walking 0 - facing R
-				{ x: 3, y: 0 },		//	3	Walking 0 - facing R
-				{ x: 4, y: 0 },		//	4	Walking 1 - facing R
-				{ x: 0, y: 1 },		//	5	Resting 2 - facing L
-				{ x: 1, y: 1 },		//	6	Resting 1 - facing L
-				{ x: 2, y: 1 },		//	7	Walking 0 - facing L
-				{ x: 3, y: 1 },		//	8	Walking 1 - facing L
-				{ x: 4, y: 1 }		//	9	Walking 2 - facing L
-			];
-			obj.sprite = obj.frames[0];
 		}
 	}
 
-	var entities = [];
-	var player = new Creature('Player', playerSprite, 2, 5, 1, 1, 10, 14);
-	player.ctx = playerCtx;
-	player.weapon = {
-		sprite: { x: 0, y: 3.5, width: 0.5, height: 0 }
+	function Attack(origin, direction) {
+		this.sprite = origin.weapon.sprite;
+		this.origin = {
+			x: origin.position.x,
+			y: origin.position.y
+		}
+		this.reach = origin.weapon.reach;				//	Radius of attack swipe from centre of creature
+		this.arc = Math.PI / 2;							//	Placeholder
+		this.direction = direction;
+		this.created = performance.now();
+		this.lifespan = origin.weapon.attackDisplayTime;				//	Placeholder
+		this.attackSwipeColor1 = origin.weapon.attackSwipeColor1;
+		this.attackSwipeColor2 = origin.weapon.attackSwipeColor2;
+		attacks.push(this);
 	}
 
-	//	Keyboard input helper object
-	var Key = {
-		_pressed: {},
-		LEFT: 65,
-		RIGHT: 68,
-		UP: 87,
-		DOWN: 83,
-		isDown: function(keyCode) {
-			return this._pressed[keyCode];
-		},
-		noneDown: function() {
-			return $.isEmptyObject(this._pressed); 
-		},
-		onKeydown: function(event) {
-			this._pressed[event.keyCode] = true;
-		},
-		onKeyup: function(event) {
-			delete this._pressed[event.keyCode];
-		},
-		clearPressed: function() {
-			this._pressed = {};
-		} 
+	function drawAttackSwipe(attack) {
+		entityCtx.moveTo(attack.origin.x, attack.origin.y);
+		entityCtx.beginPath();
+		entityCtx.arc(attack.origin.x, attack.origin.y, attack.reach, attack.direction - attack.arc / 2, attack.direction + attack.arc / 2);
+		entityCtx.lineTo(attack.origin.x, attack.origin.y);
+		entityCtx.closePath();
+		var grd = entityCtx.createRadialGradient(attack.origin.x, attack.origin.y, 2 * attack.reach / 3, attack.origin.x, attack.origin.y, attack.reach);
+		grd.addColorStop(0, attack.attackSwipeColor1);
+		grd.addColorStop(1, attack.attackSwipeColor2);
+		entityCtx.fillStyle = grd;
+		entityCtx.fill();
 	}
 
-	//	Input control event listeners
-	window.addEventListener('keyup', function(event) {
-		Key.onKeyup(event);
-	}, false);
-	window.addEventListener('keydown', function(event) {
-		Key.onKeydown(event);
-	}, false);
 
 	//	Update player movement
-	player.update = function() {
-		var moving = this.moving;
-		if(Key.isDown(Key.UP)) { this.move(Math.PI * 1.5, this.speed); this.moving = true; };
-		if(Key.isDown(Key.DOWN)) { this.move(Math.PI * 0.5, this.speed); this.moving = true; }
-		if(Key.isDown(Key.LEFT)) { this.move(Math.PI * 1, this.speed); this.moving = true; if(this.facingRight) { this.facingRight = false }}
-		if(Key.isDown(Key.RIGHT)) { this.move(0, this.speed); this.moving = true; if(!this.facingRight) { this.facingRight = true }}
-		if(Key.noneDown()) { this.moving = false; }
-		if(moving != this.moving) { 
-			this.animstart = performance.now();
+	function updatePlayer(player) {
+		var moving = player.moving;
+		if(Key.isDown(Key.MOVE_UP)) { player.move(Math.PI * 1.5, player.speed); player.moving = true; };
+		if(Key.isDown(Key.MOVE_DOWN)) { player.move(Math.PI * 0.5, player.speed); player.moving = true; }
+		if(Key.isDown(Key.MOVE_LEFT)) { player.move(Math.PI * 1, player.speed); player.moving = true; if(player.facingRight) { player.facingRight = false }}
+		if(Key.isDown(Key.MOVE_RIGHT)) { player.move(0, player.speed); player.moving = true; if(!player.facingRight) { player.facingRight = true }}
+
+		if(Key.isDown(Key.ATTACK_UP)) { player.attack(Math.PI * 1.5); }
+		if(Key.isDown(Key.ATTACK_DOWN)) { player.attack(Math.PI / 2); }
+		if(Key.isDown(Key.ATTACK_LEFT)) { player.attack(Math.PI); }
+		if(Key.isDown(Key.ATTACK_RIGHT)) { player.attack(0); }
+
+		if(Key.noneDown()) { player.moving = false; }
+		if(moving != player.moving) { 
+			player.animstart = performance.now();
 		}
-		animatePlayer(this);
+		//	Assign player.state (used to load appropriate animation)
+		if(!player.moving && player.facingRight) { player.state = StateEnum.RESTING_R; }
+		else if(!player.moving && !player.facingRight) { player.state = StateEnum.RESTING_L; }
+		else if(player.moving && player.facingRight) { player.state = StateEnum.MOVING_R; }
+		else if(player.moving && !player.facingRight) { player.state = StateEnum.MOVING_L; }
+		Object.assign(player.weapon.position, player.position);			//	Assign weapon position to player position
+		player.animate();
+		animatePlayerWeapon(player);
+	}
+
+	animatePlayerWeapon = function(player) {
+		if(performance.now() - player.lastAttackTime < player.weapon.attackDisplayTime) {
+			player.weapon.sprite = '';
+		} else {
+			if(player.facingRight) {
+				player.weapon.sprite = player.weapon.frames[0];
+			} else {
+				player.weapon.sprite = player.weapon.frames[1];
+				player.weapon.position.x += TILE_SIZE / 2;
+			}
+		}
+	}
+
+	function updateAttacks() {
+		attacks.forEach(function(attack) {
+			if(performance.now() > attack.created + attack.lifespan) {
+				attacks.splice(attacks.indexOf(attack), 1);
+			}
+		});
 	}
 
 
+
+	//	Collision Manager object - check for contact with impassable terrain
 	function CollisionManager(obj, tryX, tryY) {
-		console.log(tryX + " - " + tryY);
+		// console.log("Trying x: " + tryX + ", y: " + tryY);
 		var returnCoords = {};
-		var hasY = false;
-		if(tryX !== obj.position.x) {
-			if(tryX > obj.position.x) {
-				var tryTerX = Math.floor(((tryX + obj.width / 2) / TILE_SIZE) + 0.5);
-			} else {
-				var tryTerX = Math.floor(((tryX - obj.width / 2) / TILE_SIZE) + 0.5);
-			}
-		} else {
-			var tryTerX = Math.floor((tryX / TILE_SIZE) + 0.5);
-		}
+		var tryTerRX = Math.floor(((tryX + (obj.width / 2)) / TILE_SIZE));
+		var tryTerLX = Math.floor(((tryX - (obj.width / 2) - 1) / TILE_SIZE));
+		// console.log("tryTerRX: " + tryTerRX + ", tryTerLX: " + tryTerLX);
 		if(tryY !== obj.position.y) {
-			hasY = true;
 			if(tryY > obj.position.y) {
-				var tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE) + 0.5);
+				var tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE));
 			} else {
-				var tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 1);
+				var tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 0.5);
 			}
 		} else {
-			var tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 1);
+			var tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 0.5);
 		}
-		console.log(tryTerX + " :: " + tryTerY);
-		if(level.terrainArray[tryTerY] === undefined || level.terrainArray[tryTerY][tryTerX] === undefined || level.terrainArray[tryTerY][tryTerX] !== 0) {
+		// console.log(tryTerX + " :: " + tryTerY);
+		if((level.terrainArray[tryTerY] === undefined || level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0) ||
+			(level.terrainArray[tryTerY] === undefined || level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {
 			returnCoords.x = obj.position.x;
 			returnCoords.y = obj.position.y;
 		} else {
 			returnCoords.x = tryX;
 			returnCoords.y = tryY;
 		}
-
-
-
-		// var targetTerrainX = Math.floor((tryX / TILE_SIZE) + 0.5);
-		// var targetTerrainY = Math.floor((tryY / TILE_SIZE) + 0.5);
-		// console.log(targetTerrainX + ' : ' + targetTerrainY);
-		// if(level.terrainArray[targetTerrainY] === undefined || level.terrainArray[targetTerrainY][targetTerrainX] === undefined || level.terrainArray[targetTerrainY][targetTerrainX] !== 0) {
-		// 	returnCoords.x = startX;
-		// 	returnCoords.y = startY;
-		// } else {
-		// 	returnCoords.x = tryX;
-		// 	returnCoords.y = tryY;
-		// }
-		console.log(returnCoords);
+		// console.log(returnCoords);
 		return returnCoords;
 	}
 
-
-
-
-
-	animatePlayer = function(obj) {
-		if(obj.moving) {
-			if(obj.facingRight) {
-				if(((Math.floor(performance.now() - obj.animstart) / 150) % 3) < 1) {
-					obj.sprite = obj.frames[2];
-				} else if(((Math.floor(performance.now() - obj.animstart) / 150) % 3) < 2) {
-					obj.sprite = obj.frames[3];
-				} else {
-					obj.sprite = obj.frames[4];
-				}
-			} else {
-				if(((Math.floor(performance.now() - obj.animstart) / 150) % 3) < 1) {
-					obj.sprite = obj.frames[7];
-				} else if(((Math.floor(performance.now() - obj.animstart) / 150) % 3) < 2) {
-					obj.sprite = obj.frames[8];
-				} else {
-					obj.sprite = obj.frames[9];
-				}
-			}
-		} else {
-			if(obj.facingRight) {
-				if(((Math.floor(performance.now() - obj.animstart) / 500) % 2) < 1.2) {
-					obj.sprite = obj.frames[0];
-				} else {
-					obj.sprite = obj.frames[1];
-				}
-			} else {
-				if(((Math.floor(performance.now() - obj.animstart) / 500) % 2) < 1.2) {
-					obj.sprite = obj.frames[5];
-				} else {
-					obj.sprite = obj.frames[6];
-				}
-			}
-		}
-	}
-
-
-
-
-
-
-
-
 	//	Master game update function
 	function update(delta) {
-		player.update();
+		updatePlayer(player);
+		updateAttacks();
 	}
 
 	//	Master game draw function
 	function draw(interpolationPercentage) {
 		playerCtx.clearRect(player.position.x - TILE_SIZE, player.position.y - TILE_SIZE, TILE_SIZE * 3, TILE_SIZE * 3);	//	Clear player canvas for player location & surrounding 8 tiles
-		if(player.moving) {
-
-		}
-		drawOnCanvas(player, playerCtx);
+		entityCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);				//	Clear entire entity canvas
+		drawOnCanvas(player, playerCtx);									//	Draw player on player canvas
+		drawOnCanvas(player.weapon, playerCtx);								//	Draw player weapon on player canvas
 		entities.forEach(function(entity) {
 			drawOnCanvas(entity, entityCtx);
 		});
+		attacks.forEach(function(attack) {
+			drawAttackSwipe(attack);
+		});
 		$('#fps').text(MainLoop.getFPS());
-		// console.log(player);
 	}
 
 	//	Start routines
@@ -369,10 +466,12 @@ $(function() {
 		setupTerrain(level);
 		setupOverlays(level);
 		setupEntities();
+		setUpPlayer();
 		MainLoop.setUpdate(update).setDraw(draw).start();
 	}
 	start();
 
+	//	Pause & restart game when browser tab loses & regains focus
 	window.onfocus = function() {
 		focused = true;
 		MainLoop.start();
