@@ -22,3 +22,9 @@ canvas {
 #playerCanvas {
 	z-index: 3;
 }
+#attackCanvas {
+	z-index: 4;
+}
+#debugCanvas {
+	z-index: 10;
+}
