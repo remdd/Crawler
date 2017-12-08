@@ -12,7 +12,7 @@ $(function() {
 	var creatures = [];
 	var attacks = [];
 
-	var collisionBoxes = [];							//	Store any active collision boxes - player, creatures, obstacles etc
+	var colliders = [];							//	Store any active collision boxes - player, creatures, obstacles etc
 
 	var debugs = [];									//	Store any objects to be passed to debug canvas
 
@@ -244,9 +244,14 @@ $(function() {
 	}
 
 	function setUpCreatures() {
-		creature = new Creature(creatureTemplates[EnumCreatures.GOBLIN]);
+		var creature = new Creature(creatureTemplates[EnumCreatures.GOBLIN]);
 		console.log(creature);
 		creatures.push(creature);
+		var creature2 = new Creature(creatureTemplates[EnumCreatures.GOBLIN]);
+		creature2.position.x = 170;
+		creature2.position.y = 160;
+		console.log(creature2);
+		creatures.push(creature2);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -298,18 +303,18 @@ $(function() {
 		this.animstart = performance.now();
 	}
 	Entity.prototype.animate = function() {
-		var pointInAnimLoop = Math.floor((performance.now() - this.animstart) % this.animations[this.state][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
+		var pointInAnimLoop = Math.floor((performance.now() - this.animstart) % this.animations[this.animation][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
 		//	Need to generalize this - only works for animations with 5 or less frames
-		if(pointInAnimLoop <= this.animations[this.state][1][0]) {
-			this.sprite = this.frames[this.animations[this.state][2][0]];
-		} else if(pointInAnimLoop <= this.animations[this.state][1][1]) {
-			this.sprite = this.frames[this.animations[this.state][2][1]];
-		} else if(pointInAnimLoop <= this.animations[this.state][1][2]) {
-			this.sprite = this.frames[this.animations[this.state][2][2]];
-		} else if(pointInAnimLoop <= this.animations[this.state][1][3]) {
-			this.sprite = this.frames[this.animations[this.state][2][3]];
-		} else if(pointInAnimLoop <= this.animations[this.state][1][4]) {
-			this.sprite = this.frames[this.animations[this.state][2][4]];
+		if(pointInAnimLoop <= this.animations[this.animation][1][0]) {
+			this.sprite = this.frames[this.animations[this.animation][2][0]];
+		} else if(pointInAnimLoop <= this.animations[this.animation][1][1]) {
+			this.sprite = this.frames[this.animations[this.animation][2][1]];
+		} else if(pointInAnimLoop <= this.animations[this.animation][1][2]) {
+			this.sprite = this.frames[this.animations[this.animation][2][2]];
+		} else if(pointInAnimLoop <= this.animations[this.animation][1][3]) {
+			this.sprite = this.frames[this.animations[this.animation][2][3]];
+		} else if(pointInAnimLoop <= this.animations[this.animation][1][4]) {
+			this.sprite = this.frames[this.animations[this.animation][2][4]];
 		}
 	}
 
@@ -327,16 +332,18 @@ $(function() {
 		this.ctx = creatureCtx;
 		this.animstart = 0;
 		this.animations = creatureTemplate.animations;
-		this.state = StateEnum.RESTING_R;
-		this.ai = creatureTemplate.ai;
-		this.movement = creatureTemplate.movement;
-		collisionBoxes.push(this.box);
+		this.animation = StateEnum.RESTING_R;
+		this.ai = {};
+		Object.assign(this.ai, creatureTemplate.ai);
+		this.movement = {};
+		Object.assign(this.movement, creatureTemplate.movement);
+		colliders.push(this);
 		console.log(this);
 	}
 	Creature.prototype.move = function(direction, speed) {
 		var tryX = this.position.x + (speed * Math.cos(direction));
 		var tryY = this.position.y + (speed * Math.sin(direction));
-		var newCoords = CollisionManager(this, tryX, tryY);
+		var newCoords = checkCollision(this, tryX, tryY);
 		this.position.x = newCoords.x;
 		this.position.y = newCoords.y;
 		this.updateBox();
@@ -353,11 +360,24 @@ $(function() {
 		}
 	}
 	Creature.prototype.updateBox = function() {
-		this.box.topLeft.x = this.position.x - this.width / 2;
-		this.box.topLeft.y = this.position.y + (this.spriteSize.y * TILE_SIZE / 2) - this.height;
-		this.box.bottomRight.x = this.position.x + this.width / 2;
-		this.box.bottomRight.y = this.position.y + (this.spriteSize.y * TILE_SIZE / 2);
+		this.box.topLeft.x = this.position.x - this.width / 2 + 1;
+		this.box.topLeft.y = this.position.y + (this.spriteSize.y * TILE_SIZE / 2) - this.height + 1;
+		this.box.bottomRight.x = this.position.x + this.width / 2 - 1;
+		this.box.bottomRight.y = this.position.y + (this.spriteSize.y * TILE_SIZE / 2) - 1;
 		// debugs.push(this.box.topLeft, this.box.bottomRight);
+	}
+	Creature.prototype.setFacing = function() {
+		if(Math.cos(this.movement.direction) >= 0) {
+			this.facingRight = true;
+			if(this.animation === StateEnum.MOVING_L) {
+				this.animation = StateEnum.MOVING_R;
+			}
+		} else {
+			this.facingRight = false;
+			if(this.animation === StateEnum.MOVING_R) {
+				this.animation = StateEnum.MOVING_L;
+			}
+		}
 	}
 
 	function Attack(origin, direction) {
@@ -424,11 +444,11 @@ $(function() {
 		if(moving != player.moving) { 
 			player.animstart = performance.now();
 		}
-		//	Assign player.state (used to load appropriate animation)
-		if(!player.moving && player.facingRight) { player.state = StateEnum.RESTING_R; }
-		else if(!player.moving && !player.facingRight) { player.state = StateEnum.RESTING_L; }
-		else if(player.moving && player.facingRight) { player.state = StateEnum.MOVING_R; }
-		else if(player.moving && !player.facingRight) { player.state = StateEnum.MOVING_L; }
+		//	Assign player.animation (used to load appropriate animation)
+		if(!player.moving && player.facingRight) { player.animation = StateEnum.RESTING_R; }
+		else if(!player.moving && !player.facingRight) { player.animation = StateEnum.RESTING_L; }
+		else if(player.moving && player.facingRight) { player.animation = StateEnum.MOVING_R; }
+		else if(player.moving && !player.facingRight) { player.animation = StateEnum.MOVING_L; }
 		player.animate();
 		updateWeapon(player);
 	}
@@ -478,7 +498,7 @@ $(function() {
 		creatures.forEach(function(creature) {
 			if(creature.hp <= 0) {
 				creatures.splice(creatures.indexOf(creature), 1);											//	If creature has no more hp, remove it...
-				collisionBoxes.splice(collisionBoxes.indexOf(creature.box), 1);								//	...and remove its collision box from collisionBoxes array
+				colliders.splice(colliders.indexOf(creature), 1);											//	...and remove it from colliders array
 			}
 			if(performance.now() > creature.ai.startTime + creature.ai.duration) {							//	If creature's ai action has run its duration...
 				setAiAction(creature);																		//	...assign a new one.
@@ -526,8 +546,15 @@ $(function() {
 		target.hp -= 1;
 	}
 
+	function checkCollision(obj, tryX, tryY) {
+		var returnCoords = { x: tryX, y: tryY };
+		returnCoords = checkTerrainCollision(obj, returnCoords.x, returnCoords.y);
+		returnCoords = checkColliderCollision(obj, returnCoords.x, returnCoords.y);
+		return returnCoords;
+	}
+
 	//	Collision Manager object - check for contact with impassable terrain
-	function CollisionManager(obj, tryX, tryY) {
+	function checkTerrainCollision(obj, tryX, tryY) {
 		// console.log("Trying x: " + tryX + ", y: " + tryY);
 		var returnCoords = {};
 
@@ -548,44 +575,58 @@ $(function() {
 			(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0) || 		//	...or is impassable on the right...
 			(level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {			//	...or is impassable on the left.
 				returnCoords.y = obj.position.y;																			//	If so, set y to return unchanged...
-				tryTerY = Math.floor(((obj.position.y - Y_PADDING) / TILE_SIZE) + 0.5);												//	...and reset TryTerY to current position
+				if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
+					obj.movement.direction = -obj.movement.direction;														//	...invert direction...
+					obj.setFacing();
+				}
+				tryTerY = Math.floor(((obj.position.y - Y_PADDING) / TILE_SIZE) + 0.5);										//	...and reset TryTerY to current position
 			} else {
 				returnCoords.y = tryY;																						//	Otherwise, success - return tryY coord
 			}																												//	Else if obj is trying to move up...
 		}
-
+		// debugger;
 		if(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0 || 			//	If terrain does not exist or is impassable on the right...
 		level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0) {				//	...or on the left...
 			returnCoords.x = obj.position.x;																				//	...set x to return unchanged
+			if(obj.movement.bounceOff) {																					//	...and if obj bounces off...
+				obj.movement.direction += Math.PI;																			//	...and invert direction.
+				obj.setFacing();
+			}
 		} else {
 			returnCoords.x = tryX;																							//	Otherwise, success - return tryX coord
 		}
 
-		for(var i = 0; i < collisionBoxes.length; i++) {
-			if(collisionBoxes[i] === obj.box) {
-				// continue;
-			} else {
+		return returnCoords;																								//	Return final coordinates
+	}
+
+	function checkColliderCollision(obj, tryX, tryY) {
+		var returnCoords = { x: tryX, y: tryY };
+		for(var i = 0; i < colliders.length; i++) {
+			if(colliders[i] !== obj) {
 				// console.log("Return coords: " + returnCoords.x + ", " + returnCoords.y);
-				// console.log("Collision box: " + collisionBoxes[i].topLeft.x + ", " + collisionBoxes[i].topLeft.y + " - " + collisionBoxes[i].bottomRight.x + ", " + collisionBoxes[i].bottomRight.y);
-				var newTop = returnCoords.y + (obj.spriteSize.y * TILE_SIZE / 2) - obj.height;
-				var newBtm = returnCoords.y + (obj.spriteSize.y * TILE_SIZE / 2);
-				var newL = returnCoords.x - (obj.width / 2 );
-				var newR = returnCoords.x + (obj.width / 2 );
+				// console.log("Collision box: " + colliders[i].box.topLeft.x + ", " + colliders[i].box.topLeft.y + " - " + colliders[i].box.bottomRight.x + ", " + colliders[i].box.bottomRight.y);
+				var newTop = returnCoords.y + (obj.spriteSize.y * TILE_SIZE / 2) - obj.height - 1;
+				var newBtm = returnCoords.y + (obj.spriteSize.y * TILE_SIZE / 2) + 1;
+				var newL = returnCoords.x - (obj.width / 2 ) - 1;
+				var newR = returnCoords.x + (obj.width / 2 ) + 1;
 
 				if(
-					(newTop <= collisionBoxes[i].topLeft.y && newBtm >= collisionBoxes[i].topLeft.y && newL <= collisionBoxes[i].topLeft.x && newR >= collisionBoxes[i].topLeft.x) ||
-					(newTop <= collisionBoxes[i].bottomRight.y && newBtm >= collisionBoxes[i].bottomRight.y && newL <= collisionBoxes[i].topLeft.x && newR >= collisionBoxes[i].topLeft.x) ||
-					(newTop <= collisionBoxes[i].topLeft.y && newBtm >= collisionBoxes[i].topLeft.y && newL <= collisionBoxes[i].bottomRight.x && newR >= collisionBoxes[i].bottomRight.x) ||
-					(newTop <= collisionBoxes[i].bottomRight.y && newBtm >= collisionBoxes[i].bottomRight.y  && newL <= collisionBoxes[i].bottomRight.x && newR >= collisionBoxes[i].bottomRight.x)
+					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
+					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
+					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
+					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1)
 				) {
 					console.log("Collision!");
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
+					if(obj.movement.bounceOff) {
+						obj.movement.direction = obj.movement.direction + Math.PI;
+						obj.setFacing();
+					}
 				}
 			}
 		}
-
-		return returnCoords;																								//	Return final coordinates
+		return returnCoords;
 	}
 
 	function drawDebugCanvas() {
@@ -596,10 +637,10 @@ $(function() {
 			debugCtx.strokeStyle = 'red';
 			debugCtx.strokeRect(debug.x, debug.y, 1, 1);
 		});
-		collisionBoxes.forEach(function(box) {
+		colliders.forEach(function(collider) {
 			debugCtx.strokeStyle = 'green';
-			debugCtx.strokeRect(box.topLeft.x, box.topLeft.y, 1, 1);
-			debugCtx.strokeRect(box.bottomRight.x, box.bottomRight.y, 1, 1);
+			debugCtx.strokeRect(collider.box.topLeft.x, collider.box.topLeft.y, 1, 1);
+			debugCtx.strokeRect(collider.box.bottomRight.x, collider.box.bottomRight.y, 1, 1);
 		});
 	}
 
@@ -609,7 +650,7 @@ $(function() {
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
-		// console.log(collisionBoxes);
+		// console.log(colliders);
 	}
 
 	//	Master game draw function
@@ -627,7 +668,7 @@ $(function() {
 		attacks.forEach(function(attack) {
 			drawAttackSwipe(attack);
 		});
-		drawDebugCanvas();
+		// drawDebugCanvas();
 		$('#fps').text(MainLoop.getFPS());
 	}
 
