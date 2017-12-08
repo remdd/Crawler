@@ -12,6 +12,8 @@ $(function() {
 	var creatures = [];
 	var attacks = [];
 
+	var collisionBoxes = [];							//	Store any active collision boxes - player, creatures, obstacles etc
+
 	var debugs = [];									//	Store any objects to be passed to debug canvas
 
 	var monsterSprites = document.getElementById('monsterSprites');
@@ -229,52 +231,21 @@ $(function() {
 		];
 	}
 
+
 	//	Set up player
 	function setUpPlayer() {
-		player = new Creature('Player', playerSprite, 2, 5, 1, 1, 10, 14);
-		player.ctx = playerCtx;
-		player.speed = 1.2;
-		player.frames = [
-			{ x: 0, y: 0 },		//	0	Resting 0 - facing R
-			{ x: 1, y: 0 },		//	1	Resting 1 - facing R
-			{ x: 2, y: 0 },		//	2	Walking 0 - facing R
-			{ x: 3, y: 0 },		//	3	Walking 1 - facing R
-			{ x: 4, y: 0 },		//	4	Walking 2 - facing R
-			{ x: 5, y: 0 },		//	5	Walking 3 - facing R
-			{ x: 0, y: 1 },		//	6	Resting 0 - facing L
-			{ x: 1, y: 1 },		//	7	Resting 1 - facing L
-			{ x: 2, y: 1 },		//	8	Walking 0 - facing L
-			{ x: 3, y: 1 },		//	9	Walking 1 - facing L
-			{ x: 4, y: 1 },		//	10	Walking 2 - facing L
-			{ x: 5, y: 1 }		//	11	Walking 3 - facing L
-		];
-		player.sprite = player.frames[0];						//	Holds current sprite for rendering
-		player.animations = [									//	Format: Loop time in ms, end time of each frame in ms, frame numbers
-			[ 1000, [600, 1000], [0, 1] ],						//	Resting, facing R
-			[ 1000, [600, 1000], [6, 7] ],						//	Resting, facing L
-			[ 400, [100, 200, 300, 400], [5, 4, 3, 2 ] ],		//	Walking, facing R
-			[ 400, [100, 200, 300, 400], [8, 9, 10,11] ]		//	Walking, facing L
-		];
-		setupPlayerWeapons();
-		player.weapon = playerWeapons[0];						//	Assign starting weapon
-		player.lastAttackTime = 0;
-		player.attackRate = 500;								//	Time between attacks
+		var playerType = 0;															//	Set playerType template
+		player = new Creature(playerTemplates[playerType]);							//	Construct player from playerType
+		player.ctx = playerCtx;														//	Assign player to player canvas
+		setupPlayerWeapons();														//	Placeholder - need to revisit as part of item system
+		player.weapon = playerWeapons[0];											//	Assign starting weapon
+		player.lastAttackTime = 0;													//	Initialize to zero
+		player.attackRate = playerTemplates[playerType].attackRate;					//	Time between attacks
 	}
 
 	function setUpCreatures() {
-		creature = new Creature('Goblin', monsterSprites, 3, 4, 1, 1, 10, 10);
-		creature.ctx = creatureCtx;
-		creature.speed = 1;
-		creature.frames = [
-			{ x: 0, y: 0 },
-			{ x: 1, y: 0 },
-			{ x: 2, y: 0 }
-		];
-		creature.sprite = creature.frames[0];
-		creature.animations = [
-			[ 800, [600, 800], [ 0, 1] ]
-		];
-		creature.hp = 5;
+		creature = new Creature(creatureTemplates[EnumCreatures.GOBLIN]);
+		console.log(creature);
 		creatures.push(creature);
 	}
 
@@ -300,28 +271,28 @@ $(function() {
 		}
 	}
 
-	function Entity(name, spriteSheet, start_x, start_y, spriteSize_x, spriteSize_y, width, height ) {
-		this.name = name;
-		this.spriteSheet = spriteSheet;
+	function Entity(entityTemplate) {
+		this.name = entityTemplate.name;
+		this.spriteSheet = entityTemplate.spriteSheet;
 		this.ctx = entityCtx;
 		this.position = {
-			x: start_x * TILE_SIZE + TILE_SIZE / 2,
-			y: start_y * TILE_SIZE + TILE_SIZE / 2
+			x: entityTemplate.start_x * TILE_SIZE + TILE_SIZE / 2,
+			y: entityTemplate.start_y * TILE_SIZE + TILE_SIZE / 2
 		}
 		this.spriteSize = {
-			x: spriteSize_x,
-			y: spriteSize_y
+			x: entityTemplate.spriteSize_x,
+			y: entityTemplate.spriteSize_y
 		}
-		this.width = width;				//	of collision box - in px
-		this.height = height;			//	of collision box - in px
+		this.width = entityTemplate.width;				//	of collision box - in px
+		this.height = entityTemplate.height;			//	of collision box - in px
 		this.box = {
 			topLeft: {
-				x: ((start_x + (spriteSize_x / 2)) * TILE_SIZE) - width / 2, 
-				y: ((start_y + spriteSize_y) * TILE_SIZE) - height
+				x: ((entityTemplate.start_x + (entityTemplate.spriteSize_x / 2)) * TILE_SIZE) - entityTemplate.width / 2, 
+				y: ((entityTemplate.start_y + entityTemplate.spriteSize_y) * TILE_SIZE) - entityTemplate.height
 			},
 			bottomRight: {
-				x: ((start_x + (spriteSize_x / 2)) * TILE_SIZE) + width / 2, 
-				y: (start_y + spriteSize_y) * TILE_SIZE
+				x: ((entityTemplate.start_x + (entityTemplate.spriteSize_x / 2)) * TILE_SIZE) + entityTemplate.width / 2, 
+				y: (entityTemplate.start_y + entityTemplate.spriteSize_y) * TILE_SIZE
 			}
 		}
 		this.animstart = performance.now();
@@ -345,19 +316,26 @@ $(function() {
 	Creature.prototype = Object.create(Entity.prototype);
 	Creature.prototype.constructor = Creature;
 
-	function Creature(name, spriteSheet, start_x, start_y, spriteSize_x, spriteSize_y, width, height ) {
+	function Creature(creatureTemplate) {
 		Entity.apply(this, arguments);
-		this.isMoving = false;
+		this.frames = creatureTemplate.frames;
+		this.sprite = creatureTemplate.sprite;
+		this.animations = creatureTemplate.animations;
+		this.hp = creatureTemplate.hp;
+		this.speed = creatureTemplate.speed;
 		this.facingRight = true;
 		this.ctx = creatureCtx;
-		this.animstart = performance.now();
-		this.animations = [];
+		this.animstart = 0;
+		this.animations = creatureTemplate.animations;
 		this.state = StateEnum.RESTING_R;
+		this.ai = creatureTemplate.ai;
+		this.movement = creatureTemplate.movement;
+		collisionBoxes.push(this.box);
+		console.log(this);
 	}
-
 	Creature.prototype.move = function(direction, speed) {
-		var tryX = Math.floor(this.position.x + 0.5 + (speed * Math.cos(direction)));
-		var tryY = Math.floor(this.position.y + 0.5 + (speed * Math.sin(direction)));
+		var tryX = this.position.x + (speed * Math.cos(direction));
+		var tryY = this.position.y + (speed * Math.sin(direction));
 		var newCoords = CollisionManager(this, tryX, tryY);
 		this.position.x = newCoords.x;
 		this.position.y = newCoords.y;
@@ -375,10 +353,11 @@ $(function() {
 		}
 	}
 	Creature.prototype.updateBox = function() {
-		this.box.topLeft.x = this.position_x - this.width / 2;
-		this.box.topLeft.y = this.position_y + (this.spriteSize.y * TILE_SIZE / 2) - this.height;
-		this.box.bottomRight.x = this.position_x + this.width / 2;
-		this.box.bottomRight.y = this.position_y + (this.spriteSize.y * TILE_SIZE / 2);
+		this.box.topLeft.x = this.position.x - this.width / 2;
+		this.box.topLeft.y = this.position.y + (this.spriteSize.y * TILE_SIZE / 2) - this.height;
+		this.box.bottomRight.x = this.position.x + this.width / 2;
+		this.box.bottomRight.y = this.position.y + (this.spriteSize.y * TILE_SIZE / 2);
+		// debugs.push(this.box.topLeft, this.box.bottomRight);
 	}
 
 	function Attack(origin, direction) {
@@ -454,6 +433,7 @@ $(function() {
 		updateWeapon(player);
 	}
 
+
 	updateWeapon = function(creature) {
 		creature.weapon.position.x = creature.position.x;
 		creature.weapon.position.y = creature.position.y;
@@ -497,9 +477,16 @@ $(function() {
 	function updateCreatures() {
 		creatures.forEach(function(creature) {
 			if(creature.hp <= 0) {
-				creatures.splice(creatures.indexOf(creature), 1);
+				creatures.splice(creatures.indexOf(creature), 1);											//	If creature has no more hp, remove it...
+				collisionBoxes.splice(collisionBoxes.indexOf(creature.box), 1);								//	...and remove its collision box from collisionBoxes array
 			}
-			creature.animate();
+			if(performance.now() > creature.ai.startTime + creature.ai.duration) {							//	If creature's ai action has run its duration...
+				setAiAction(creature);																		//	...assign a new one.
+			}
+			creature.animate();																				//	Animate creature
+			if(creature.movement.speed > 0) {																//	If creature has a current movement speed...
+				creature.move(creature.movement.direction, creature.movement.speed);						//	...move it accordingly
+			}
 		});
 	}
 
@@ -543,29 +530,62 @@ $(function() {
 	function CollisionManager(obj, tryX, tryY) {
 		// console.log("Trying x: " + tryX + ", y: " + tryY);
 		var returnCoords = {};
+
 		var tryTerRX = Math.floor(((tryX + (obj.width / 2)) / TILE_SIZE));
 		var tryTerLX = Math.floor(((tryX - (obj.width / 2) - 1) / TILE_SIZE));
-		// console.log("tryTerRX: " + tryTerRX + ", tryTerLX: " + tryTerLX);
-		if(tryY !== obj.position.y) {
-			if(tryY > obj.position.y) {
-				var tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE));
-			} else {
-				var tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 0.5);
+		var tryTerY;
+
+		if(obj.position.y === tryY) {																						//	If movement has no Y component...
+			tryTerY = Math.floor(((obj.position.y - Y_PADDING) / TILE_SIZE) + 0.5);											//	...set tryTerY to current grid row...
+			returnCoords.y = obj.position.y;																				//	...and set return Y coord to current position.
+		} else {
+			if(tryY > obj.position.y) {																						//	Else if obj is trying to move down...
+				tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE));													//	...set tryTerY...
+			} else {																										//	...or if trying to move up...
+				tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 0.5);												//	...set tryTerY.
 			}
-		} else {
-			var tryTerY = Math.floor(((tryY - Y_PADDING) / TILE_SIZE) + 0.5);
+			if(level.terrainArray[tryTerY] === undefined ||																	//	Check whether terrain in tryY direction does not exist...
+			(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0) || 		//	...or is impassable on the right...
+			(level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {			//	...or is impassable on the left.
+				returnCoords.y = obj.position.y;																			//	If so, set y to return unchanged...
+				tryTerY = Math.floor(((obj.position.y - Y_PADDING) / TILE_SIZE) + 0.5);												//	...and reset TryTerY to current position
+			} else {
+				returnCoords.y = tryY;																						//	Otherwise, success - return tryY coord
+			}																												//	Else if obj is trying to move up...
 		}
-		// console.log(tryTerX + " :: " + tryTerY);
-		if((level.terrainArray[tryTerY] === undefined || level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0) ||
-			(level.terrainArray[tryTerY] === undefined || level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {
-			returnCoords.x = obj.position.x;
-			returnCoords.y = obj.position.y;
+
+		if(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0 || 			//	If terrain does not exist or is impassable on the right...
+		level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0) {				//	...or on the left...
+			returnCoords.x = obj.position.x;																				//	...set x to return unchanged
 		} else {
-			returnCoords.x = tryX;
-			returnCoords.y = tryY;
+			returnCoords.x = tryX;																							//	Otherwise, success - return tryX coord
 		}
-		// console.log(returnCoords);
-		return returnCoords;
+
+		for(var i = 0; i < collisionBoxes.length; i++) {
+			if(collisionBoxes[i] === obj.box) {
+				// continue;
+			} else {
+				// console.log("Return coords: " + returnCoords.x + ", " + returnCoords.y);
+				// console.log("Collision box: " + collisionBoxes[i].topLeft.x + ", " + collisionBoxes[i].topLeft.y + " - " + collisionBoxes[i].bottomRight.x + ", " + collisionBoxes[i].bottomRight.y);
+				var newTop = returnCoords.y + (obj.spriteSize.y * TILE_SIZE / 2) - obj.height;
+				var newBtm = returnCoords.y + (obj.spriteSize.y * TILE_SIZE / 2);
+				var newL = returnCoords.x - (obj.width / 2 );
+				var newR = returnCoords.x + (obj.width / 2 );
+
+				if(
+					(newTop <= collisionBoxes[i].topLeft.y && newBtm >= collisionBoxes[i].topLeft.y && newL <= collisionBoxes[i].topLeft.x && newR >= collisionBoxes[i].topLeft.x) ||
+					(newTop <= collisionBoxes[i].bottomRight.y && newBtm >= collisionBoxes[i].bottomRight.y && newL <= collisionBoxes[i].topLeft.x && newR >= collisionBoxes[i].topLeft.x) ||
+					(newTop <= collisionBoxes[i].topLeft.y && newBtm >= collisionBoxes[i].topLeft.y && newL <= collisionBoxes[i].bottomRight.x && newR >= collisionBoxes[i].bottomRight.x) ||
+					(newTop <= collisionBoxes[i].bottomRight.y && newBtm >= collisionBoxes[i].bottomRight.y  && newL <= collisionBoxes[i].bottomRight.x && newR >= collisionBoxes[i].bottomRight.x)
+				) {
+					console.log("Collision!");
+					returnCoords.x = obj.position.x;
+					returnCoords.y = obj.position.y;
+				}
+			}
+		}
+
+		return returnCoords;																								//	Return final coordinates
 	}
 
 	function drawDebugCanvas() {
@@ -576,6 +596,11 @@ $(function() {
 			debugCtx.strokeStyle = 'red';
 			debugCtx.strokeRect(debug.x, debug.y, 1, 1);
 		});
+		collisionBoxes.forEach(function(box) {
+			debugCtx.strokeStyle = 'green';
+			debugCtx.strokeRect(box.topLeft.x, box.topLeft.y, 1, 1);
+			debugCtx.strokeRect(box.bottomRight.x, box.bottomRight.y, 1, 1);
+		});
 	}
 
 
@@ -584,6 +609,7 @@ $(function() {
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
+		// console.log(collisionBoxes);
 	}
 
 	//	Master game draw function
