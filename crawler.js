@@ -155,11 +155,14 @@ $(function() {
 	}
 
 	function setUpCreatures() {
-		// var creature = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 4, 4);
-		// creatures.push(creature);
+		var creature = new Creature(creatureTemplates[EnumCreature.SKELTON], 4, 4);
+		creature.weapon = playerWeapons[1];
+		creatures.push(creature);
 		var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
 		creature2.weapon = creatureWeapons[0];
 		creatures.push(creature2);
+		var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
+		creatures.push(creature3);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -251,6 +254,7 @@ $(function() {
 		this.movement = {};
 		Object.assign(this.movement, creatureTemplate.movement);
 		this.damageResponse = creatureTemplate.damageResponse;
+		this.deathResponse = creatureTemplate.deathResponse;
 		colliders.push(this);
 	}
 	Creature.prototype.move = function(direction, speed) {
@@ -284,6 +288,23 @@ $(function() {
 				this.vars.animation = EnumState.MOVING_L;
 			}
 		}
+	}
+	Creature.prototype.kill = function() {
+		if(this.weapon) {
+			delete this.weapon;
+		}
+		this.ai.nextAction = -1;														//	Prevent further AI actions
+		this.movement.speed = 0;														//	Zero speed
+		this.movement.moving = false;													//	Stop moving
+		this.position.x = Math.floor(this.position.x);									//	Round co-ords down to prevent blurred drawing on canvas
+		this.position.y = Math.floor(this.position.y);
+		this.vars.animstart = performance.now();										//	Set animation start time to now...
+		if(this.vars.facingRight) {														//	...and set death animation
+			this.vars.animation = 4;
+		} else {
+			this.vars.animation = 5;
+		}
+		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0];		//	Set deathTime to be current time plus duration of death animation
 	}
 
 	function Attack(origin, direction) {
@@ -366,12 +387,17 @@ $(function() {
 
 	function drawCreatures() {
 		creatures.forEach(function(creature) {
-			if(creature.weapon !== undefined) {
+			if(creature.weapon !== undefined && !creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
 					drawOnCanvas(creature.weapon, creatureCtx);
 				}
 			}
 			drawOnCanvas(creature, creatureCtx);
+			if(creature.weapon !== undefined && creature.weapon.vars.foreground) {
+				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
+					drawOnCanvas(creature.weapon, creatureCtx);
+				}
+			}
 		});
 	}
 
@@ -439,9 +465,15 @@ $(function() {
 
 	function updateCreatures() {
 		creatures.forEach(function(creature) {
-			if(creature.vars.currentHP <= 0) {
-				creatures.splice(creatures.indexOf(creature), 1);											//	If creature has no more hp, remove it...
-				colliders.splice(colliders.indexOf(creature), 1);											//	...and remove it from colliders array
+			if(performance.now() > creature.vars.deathTime) {					//	If creature's deathTime has passed...
+				var lastFrame = creature.sprite.animations[creature.vars.animation][2].length - 1;				//	...get last frame of current animation (should be death animation!)...
+				creature.vars.sprite = creature.sprite.frames[creature.sprite.animations[creature.vars.animation][2][lastFrame]];	//	...and set it as the creature's current sprite...
+				drawOnCanvas(creature, bgCtx);									//	...draw this final sprite on background canvas...
+				creatures.splice(creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
+				colliders.splice(colliders.indexOf(creature), 1);				//	...and from the colliders array.
+			}
+			if(creature.vars.currentHP <= 0 && !creature.vars.deathTime) {		//	If creature has 0 or less HP and deathTime has not yet been set...
+				creature.deathResponse();										//	...trigger its death response.
 			}
 			if(performance.now() > creature.ai.endTime) {						//	If creature's ai action has run its duration...
 				setAiAction(creature);																		//	...assign a new one.

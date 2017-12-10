@@ -61,6 +61,25 @@ setAiAction = function(creature) {
 			}
 		}
 
+		case 2: {
+		//	Skelton
+			switch(creature.ai.nextAction) {
+				case 0: {
+					var action = Math.floor(Math.random() * 2);
+					if(action < 1) {
+						ai.moveRandomVector(creature, 1000, 500);
+						break;
+					} else {
+						ai.rest(creature, 1000, 500);
+						break;				
+					}
+				}
+				default: {
+					break;
+				}
+			}
+		}
+
 		default: {
 			break;
 		}
@@ -70,7 +89,6 @@ setAiAction = function(creature) {
 setAiTiming = function(creature, duration) {
 	creature.ai.startTime = performance.now();
 	creature.ai.endTime = performance.now() + duration;
-	console.log(creature.ai.startTime + " - " + creature.ai.endTime);
 	creature.vars.animStart = performance.now();
 }
 clearAiAction = function(creature) {
@@ -79,7 +97,7 @@ clearAiAction = function(creature) {
 
 var ai = {
 	rest: function(creature, duration_factor, duration_min) {
-		console.log("AI: rest");
+		// console.log("AI: rest");
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.speed = 0;
@@ -90,7 +108,7 @@ var ai = {
 		}
 	},
 	moveRandomVector: function(creature, duration_factor, duration_min) {
-		console.log("AI: moveRandomVector");
+		// console.log("AI: moveRandomVector");
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.direction = Math.random() * Math.PI * 2;
@@ -103,7 +121,7 @@ var ai = {
 		}
 	},
 	attackPlayer: function(creature, duration_factor, duration_min, accuracy) {
-		console.log("AI: attacking");
+		// console.log("AI: attacking");
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.speed = 0;
@@ -118,7 +136,7 @@ var ai = {
 		}
 	},
 	moveAwayFromPlayer: function(creature, duration_factor, duration_min, speed_multiplier) {
-		console.log("AI: moveAwayFromPlayer " + speed_multiplier);
+		// console.log("AI: moveAwayFromPlayer " + speed_multiplier);
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.direction = getPlayerDirection(creature) + Math.PI;
@@ -131,8 +149,6 @@ var ai = {
 		}
 	}
 }
-
-
 
 
 var playerTemplates = [
@@ -192,7 +208,7 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.6,
 			maxHP: 5,
-			currentHP: 50,
+			currentHP: 5,
 			sprite: { x: 0, y: 0}
 		},
 		sprite: {
@@ -214,15 +230,13 @@ var creatureTemplates = [
 				{ x: 5, y: 1 }	//	Death facing L 2
 			],
 			animations: [
-				[ 800, [600, 800], [ 0, 1] ],						//	Resting, facing R
-				[ 800, [600, 800], [ 4, 5] ],						//	Resting, facing L
+				[ 800, [600, 800], [ 0, 1] ],												//	Resting, facing R
+				[ 800, [600, 800], [ 4, 5] ],												//	Resting, facing L
 				[ 250, [50, 100, 150, 200, 250], [ 0, 1, 2, 3, 1 ] ],						//	Moving, facing R
 				[ 250, [50, 100, 150, 200, 250], [ 4, 5, 6, 7, 5 ] ],						//	Moving, facing L
-				[ 500, [500], [8] ],						//	Death, facing R
-				[ 500, [500], [10] ]						//	Death, facing L
-			],
-			deadFrameR: { x: 6, y: 0 },
-			deadFrameL: { x: 5, y: 1 }
+				[ 1000, [500, 1000], [8, 9] ],												//	Death, facing R
+				[ 1000, [500, 1000], [10, 11] ]												//	Death, facing L
+			]
 		},
 		box: {
 			width: 10, 
@@ -245,6 +259,9 @@ var creatureTemplates = [
 		damageResponse: function(creature) {
 			creature.ai.nextAction = 2;
 			clearAiAction(creature);
+		},
+		deathResponse: function() {
+			this.kill();
 		}
 	},
 	{
@@ -294,8 +311,74 @@ var creatureTemplates = [
 		},
 		damageResponse: function() {
 			console.log("ouchy!!");
+		},
+		deathResponse: function() {
+			this.kill();
+		}
+	},
+	{
+		name: 'Skelton',
+		vars: {
+			speed: 0.5,
+			maxHP: 5,
+			currentHP: 5,
+			sprite: { x: 3, y: 4 }
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 4 },
+				{ x: 1, y: 4 },
+				{ x: 2, y: 4 },
+				{ x: 3, y: 4 },
+				{ x: 4, y: 4 },
+				{ x: 5, y: 4 },
+				{ x: 6, y: 4 },
+				{ x: 0, y: 5 },
+				{ x: 1, y: 5 },
+				{ x: 2, y: 5 },
+				{ x: 3, y: 5 },
+				{ x: 4, y: 5 },
+				{ x: 5, y: 5 },
+				{ x: 6, y: 5 }
+			],
+			animations: [
+				[ 1000, [1000], [0] ],									//	Resting, facing R
+				[ 1000, [1000], [7] ],									//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [1, 3, 2, 0] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [8, 10, 9, 7] ],			//	Moving, facing L
+				[ 2000, [500, 1000, 2000], [4, 5, 6]],					//	Death, facing R
+				[ 2000, [500, 1000, 2000], [11, 12, 13]]				//	Death, facing L
+			]
+		},
+		box: {
+			width: 8, 
+			height: 16,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: 2,
+			startTime: 0,
+			endTime: 500,
+			action: 0,
+			nextAction: 0
+		},
+		damageResponse: function() {
+			console.log("ouchy!!");
+		},
+		deathResponse: function() {
+			this.kill();
 		}
 	}
+
 ];
 
 var creatureWeapons = [
@@ -308,7 +391,8 @@ var creatureWeapons = [
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
 			attackRate: 800,
-			drawOffset: { x: 0, y: 0 }
+			drawOffset: { x: 0, y: 0 },
+			foreground: false
 		},
 		position: {},
 		sprite: {

@@ -18,7 +18,8 @@ var EnumAttack = {
 
 var EnumCreature = {
 	GREEN_GOBLIN: 0,
-	MINI_GHOST: 1 
+	MINI_GHOST: 1,
+	SKELTON: 2
 }
 
 var EnumBoxtype = {

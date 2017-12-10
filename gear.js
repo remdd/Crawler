@@ -8,7 +8,8 @@ var playerWeapons = [
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
 			attackRate: 400,
-			drawOffset: { x: 0, y: 0 }
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
 		},
 		position: {},
 		sprite: {
@@ -52,7 +53,8 @@ var playerWeapons = [
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
 			attackRate: 500,
-			drawOffset: { x: 0, y: 0 }
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
 		},
 		position: {},
 		sprite: {
