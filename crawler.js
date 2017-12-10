@@ -155,8 +155,8 @@ $(function() {
 	}
 
 	function setUpCreatures() {
-		var creature = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 4, 4);
-		creatures.push(creature);
+		// var creature = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 4, 4);
+		// creatures.push(creature);
 		var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
 		creature2.weapon = creatureWeapons[0];
 		creatures.push(creature2);
@@ -242,11 +242,15 @@ $(function() {
 
 	function Creature(creatureTemplate) {
 		Entity.apply(this, arguments);
+		if(!this.vars.attackRate) { this.vars.attackRate = 1 };
+		this.vars.animation = 0;
+		this.vars.lastAttackTime = 0;
 		this.ctx = creatureCtx;
 		this.ai = {};
 		Object.assign(this.ai, creatureTemplate.ai);
 		this.movement = {};
 		Object.assign(this.movement, creatureTemplate.movement);
+		this.damageResponse = creatureTemplate.damageResponse;
 		colliders.push(this);
 	}
 	Creature.prototype.move = function(direction, speed) {
@@ -258,7 +262,7 @@ $(function() {
 		this.updateBox();
 	}
 	Creature.prototype.attack = function(direction) {
-		if(performance.now() - this.vars.lastAttackTime > this.vars.attackRate) {
+		if(performance.now() - this.vars.lastAttackTime > this.vars.attackRate * this.weapon.vars.attackRate) {
 			if((direction < Math.PI * 2 && direction > Math.PI * 1.5) || (direction >= 0 && direction < Math.PI * 0.5) && !this.vars.facingRight) {
 				this.vars.facingRight = true;
 			} else if((direction < Math.PI * 1.5 && direction > Math.PI / 2 ) && this.vars.facingRight) {
@@ -284,6 +288,7 @@ $(function() {
 
 	function Attack(origin, direction) {
 		Object.assign(this, origin.weapon.attack);
+		this.attacker = origin;
 		if(origin.weapon.sprite) {
 			this.sprite = origin.weapon.sprite.current;
 		}
@@ -301,14 +306,14 @@ $(function() {
 		switch(this.type) {
 			case(EnumAttack.SWIPE): {
 				this.contactPoints = [
-					{ x: origin.position.x + Math.cos(this.direction - Math.PI * 0.25) * this.reach, y: origin.position.y + Math.sin(this.direction - Math.PI * 0.25) * this.reach },
-					{ x: origin.position.x + Math.cos(this.direction - Math.PI * 0.125) * this.reach, y: origin.position.y + Math.sin(this.direction - Math.PI * 0.125) * this.reach },
-					{ x: origin.position.x + Math.cos(this.direction) * this.reach, y: origin.position.y + Math.sin(this.direction) * this.reach },
-					{ x: origin.position.x + Math.cos(this.direction + Math.PI * 0.125) * this.reach, y: origin.position.y + Math.sin(this.direction + Math.PI * 0.125) * this.reach },
-					{ x: origin.position.x + Math.cos(this.direction + Math.PI * 0.25) * this.reach, y: origin.position.y + Math.sin(this.direction + Math.PI * 0.25) * this.reach },
-					{ x: origin.position.x + Math.cos(this.direction - Math.PI * 0.25) * this.reach / 2, y: origin.position.y + Math.sin(this.direction - Math.PI * 0.25) * this.reach / 2},
-					{ x: origin.position.x + Math.cos(this.direction) * this.reach / 2, y: origin.position.y + Math.sin(this.direction) * this.reach / 2},
-					{ x: origin.position.x + Math.cos(this.direction + Math.PI * 0.25) * this.reach / 2, y: origin.position.y + Math.sin(this.direction + Math.PI * 0.25) * this.reach / 2}
+					{ x: this.origin.x + Math.cos(this.direction - this.arc / 2) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc / 2) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction - this.arc / 4) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc / 4) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction) * this.reach, y: this.origin.y + Math.sin(this.direction) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction + this.arc / 4) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc / 4) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction + this.arc / 2) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc / 2) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction - this.arc / 2) * this.reach / 2, y: this.origin.y + Math.sin(this.direction - this.arc / 2) * this.reach / 2},
+					{ x: this.origin.x + Math.cos(this.direction) * this.reach / 2, y: this.origin.y + Math.sin(this.direction) * this.reach / 2},
+					{ x: this.origin.x + Math.cos(this.direction + this.arc / 2) * this.reach / 2, y: this.origin.y + Math.sin(this.direction + this.arc / 2) * this.reach / 2}
 				];
 				break;
 			}
@@ -316,7 +321,6 @@ $(function() {
 				this.contactPoints = [
 					{ x: origin.position.x + Math.cos(this.direction) * this.reach, y: origin.position.y + Math.sin(this.direction) * this.reach }
 				];
-				// debugger;
 				break;
 			}
 			default:
@@ -368,6 +372,12 @@ $(function() {
 				}
 			}
 			drawOnCanvas(creature, creatureCtx);
+		});
+	}
+
+	function drawAttacks() {
+		attacks.forEach(function(attack) {
+			drawAttack(attack);
 		});
 	}
 
@@ -433,7 +443,7 @@ $(function() {
 				creatures.splice(creatures.indexOf(creature), 1);											//	If creature has no more hp, remove it...
 				colliders.splice(colliders.indexOf(creature), 1);											//	...and remove it from colliders array
 			}
-			if(performance.now() > creature.ai.startTime + creature.ai.duration) {							//	If creature's ai action has run its duration...
+			if(performance.now() > creature.ai.endTime) {						//	If creature's ai action has run its duration...
 				setAiAction(creature);																		//	...assign a new one.
 			}
 			creature.animate();																				//	Animate creature
@@ -456,22 +466,39 @@ $(function() {
 	}
 
 	function resolveAttacks() {
-		attacks.forEach(function(attack) {
-			var hits = 0;
-			attack.contactPoints.forEach(function(contactPoint) {
-				creatures.forEach(function(creature) {
-					//	Check whether contactPoint falls within bounding box of any creature
-					if(contactPoint.x >= creature.box.topLeft.x && contactPoint.x <= creature.box.bottomRight.x
-					&& contactPoint.y >= creature.box.topLeft.y && contactPoint.y <= creature.box.bottomRight.y) {
-						console.log("Hit!");
+		attacks.forEach(function(attack) {																							//	For each attack...
+			var hits = 0;																											//	Count successful hits
+			attack.contactPoints.forEach(function(contactPoint) {																	//	...iterate contact points...
+				if(attack.attacker !== player) {																					//	...and if attacker was not player...
+					if(contactPoint.x >= player.box.topLeft.x - 1 && contactPoint.x <= player.box.bottomRight.x + 1 					//	...check if attack falls within player's box...
+					&& contactPoint.y >= player.box.topLeft.y - 1 && contactPoint.y <= player.box.bottomRight.y + 1) {
+						console.log("Hit player!");
 						hits++;
-						resolveHit(attack, creature);				//	If so, resolve hit
+						resolveHit(attack, player);				//	If so, resolve hit
+						console.log(player.name + " has " + player.vars.currentHP + " HP.");
 					}
 					if(hits >= attack.maxHits) {														//	If maxHits for Attack is reached...
 						attack.contactPoints.splice(0, attack.contactPoints.length);					//	...clear all contactPoints
 					}
-					if(performance.now() > attack.created + attack.lifespan) {
-						attack.contactPoints.splice(attack.contactPoints.indexOf(contactPoint), 1);
+					// if(performance.now() > attack.created + attack.lifespan) {
+					// 	attack.contactPoints.splice(attack.contactPoints.indexOf(contactPoint), 1);
+					// }
+				}
+				creatures.forEach(function(creature) {
+					if(attack.attacker !== creature) {
+						//	Check whether contactPoint falls within bounding box of any creature
+						if(contactPoint.x >= creature.box.topLeft.x && contactPoint.x <= creature.box.bottomRight.x
+						&& contactPoint.y >= creature.box.topLeft.y && contactPoint.y <= creature.box.bottomRight.y) {
+							hits++;
+							resolveHit(attack, creature);				//	If so, resolve hit
+							console.log(creature.name + " has " + creature.vars.currentHP + " HP.");
+						}
+						if(hits >= attack.maxHits) {														//	If maxHits for Attack is reached...
+							attack.contactPoints.splice(0, attack.contactPoints.length);					//	...clear all contactPoints
+						}
+						// if(performance.now() > attack.created + attack.lifespan) {
+						// 	attack.contactPoints.splice(attack.contactPoints.indexOf(contactPoint), 1);
+						// }
 					}
 				});
 			});
@@ -480,6 +507,9 @@ $(function() {
 
 	function resolveHit(attack, target) {
 		target.vars.currentHP -= 1;
+		if(target.damageResponse) {
+			target.damageResponse(target);
+		}
 	}
 
 	function checkCollision(obj, tryX, tryY) {
@@ -567,14 +597,20 @@ $(function() {
 		if(performance.now() % 5000 < 50) {				//	Clear all debugs every 5 seconds
 			debugs = [];
 		}
-		debugs.forEach(function(debug) {
-			debugCtx.strokeStyle = 'red';
-			debugCtx.strokeRect(debug.x, debug.y, 1, 1);
-		});
+		// debugs.forEach(function(debug) {
+		// 	debugCtx.strokeStyle = 'red';
+		// 	debugCtx.strokeRect(debug.x, debug.y, 1, 1);
+		// });
 		colliders.forEach(function(collider) {
 			debugCtx.strokeStyle = 'green';
 			debugCtx.strokeRect(collider.box.topLeft.x, collider.box.topLeft.y, 1, 1);
 			debugCtx.strokeRect(collider.box.bottomRight.x, collider.box.bottomRight.y, 1, 1);
+		});
+		attacks.forEach(function(attack) {
+			attack.contactPoints.forEach(function(contactPoint) {
+				debugCtx.strokeStyle = 'blue';
+				debugCtx.strokeRect(contactPoint.x, contactPoint.y, 1, 1);
+			});
 		});
 	}
 
@@ -596,9 +632,7 @@ $(function() {
 		debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 		drawPlayer();
 		drawCreatures();
-		attacks.forEach(function(attack) {
-			drawAttack(attack);
-		});
+		drawAttacks();
 		// drawDebugCanvas();
 		$('#fps').text(MainLoop.getFPS());
 	}

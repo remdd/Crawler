@@ -7,6 +7,7 @@ var playerWeapons = [
 			hasAttackVariants: true,					//	True if has 2 attack variants
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
+			attackRate: 400,
 			drawOffset: { x: 0, y: 0 }
 		},
 		position: {},
@@ -50,6 +51,7 @@ var playerWeapons = [
 			hasAttackVariants: true,					//	True if has 2 attack variants
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
+			attackRate: 500,
 			drawOffset: { x: 0, y: 0 }
 		},
 		position: {},
