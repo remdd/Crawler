@@ -1,29 +1,46 @@
+getPlayerDirection = function(creature) {					//	Returns angle in radians from creature position to player position vectors
+	if(player) {
+		return Math.atan2((player.position.y - creature.position.y), (player.position.x - creature.position.x));
+	} else {
+		return Math.random() * Math.PI * 2;
+	}
+}
+
+getPlayerDistance = function(creature) {
+	if(player) {
+		return Math.sqrt(Math.pow(player.position.y - creature.position.y, 2) + Math.pow(player.position.x - creature.position.x, 2));
+	}
+}
+
 setAiAction = function(creature) {
 	// console.log("Setting AI action...");
 	creature.ai.startTime = performance.now();
+	creature.vars.animStart = performance.now();
 	switch(creature.ai.type) {
+		//	Green Goblin
 		case 0: {				//	Green Goblin
-			var action = Math.floor(Math.random() * 2);
-			if(action < 1) {
-				creature.vars.animStart = performance.now();
+			if(getPlayerDistance(creature) < creature.weapon.attack.reach * 2.5) {
+				ai.attackPlayer(creature, Math.PI / 4, creature.vars.attackRate);					//	Accuracy in radians = max offset from player's direction vector
+			}
+			var action = Math.floor(Math.random() * 3);
+			if(action < 2) {
+				console.log("Resting...");
 				ai.rest(creature);
-				break;
 			} else {
 				ai.moveRandomVector(creature, 1500, 100);
+			}
+			break;
+		}
+
+		//	Mini Ghost
+		case 1: {				//	Mini Ghost
+			var action = Math.floor(Math.random() * 1);
+			if(action < 1) {
+				ai.moveRandomVector(creature, 2500, 300);
 				break;
 			}
 		}
-		case 1: {				//	Mini Ghost
-			// var action = Math.floor(Math.random() * 4);
-			// if(action < 1) {
-				creature.vars.animStart = performance.now();
-			// 	ai.rest(creature);
-			// 	break;
-			// } else {
-				ai.moveRandomVector(creature, 2500, 300);
-				break;
-			// }
-		}
+
 		default: {
 			break;
 		}
@@ -54,6 +71,19 @@ var ai = {
 		}
 		creature.movement.speed = creature.vars.speed;
 		creature.ai.action = 'moveRandomVector';
+	},
+	attackPlayer: function(creature, accuracy, waitTimeAfterAttack) {
+		var direction = getPlayerDirection(creature);
+		direction += Math.random() * accuracy;
+		direction -= Math.random() * accuracy;
+		creature.attack(direction);
+		if(direction >= 0) {
+			creature.facingRight = true;
+		} else {
+			creature.facingRight = false;
+		}
+		creature.ai.duration = waitTimeAfterAttack;
+		creature.movement.speed = 0;
 	}
 }
 
@@ -70,7 +100,6 @@ var playerTemplates = [
 			lastAttackTime: 0,
 			attackRate: 500,
 			sprite: { x: 0, y: 0 },								//	Holds current sprite to be rendered
-			drawOffset: { x: 0, y: 0 },
 			animation: 0,										//	Holds current animation number from sprite.animations array
 			facingRight: true,
 			moving: false
@@ -120,12 +149,11 @@ var creatureTemplates = [
 		name: 'Green Goblin',
 		vars: {
 			speed: 0.6,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 500,
+			currentHP: 500,
 			lastAttackTime: 0,
 			attackRate: 500,
 			sprite: { x: 0, y: 0},
-			drawOffset: { x: 0, y: 0 },
 			animation: 0
 		},
 		sprite: {
@@ -179,7 +207,6 @@ var creatureTemplates = [
 			lastAttackTime: 0,
 			attackRate: 500,
 			sprite: { x: 0, y: 2},
-			drawOffset: { x: 0, y: 0 },
 			animation: 0
 		},
 		sprite: {
@@ -224,47 +251,47 @@ var creatureTemplates = [
 	}
 ];
 
-// var creatureWeapons = [
-// 	{
-// 		name: 'Goblin Claw',
-// 		// spriteSheet: playerSprite,
-// 		spriteSize: {
-// 			x: 0.5,
-// 			y: 1
-// 		},
-// 		position: {
-// 			x: player.position.x,
-// 			y: player.position.y
-// 		},
-// 		frames: [
-// 			{ x: 0, y: 4 },							//	Right facing
-// 			{ x: 0.5, y: 4 }						//	Left facing
-// 		],
-// 		sprite: { x: 0, y: 4 },						//	Starting sprite
-// 		reach: TILE_SIZE * 0.8,						//	Reach of attack from centre of player object position
-// 		animTime: 150,								//	Length of time the weapon stays animated after attack
-// 		restingDrawOffset: {
-// 			x: TILE_SIZE * - 0.25,
-// 			y: 0
-// 		},
-// 		rotationDrawOffset: {
-// 			x: TILE_SIZE * 0.3,
-// 			y: TILE_SIZE * 0.3
-// 		},
-// 		attack: {
-// 			type: EnumAttack.SWIPE,
-// 			displayTime: 50,
-// 			swipeColor1: 'rgba(255,255,255,0)',
-// 			swipeColor2: 'rgb(70,0,160)',
-// 			swipeThickness: 0.8,					//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
-// 			lifespan: 1
-// 		},
-// 		maxHits: 1,									//	Number of contact points per swipe that can successfully resolve as hits
-// 		lastAttackDirection: 0,						//	Store direction of last attack
-// 		attackVariants: 2,							//	Number of attack variants weapon has
-// 		lastAttackVariant: 0						//	Hold variant of last attack
-// 	}
-// ];
+var creatureWeapons = [
+	{
+		name: 'Green Goblin Claw',
+		vars: {
+			sprite: { x: 4, y: 0},
+			animTime: 100,								//	Length of time the weapon stays animated after attack
+			hasAttackVariants: true,					//	True if has 2 attack variants
+			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
+			lastAttackDirection: 0,						//	Store direction of last attack
+			drawOffset: { x: 0, y: 0 }
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			displayWhileResting: false,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 4, y: 0 },							//	Right facing
+				{ x: 4.5, y: 0 }						//	Left facing
+			],
+			attackDrawOffset: {
+				x: 0,
+				y: TILE_SIZE * -0.6
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 0.7,						//	Reach of attack from centre of player object position
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			swipeColor1: 'rgba(255,102,0,0)',
+			swipeColor2: '#ff944d',
+			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	}
+];
 
 
 

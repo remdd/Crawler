@@ -7,11 +7,12 @@ var playerWeapons = [
 			hasAttackVariants: true,					//	True if has 2 attack variants
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
-			drawOffset: { x: 0, y: 0 },
+			drawOffset: { x: 0, y: 0 }
 		},
 		position: {},
 		sprite: {
 			spriteSheet: playerSprite,
+			displayWhileResting: true,
 			size: {
 				x: 0.5,
 				y: 1
@@ -22,15 +23,15 @@ var playerWeapons = [
 			],
 			restingDrawOffset: {
 				x: TILE_SIZE * -0.25,
-				y: -3
+				y: TILE_SIZE * -0.25
 			},
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * 0.6
+				y: -TILE_SIZE * 0.6
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 0.9,						//	Reach of attack from centre of player object position
+			reach: TILE_SIZE * 0.8,						//	Reach of attack from centre of player object position
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
 			swipeColor1: 'rgba(255,255,255,0)',
@@ -54,6 +55,7 @@ var playerWeapons = [
 		position: {},
 		sprite: {
 			spriteSheet: playerSprite,
+			displayWhileResting: true,
 			size: {
 				x: 0.5,
 				y: 1
@@ -64,15 +66,15 @@ var playerWeapons = [
 			],
 			restingDrawOffset: {
 				x: TILE_SIZE * -0.25,
-				y: -3
+				y: -TILE_SIZE / 4
 			},
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * 0.6
+				y: -TILE_SIZE / 2
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 1.1,						//	Reach of attack from centre of player object position
+			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
 			swipeColor1: 'rgba(255,255,255,0)',

@@ -2,6 +2,8 @@ var CANVAS_WIDTH = 320;								//	In native pixels - scale up **in CSS** to avoi
 var CANVAS_HEIGHT = 224;
 var TILE_SIZE = 16;									//	Native tile size in spriteSheet
 
+var player = {};
+
 var EnumState = { 
 	RESTING_R: 0, 
 	RESTING_L: 1, 
@@ -10,7 +12,8 @@ var EnumState = {
 }
 
 var EnumAttack = { 
-	SWIPE: 0 
+	SWIPE: 0,
+	STAB: 1 
 }
 
 var EnumCreature = {
