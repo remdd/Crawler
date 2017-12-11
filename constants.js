@@ -8,7 +8,11 @@ var EnumState = {
 	RESTING_R: 0, 
 	RESTING_L: 1, 
 	MOVING_R: 2, 
-	MOVING_L: 3 
+	MOVING_L: 3,
+	RESTING_HITFLASH_R: 4,
+	RESTING_HITFLASH_L: 5, 
+	MOVING_HITFLASH_R: 6,
+	MOVING_HITFLASH_L: 7 
 }
 
 var EnumAttack = { 
@@ -19,13 +23,15 @@ var EnumAttack = {
 var EnumCreature = {
 	GREEN_GOBLIN: 0,
 	MINI_GHOST: 1,
-	SKELTON: 2
+	SKELTON: 2,
+	GREEN_SLUDGIE: 3,
+	CAMP_VAMP: 4
 }
 
 var EnumBoxtype = {
 	PLAYER: 0,
 	CREATURE: 1,
-	CREATURE_TOXIC: 2,
+	CREATURE_TOXIC_TO_PLAYER: 2,
 	POWERUP: 3,
 	ITEM: 4
 }

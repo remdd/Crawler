@@ -155,14 +155,22 @@ $(function() {
 	}
 
 	function setUpCreatures() {
-		var creature = new Creature(creatureTemplates[EnumCreature.SKELTON], 4, 4);
-		creature.weapon = playerWeapons[1];
+		var creature = new Creature(creatureTemplates[EnumCreature.GREEN_SLUDGIE], 4, 4);
 		creatures.push(creature);
+
 		var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
 		creature2.weapon = creatureWeapons[0];
 		creatures.push(creature2);
+
 		var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
 		creatures.push(creature3);
+
+		var creature4 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
+		creature4.weapon = creatureWeapons[1];
+		creatures.push(creature4);
+
+		var creature5 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
+		creatures.push(creature5);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -205,11 +213,11 @@ $(function() {
 		this.box.topLeft = {}; this.box.bottomRight = {};
 		Object.assign(this.box, entityTemplate.box);				//	Copy box object
 		this.updateBox();											//	Update box co-ordinates
-		this.vars.animstart = performance.now();
+		this.vars.animStart = performance.now();
 	}
 	Entity.prototype.animate = function() {
-		var pointInAnimLoop = Math.floor((performance.now() - this.vars.animstart) % this.sprite.animations[this.vars.animation][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
-		//	Need to generalize this - only works for animations with 5 or less frames
+		var pointInAnimLoop = Math.floor((performance.now() - this.vars.animStart) % this.sprite.animations[this.vars.animation][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
+		//	Need to generalize this
 		if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][0]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][0]];
 		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][1]) {
@@ -220,6 +228,22 @@ $(function() {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][3]];
 		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][4]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][4]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][5]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][5]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][6]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][6]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][7]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][7]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][8]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][8]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][9]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][9]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][10]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][10]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][11]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][11]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][12]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][12]];
 		}
 		if(this.weapon && this.weapon.sprite) {
 			if(performance.now() > this.vars.lastAttackTime + this.weapon.vars.animTime) {
@@ -246,16 +270,21 @@ $(function() {
 	function Creature(creatureTemplate) {
 		Entity.apply(this, arguments);
 		if(!this.vars.attackRate) { this.vars.attackRate = 1 };
-		this.vars.animation = 0;
-		this.vars.lastAttackTime = 0;
-		this.ctx = creatureCtx;
+		this.vars.animation = 0;									//	Track animation number currently playing
+		this.vars.animEnd = 0;
+		this.vars.lastAttackTime = 0;								//	Track time of last attack
+		this.vars.lastFacingChangeTime = 0;							//	Track time that facing direction last changed
+		if(!this.vars.minFacingChangeTime) {
+			this.vars.minFacingChangeTime = 50;						//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
+		}
+		this.ctx = creatureCtx;										//	Draw on Creature Canvas
 		this.ai = {};
-		Object.assign(this.ai, creatureTemplate.ai);
+		Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
 		this.movement = {};
-		Object.assign(this.movement, creatureTemplate.movement);
-		this.damageResponse = creatureTemplate.damageResponse;
-		this.deathResponse = creatureTemplate.deathResponse;
-		colliders.push(this);
+		Object.assign(this.movement, creatureTemplate.movement);	//	Copy movement object for this creature template
+		this.damageResponse = creatureTemplate.damageResponse;		//	Set damage response function from template
+		this.deathResponse = creatureTemplate.deathResponse;		//	Set death response function from template
+		colliders.push(this);										//	Add creature to colliders array
 	}
 	Creature.prototype.move = function(direction, speed) {
 		var tryX = this.position.x + (speed * Math.cos(direction));
@@ -277,15 +306,18 @@ $(function() {
 		}
 	}
 	Creature.prototype.setFacing = function() {
-		if(Math.cos(this.movement.direction) >= 0) {
-			this.vars.facingRight = true;
-			if(this.vars.animation === EnumState.MOVING_L) {
-				this.vars.animation = EnumState.MOVING_R;
-			}
-		} else {
-			this.vars.facingRight = false;
-			if(this.vars.animation === EnumState.MOVING_R) {
-				this.vars.animation = EnumState.MOVING_L;
+		if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
+			this.vars.lastFacingChangeTime = performance.now();
+			if(Math.cos(this.movement.direction) >= 0) {
+				this.vars.facingRight = true;
+				if(this.vars.animation === EnumState.MOVING_L) {
+					this.vars.animation = EnumState.MOVING_R;
+				}
+			} else {
+				this.vars.facingRight = false;
+				if(this.vars.animation === EnumState.MOVING_R) {
+					this.vars.animation = EnumState.MOVING_L;
+				}
 			}
 		}
 	}
@@ -293,18 +325,19 @@ $(function() {
 		if(this.weapon) {
 			delete this.weapon;
 		}
+		colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
 		this.ai.nextAction = -1;														//	Prevent further AI actions
 		this.movement.speed = 0;														//	Zero speed
 		this.movement.moving = false;													//	Stop moving
 		this.position.x = Math.floor(this.position.x);									//	Round co-ords down to prevent blurred drawing on canvas
 		this.position.y = Math.floor(this.position.y);
-		this.vars.animstart = performance.now();										//	Set animation start time to now...
+		this.vars.animStart = performance.now();										//	Set animation start time to now...
 		if(this.vars.facingRight) {														//	...and set death animation
 			this.vars.animation = 4;
 		} else {
 			this.vars.animation = 5;
 		}
-		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0];		//	Set deathTime to be current time plus duration of death animation
+		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 	}
 
 	function Attack(origin, direction) {
@@ -327,14 +360,19 @@ $(function() {
 		switch(this.type) {
 			case(EnumAttack.SWIPE): {
 				this.contactPoints = [
-					{ x: this.origin.x + Math.cos(this.direction - this.arc / 2) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc / 2) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction - this.arc / 4) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc / 4) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.50) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc * 0.50) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.28) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc * 0.28) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.15) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc * 0.15) * this.reach },
 					{ x: this.origin.x + Math.cos(this.direction) * this.reach, y: this.origin.y + Math.sin(this.direction) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction + this.arc / 4) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc / 4) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction + this.arc / 2) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc / 2) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction - this.arc / 2) * this.reach / 2, y: this.origin.y + Math.sin(this.direction - this.arc / 2) * this.reach / 2},
+					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.15) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc * 0.15) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.28) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc * 0.28) * this.reach },
+					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.50) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc * 0.50) * this.reach },
+
+					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.50) * this.reach / 2, y: this.origin.y + Math.sin(this.direction - this.arc * 0.50) * this.reach / 2},
+					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.28) * this.reach / 2, y: this.origin.y + Math.sin(this.direction - this.arc * 0.28) * this.reach / 2},
 					{ x: this.origin.x + Math.cos(this.direction) * this.reach / 2, y: this.origin.y + Math.sin(this.direction) * this.reach / 2},
-					{ x: this.origin.x + Math.cos(this.direction + this.arc / 2) * this.reach / 2, y: this.origin.y + Math.sin(this.direction + this.arc / 2) * this.reach / 2}
+					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.28) * this.reach / 2, y: this.origin.y + Math.sin(this.direction + this.arc * 0.28) * this.reach / 2},
+					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.50) * this.reach / 2, y: this.origin.y + Math.sin(this.direction + this.arc * 0.50) * this.reach / 2}
 				];
 				break;
 			}
@@ -422,13 +460,20 @@ $(function() {
 
 		if(!Key.isDown(Key.MOVE_UP) && !Key.isDown(Key.MOVE_DOWN) && !Key.isDown(Key.MOVE_LEFT) && !Key.isDown(Key.MOVE_RIGHT)) { player.vars.moving = false; }
 		if(moving != player.vars.moving) { 
-			player.vars.animstart = performance.now();
+			player.vars.animStart = performance.now();
 		}
-		//	Assign player.animation (used to load appropriate animation)
-		if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_R; }
-		else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_L; }
-		else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
-		else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
+		//	Assign current player animation
+		if(performance.now() < player.vars.lastDamageTime + 1000) {						//	+ length of time to flash after taking damage
+			if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_R; }
+			else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_L; }
+			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_R; }
+			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_L; }
+		} else {
+			if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_R; }
+			else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_L; }
+			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
+			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
+		}
 		updateGear(player);
 		player.animate();
 	}
@@ -470,7 +515,6 @@ $(function() {
 				creature.vars.sprite = creature.sprite.frames[creature.sprite.animations[creature.vars.animation][2][lastFrame]];	//	...and set it as the creature's current sprite...
 				drawOnCanvas(creature, bgCtx);									//	...draw this final sprite on background canvas...
 				creatures.splice(creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
-				colliders.splice(colliders.indexOf(creature), 1);				//	...and from the colliders array.
 			}
 			if(creature.vars.currentHP <= 0 && !creature.vars.deathTime) {		//	If creature has 0 or less HP and deathTime has not yet been set...
 				creature.deathResponse();										//	...trigger its death response.
@@ -502,8 +546,14 @@ $(function() {
 			var hits = 0;																											//	Count successful hits
 			attack.contactPoints.forEach(function(contactPoint) {																	//	...iterate contact points...
 				if(attack.attacker !== player) {																					//	...and if attacker was not player...
-					if(contactPoint.x >= player.box.topLeft.x - 1 && contactPoint.x <= player.box.bottomRight.x + 1 					//	...check if attack falls within player's box...
+					if(contactPoint.x >= player.box.topLeft.x - 1 && contactPoint.x <= player.box.bottomRight.x + 1 				//	...check if attack falls within player's box...
 					&& contactPoint.y >= player.box.topLeft.y - 1 && contactPoint.y <= player.box.bottomRight.y + 1) {
+						if(player.vars.facingRight) {
+							player.vars.animation = EnumState.HITFLASH_R;
+						} else {
+							player.vars.animation = EnumState.HITFLASH_L;
+						}
+						player.vars.lastDamageTime = performance.now();
 						console.log("Hit player!");
 						hits++;
 						resolveHit(attack, player);				//	If so, resolve hit
@@ -602,10 +652,10 @@ $(function() {
 		var returnCoords = { x: tryX, y: tryY };
 		for(var i = 0; i < colliders.length; i++) {
 			if(colliders[i] !== obj) {
-				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height - 1;
-				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) + 1;
-				var newL = returnCoords.x - (obj.box.width / 2 ) - 1;
-				var newR = returnCoords.x + (obj.box.width / 2 ) + 1;
+				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
+				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2);
+				var newL = returnCoords.x - (obj.box.width / 2 );
+				var newR = returnCoords.x + (obj.box.width / 2 );
 
 				if(
 					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
