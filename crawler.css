@@ -1,9 +1,7 @@
 canvas {
-/*	width: 960px;
-	height: 672px;
-*/	width: 960px;
-	height: 672px;
-	position: absolute;
+/*	width: 480px;
+	height: 336px;
+*/	position: absolute;
 	image-rendering: -moz-crisp-edges;
 	image-rendering: -webkit-crisp-edges;
 	image-rendering: pixelated;

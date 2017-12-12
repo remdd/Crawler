@@ -5,8 +5,53 @@ $(function() {
 	var attacks = [];
 	var colliders = [];							//	Store any active collision boxes - player, creatures, obstacles etc
 	var debugs = [];									//	Store any objects to be passed to debug canvas
+	var corpses = [];
 
 	var focused = true;									//	Track whether browser tab is focused by user
+
+	var viewport_offset_x = 0;
+	var viewport_offset_y = 0;
+	var redrawBackground = false;
+
+	setViewportOffset = function() {
+		redrawBackground = false;
+		if(viewport_offset_x < Math.floor(player.position.x - CANVAS_WIDTH * 0.65)) {
+			viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.65);
+			redrawBackground = true;
+		} else if(viewport_offset_x > Math.floor(player.position.x - CANVAS_WIDTH * 0.35)) {
+			viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.35);
+			redrawBackground = true;
+		}
+		if(viewport_offset_x < 0) {
+			viewport_offset_x = 0;
+		} else if(viewport_offset_x > (level.terrainArray[0].length * TILE_SIZE) - CANVAS_WIDTH) {
+			viewport_offset_x = (level.terrainArray[0].length * TILE_SIZE) - CANVAS_WIDTH;
+		}
+
+		if(viewport_offset_y < Math.floor(player.position.y - CANVAS_HEIGHT * 0.65)) {
+			viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.65);
+			redrawBackground = true;
+		} else if(viewport_offset_y > Math.floor(player.position.y - CANVAS_HEIGHT * 0.35)) {
+			viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.35);
+			redrawBackground = true;
+		}
+		if(viewport_offset_y < 0) {
+			viewport_offset_y = 0;
+		} else if(viewport_offset_y > (level.terrainArray.length * TILE_SIZE) - CANVAS_HEIGHT) {
+			viewport_offset_y = (level.terrainArray.length * TILE_SIZE) - CANVAS_HEIGHT;
+		}
+	}
+
+	//	***NEED TO IMPROVE ON THIS IF SPRITES ARE EVER USED GREATER THAN 2x2 TILES***
+	inViewport = function(x, y) {
+		if(	x > viewport_offset_x - TILE_SIZE && x < viewport_offset_x + CANVAS_WIDTH + TILE_SIZE && 
+			y > viewport_offset_y - TILE_SIZE && y < viewport_offset_y + CANVAS_HEIGHT + TILE_SIZE) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 
 	//	Player controls
 	//	Keyboard input helper object
@@ -49,7 +94,7 @@ $(function() {
 
 
 	//	Level setup
-	function setupTerrain(level) {									//	Draw core terrain types
+	function drawTerrain(level) {									//	Draw core terrain types
 		for(var i = 0; i < level.terrainArray.length; i++) {
 			for(var j = 0; j < level.terrainArray[i].length; j++) {
 				var sheetTile_x = 0;							//	Count no. of tiles on spriteSheet from left - first col = 0, second col = 1 etc
@@ -77,21 +122,23 @@ $(function() {
 						break;
 					}
 				}
-				bgCtx.drawImage(level.img, 					//	Image to load
-					sheetTile_x * TILE_SIZE, 		//	x-coord to start clipping
-					sheetTile_y * TILE_SIZE, 		//	y-coord to start clipping
-					TILE_SIZE * tileWidth, 			//	width of clipped image
-					TILE_SIZE * tileHeight, 		//	height of clipped image
-					TILE_SIZE * j, 					//	x-coord of canvas placement
-					TILE_SIZE * i, 					//	y-coord of canvas placement
-					TILE_SIZE * tileWidth, 			//	width of image on canvas
-					TILE_SIZE * tileHeight
-				);		//	height of image on canvas
+				if(inViewport(TILE_SIZE * j + (tileWidth * TILE_SIZE / 2), TILE_SIZE * i + (tileHeight * TILE_SIZE / 2))) {
+					bgCtx.drawImage(level.img, 					//	Image to load
+						sheetTile_x * TILE_SIZE, 		//	x-coord to start clipping
+						sheetTile_y * TILE_SIZE, 		//	y-coord to start clipping
+						TILE_SIZE * tileWidth, 			//	width of clipped image
+						TILE_SIZE * tileHeight, 		//	height of clipped image
+						TILE_SIZE * j - viewport_offset_x, 					//	x-coord of canvas placement
+						TILE_SIZE * i - viewport_offset_y, 					//	y-coord of canvas placement
+						TILE_SIZE * tileWidth, 			//	width of image on canvas
+						TILE_SIZE * tileHeight
+					);		//	height of image on canvas
+				}
 			}
 		}
 	}
 
-	function setupOverlays(level) {									//	Draw inert overlay tile decorators
+	function drawOverlays(level) {									//	Draw inert overlay tile decorators
 		for(var i = 0; i < level.overlayArray.length; i++) {
 			for(var j = 0; j < level.overlayArray[i].length; j++) {
 				var addOverlay = true;
@@ -128,16 +175,18 @@ $(function() {
 					}
 				}
 				if(addOverlay) {
-					bgCtx.drawImage(level.img, 					//	Image to load
-						sheetTile_x * TILE_SIZE, 		//	x-coord to start clipping
-						sheetTile_y * TILE_SIZE, 		//	y-coord to start clipping
-						TILE_SIZE * tileWidth, 			//	width of clipped image
-						TILE_SIZE * tileHeight, 		//	height of clipped image
-						TILE_SIZE * j, 					//	x-coord of canvas placement
-						TILE_SIZE * i, 					//	y-coord of canvas placement
-						TILE_SIZE * tileWidth, 			//	width of image on canvas
-						TILE_SIZE * tileHeight
-					);		//	height of image on canvas
+					if(inViewport(TILE_SIZE * j + (tileWidth * TILE_SIZE / 2), TILE_SIZE * i + (tileHeight * TILE_SIZE / 2))) {
+						bgCtx.drawImage(level.img, 					//	Image to load
+							sheetTile_x * TILE_SIZE, 		//	x-coord to start clipping
+							sheetTile_y * TILE_SIZE, 		//	y-coord to start clipping
+							TILE_SIZE * tileWidth, 			//	width of clipped image
+							TILE_SIZE * tileHeight, 		//	height of clipped image
+							TILE_SIZE * j - viewport_offset_x, 					//	x-coord of canvas placement
+							TILE_SIZE * i - viewport_offset_y, 					//	y-coord of canvas placement
+							TILE_SIZE * tileWidth, 			//	width of image on canvas
+							TILE_SIZE * tileHeight
+						);		//	height of image on canvas
+					}
 				}
 			}
 		}
@@ -183,28 +232,38 @@ $(function() {
 	}
 
 	function drawOnCanvas(entity, ctx) {
-		if(entity.hasOwnProperty('rotation')) {
-			ctx.save();
-			ctx.translate(entity.position.x, entity.position.y);
-			ctx.rotate(entity.rotation);
-			entity.position.x = entity.vars.drawOffset.x; 
-			entity.position.y = entity.vars.drawOffset.y;
-		} else {
-			entity.position.x += entity.vars.drawOffset.x; 
-			entity.position.y += entity.vars.drawOffset.y;
-		}
-		ctx.drawImage(entity.sprite.spriteSheet,
-			entity.vars.sprite.x * TILE_SIZE, 												//	x-coord to start clipping
-			entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
-			entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
-			entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
-			entity.position.x - TILE_SIZE * entity.sprite.size.x / 2, 	//	x-coord of canvas placement
-			entity.position.y - TILE_SIZE * entity.sprite.size.y / 2, 	//	y-coord of canvas placement
-			entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
-			entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
-		);
-		if(entity.hasOwnProperty('rotation')) {
-			ctx.restore();
+		if(inViewport(entity.position.x, entity.position.y)) {
+			if(entity.hasOwnProperty('rotation')) {
+				ctx.save();
+				ctx.translate(entity.position.x - viewport_offset_x, entity.position.y - viewport_offset_y);
+				ctx.rotate(entity.rotation);
+				entity.position.x = entity.vars.drawOffset.x - TILE_SIZE * entity.sprite.size.x / 2; 
+				entity.position.y = entity.vars.drawOffset.y - TILE_SIZE * entity.sprite.size.y / 2;
+				ctx.drawImage(entity.sprite.spriteSheet,
+					entity.vars.sprite.x * TILE_SIZE, 												//	x-coord to start clipping
+					entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
+					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
+					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
+					entity.position.x, 	//	x-coord of canvas placement
+					entity.position.y, 	//	y-coord of canvas placement
+					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
+					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
+				);
+				ctx.restore();
+			} else {
+				entity.position.x += entity.vars.drawOffset.x; 
+				entity.position.y += entity.vars.drawOffset.y;
+				ctx.drawImage(entity.sprite.spriteSheet,
+					entity.vars.sprite.x * TILE_SIZE, 												//	x-coord to start clipping
+					entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
+					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
+					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
+					entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - viewport_offset_x, 	//	x-coord of canvas placement
+					entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - viewport_offset_y, 	//	y-coord of canvas placement
+					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
+					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
+				);
+			}
 		}
 	}
 
@@ -364,9 +423,7 @@ $(function() {
 			if(this.weapon) {
 				delete this.weapon;															//	Delete creature's weapon property
 			}
-			console.log(colliders);
 			colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
-			console.log(colliders);
 			this.ai.nextAction = -1;														//	Prevent further AI actions
 			this.movement.speed = 0;														//	Zero speed
 			this.movement.moving = false;													//	Stop moving
@@ -381,6 +438,27 @@ $(function() {
 			this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 		}
 	}
+
+	function leaveCorpse(creature) {
+		var corpse = {
+			position: {},
+			vars: {
+				drawOffset: {}
+			},
+			sprite: {}
+		}
+		Object.assign(corpse.sprite, creature.sprite);
+		var lastFrame = creature.sprite.animations[creature.vars.animation][2].length - 1;				//	...get last frame of current animation (should be death animation!)...
+		corpse.vars.sprite = creature.sprite.frames[creature.sprite.animations[creature.vars.animation][2][lastFrame]];	//	...and set it as the creature's current sprite...
+		corpse.position.x = Math.floor(creature.position.x);
+		corpse.position.y = Math.floor(creature.position.y);
+		corpse.vars.drawOffset.x = Math.floor(creature.vars.drawOffset.x);
+		corpse.vars.drawOffset.y = Math.floor(creature.vars.drawOffset.y);
+		corpses.push(corpse);
+	}
+
+
+
 
 	function Attack(origin, direction) {
 		Object.assign(this, origin.weapon.attack);
@@ -436,12 +514,14 @@ $(function() {
 	function drawAttack(attack) {
 		switch(attack.type) {
 			case(EnumAttack.SWIPE): {
-				attackCtx.moveTo(attack.origin.x, attack.origin.y);
+				var origin_x = attack.origin.x - viewport_offset_x;
+				var origin_y = attack.origin.y - viewport_offset_y;
+				attackCtx.moveTo(origin.x,origin.y);
 				attackCtx.beginPath();
-				attackCtx.arc(attack.origin.x, attack.origin.y, attack.reach, attack.direction - attack.arc / 2, attack.direction + attack.arc / 2);
-				attackCtx.lineTo(attack.origin.x, attack.origin.y);
+				attackCtx.arc(origin_x, origin_y, attack.reach, attack.direction - attack.arc / 2, attack.direction + attack.arc / 2);
+				attackCtx.lineTo(origin_x, origin_y);
 				attackCtx.closePath();
-				var grd = attackCtx.createRadialGradient(attack.origin.x, attack.origin.y, attack.reach * attack.swipeThickness, attack.origin.x, attack.origin.y, attack.reach);
+				var grd = attackCtx.createRadialGradient(origin_x, origin_y, attack.reach * attack.swipeThickness, origin_x, origin_y, attack.reach);
 				grd.addColorStop(0, attack.swipeColor1);
 				grd.addColorStop(1, attack.swipeColor2);
 				attackCtx.fillStyle = grd;
@@ -564,9 +644,7 @@ $(function() {
 	function updateCreatures() {
 		creatures.forEach(function(creature) {
 			if(performance.now() > creature.vars.deathTime) {					//	If creature's deathTime has passed...
-				var lastFrame = creature.sprite.animations[creature.vars.animation][2].length - 1;				//	...get last frame of current animation (should be death animation!)...
-				creature.vars.sprite = creature.sprite.frames[creature.sprite.animations[creature.vars.animation][2][lastFrame]];	//	...and set it as the creature's current sprite...
-				drawOnCanvas(creature, bgCtx);									//	...draw this final sprite on background canvas...
+				leaveCorpse(creature);
 				creatures.splice(creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
 			}
 			if(creature.vars.currentHP <= 0 && !creature.vars.deathTime) {		//	If creature has 0 or less HP and deathTime has not yet been set...
@@ -760,6 +838,12 @@ $(function() {
 		});
 	}
 
+	function drawCorpses() {
+		corpses.forEach(function(corpse) {
+			drawOnCanvas(corpse, bgCtx);
+		});
+	}
+
 	function drawDebugCanvas() {
 		if(performance.now() % 5000 < 50) {				//	Clear all debugs every 5 seconds
 			debugs = [];
@@ -787,13 +871,19 @@ $(function() {
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
-		console.log(colliders);
 		// collisionFixer();
+		setViewportOffset();
 		// console.log(colliders);
 	}
 
 	//	Master game draw function
 	function draw(interpolationPercentage) {
+		if(redrawBackground) {
+			bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+			drawTerrain(level);
+			drawOverlays(level);
+			drawCorpses();
+		}
 		playerCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);	//	Clear player canvas for player location & surrounding 8 tiles
 		attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);				//	Clear entire attack canvas
 		creatureCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);			//	Clear entire creature canvas
@@ -809,10 +899,12 @@ $(function() {
 	//	Start routines
 	function start() {
 		level = loadLevel(0);
-		setupTerrain(level);
-		setupOverlays(level);
+		drawTerrain(level);
+		drawOverlays(level);
 		setUpPlayer();
 		setUpCreatures();
+		$('canvas').css('width', CANVAS_WIDTH * 3);
+		$('canvas').css('height', CANVAS_HEIGHT * 3);
 		MainLoop.setUpdate(update).setDraw(draw).start();
 	}
 	start();
