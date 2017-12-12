@@ -74,9 +74,14 @@ setAiAction = function(creature) {
 			switch(creature.ai.nextAction) {
 				case 0: {
 					if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
-						ai.moveTowardsPlayer(creature, 300, 350, 2);
-						creature.movement.bounceOff = false;
-						creature.ai.nextAction = 1;
+						var action = Math.floor(Math.random() * 4)
+						if(action < 3) {
+							ai.moveTowardsPlayer(creature, 300, 350, 2);
+							creature.movement.bounceOff = false;
+							creature.ai.nextAction = 1;
+						} else {
+							ai.moveRandomVector(creature, 300, 350, 2);
+						}
 					} else {
 						var action = Math.floor(Math.random() * 2);
 						if(action < 1) {
@@ -172,7 +177,7 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 3: {				//	Transform into bat!
-					creature.vars.transformEndTime = performance.now() + 2000 + Math.random() * 1000;	//	Set transformation duration
+					creature.vars.transformEndTime = performance.now() + 2000 + Math.random() * 8000;	//	Set transformation duration
 					ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[6][0], 1.5);			//	Set AI timing to last for duration of transformation animation
 					creature.vars.animation = 6;														//	Transform to bat
 					creature.ai.nextAction = 4;															//	Fly as bat
@@ -185,7 +190,6 @@ setAiAction = function(creature) {
 					if(performance.now() > creature.vars.transformEndTime) {							//	If transform time has elapsed...
 							creature.vars.moveThroughColliders = false;									//	...turn collider back on and check that it does not collide with any other...
 						if(!creature.checkIfCollides()) {
-							console.log("Setting action 5");
 							creature.ai.nextAction = 5;													//	...if it does not, set next action to be transform back from bat
 							clearAiAction(creature);
 						} else {
@@ -200,7 +204,7 @@ setAiAction = function(creature) {
 							creature.vars.animation = 8;					//	Bat flying animation
 						}
 					} else {
-						var action = Math.floor(Math.random() * 2);
+						var action = Math.floor(Math.random() * 3);
 						if(action < 1) {
 							ai.moveAwayFromPlayer(creature, 200, 50, 3.5);
 							creature.vars.animation = 8;					//	Bat flying animation
@@ -212,7 +216,6 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 5: {
-					console.log("Turning back from bat");
 					ai.rest(creature, 0, creature.sprite.animations[7][0]);			//	Set AI timing to last for duration of transformation animation
 					creature.vars.animation = 7;									//	Transform back to vamp
 					creature.ai.nextAction = 0;
@@ -388,6 +391,7 @@ var playerTemplates = [
 ];
 
 var creatureTemplates = [
+	{},			//	Template 0 is not used - indicates no creature!
 	{
 		name: 'Green Goblin',
 		vars: {
@@ -452,7 +456,10 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
-		}
+		},
+		addWeapon: function() {
+			return 1;
+		}	
 	},
 	{
 		name: 'Mini Ghost',
@@ -524,7 +531,7 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.5,
 			maxHP: 5,
-			currentHP: 15,
+			currentHP: 5,
 			sprite: { x: 3, y: 4 }
 		},
 		sprite: {
@@ -585,6 +592,14 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
+		},
+		addWeapon: function() {
+			var rand = Math.floor(Math.random() * 3);
+			if(rand < 1) {
+				return 2;
+			} else {
+				return 3;
+			}
 		}
 	},
 	{
@@ -650,7 +665,7 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.7,
 			maxHP: 5,
-			currentHP: 50,
+			currentHP: 5,
 			sprite: { x: 0, y: 10 },
 			minFacingChangeTime: 50,
 			transformStartTime: 0,
@@ -696,8 +711,8 @@ var creatureTemplates = [
 				[ 500, [300, 500], [14, 15] ],																	//	Resting, facing L
 				[ 400, [100, 200, 300, 400], [6, 8, 7, 9] ],													//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [20, 22, 21, 23] ],												//	Moving, facing L
-				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],		//	Death, facing R
-				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],		//	Death, facing R
+				[ 2400, [1000, 1100, 1200, 1300, 1400, 1500, 1600, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],		//	Death, facing R
+				[ 2400, [1000, 1100, 1200, 1300, 1400, 1500, 1600, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],		//	Death, facing R
 				[ 600, [100, 200, 300, 400, 500, 600], [14, 15, 16, 17, 18, 19] ],								//	Transform into bat
 				[ 600, [100, 200, 300, 400, 500, 600], [19, 18, 17, 16, 15, 14] ],								//	Transform back from bat
 				[ 400, [100, 200, 300, 400], [2, 3, 4, 5] ]														//	Moving as bat
@@ -735,11 +750,15 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
+		},
+		addWeapon: function() {
+			return 4;
 		}
 	}
 ];
 
 var creatureWeapons = [
+	{},				//	0 is blank - not a weapon!
 	{
 		name: 'Green Goblin Claw',
 		vars: {

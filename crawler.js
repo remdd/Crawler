@@ -203,45 +203,55 @@ $(function() {
 		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;					//	Time between attacks
 	}
 
-	function setUpCreatures() {
-		var creature = new Creature(creatureTemplates[EnumCreature.GREEN_SLUDGIE], 4, 4);
-		creatures.push(creature);
+	function setUpCreatures(level) {
+		for(var i = 0; i < level.creatureArray.length; i++) {
+			for(var j = 0; j < level.creatureArray[i].length; j++) {
+				if(level.creatureArray[i][j]) {
+					var creature = new Creature(creatureTemplates[level.creatureArray[i][j]]);
+					creature.position.x = j * TILE_SIZE + TILE_SIZE / 2;
+					creature.position.y = i * TILE_SIZE + TILE_SIZE / 2;
+					creatures.push(creature);
+					console.log(creature);
+				}
+			}
+		}
+		// var creature = new Creature(creatureTemplates[EnumCreature.GREEN_SLUDGIE], 4, 4);
+		// creatures.push(creature);
 
-		var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
-		creature2.weapon = new Weapon(creatureWeapons[0]);
-		creatures.push(creature2);
+		// var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
+		// creature2.weapon = new Weapon(creatureWeapons[0]);
+		// creatures.push(creature2);
 
-		var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
-		creatures.push(creature3);
+		// var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
+		// creatures.push(creature3);
 
-		var creature4 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
-		creature4.weapon = new Weapon(creatureWeapons[3]);
-		creatures.push(creature4);
+		// var creature4 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
+		// creature4.weapon = new Weapon(creatureWeapons[3]);
+		// creatures.push(creature4);
 
-		var creature5 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
-		creature5.weapon = new Weapon(creatureWeapons[1]);
-		creatures.push(creature5);
+		// var creature5 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
+		// creature5.weapon = new Weapon(creatureWeapons[1]);
+		// creatures.push(creature5);
 
-		var creature6 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 8);
-		creature6.weapon = new Weapon(creatureWeapons[2]);
-		creatures.push(creature6);
+		// var creature6 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 8);
+		// creature6.weapon = new Weapon(creatureWeapons[2]);
+		// creatures.push(creature6);
 
-		var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
-		creature7.weapon = new Weapon(creatureWeapons[1]);
-		creatures.push(creature7);
+		// var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
+		// creature7.weapon = new Weapon(creatureWeapons[1]);
+		// creatures.push(creature7);
 
-		var creature8 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 7);
-		creature8.weapon = new Weapon(creatureWeapons[2]);
-		creatures.push(creature8);
+		// var creature8 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 7);
+		// creature8.weapon = new Weapon(creatureWeapons[2]);
+		// creatures.push(creature8);
 
-		var creature9 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 9);
-		creature9.weapon = new Weapon(creatureWeapons[2]);
-		creatures.push(creature9);
+		// var creature9 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 9);
+		// creature9.weapon = new Weapon(creatureWeapons[2]);
+		// creatures.push(creature9);
 
-		var creature10 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 7);
-		creature10.weapon = new Weapon(creatureWeapons[1]);
-		creatures.push(creature10);
-
+		// var creature10 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 7);
+		// creature10.weapon = new Weapon(creatureWeapons[1]);
+		// creatures.push(creature10);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -388,6 +398,10 @@ $(function() {
 		Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
 		this.movement = {};
 		Object.assign(this.movement, creatureTemplate.movement);	//	Copy movement object for this creature template
+		if(creatureTemplate.addWeapon) {
+			var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()]);
+			this.weapon = weapon;
+		}
 		if(creatureTemplate.touchDamage) {
 			this.touchDamage = creatureTemplate.touchDamage;
 		}
@@ -475,7 +489,6 @@ $(function() {
 				//	...or dalls fully inside the collider
 				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.bottomRight.x +1)
 				) {
-					console.log("Collision!");
 					collides = true;
 				}
 			}
@@ -483,8 +496,6 @@ $(function() {
 				break;
 			}
 		}
-		if(!collides) { console.log("Does not collide!"); }
-		if(collides) { console.log("Collides..."); }
 		return collides;
 	}
 
@@ -503,6 +514,7 @@ $(function() {
 		corpse.position.y = Math.floor(creature.position.y);
 		corpse.vars.drawOffset.x = Math.floor(creature.vars.drawOffset.x);
 		corpse.vars.drawOffset.y = Math.floor(creature.vars.drawOffset.y);
+		drawOnCanvas(corpse, bgCtx);
 		corpses.push(corpse);
 	}
 
@@ -596,12 +608,16 @@ $(function() {
 
 	function drawCreatures() {
 		creatures.forEach(function(creature) {
-			if(creature.weapon && !creature.weapon.vars.foreground) {
+			if(creature.vars.moveThroughColliders) {
+				drawOnCanvas(creature, attackCtx);
+			} else if(creature.weapon && !creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
 					drawOnCanvas(creature.weapon, creatureCtx);
 				}
+				drawOnCanvas(creature, creatureCtx);
+			} else {
+				drawOnCanvas(creature, creatureCtx);
 			}
-			drawOnCanvas(creature, creatureCtx);
 		});
 	}
 
@@ -955,7 +971,7 @@ $(function() {
 		drawTerrain(level);
 		drawOverlays(level);
 		setUpPlayer();
-		setUpCreatures();
+		setUpCreatures(level);
 		$('canvas').css('width', CANVAS_WIDTH * 3);
 		$('canvas').css('height', CANVAS_HEIGHT * 3);
 		MainLoop.setUpdate(update).setDraw(draw).start();
