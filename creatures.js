@@ -162,7 +162,7 @@ setAiAction = function(creature) {
 				}
 				case 1: {
 					var direction = getPlayerCompassDirection(creature);
-					ai.attack(creature, 0, creature.vars.attackRate, direction, 0);		//	...attack in player's compass direction...
+					ai.attack(creature, 0, creature.vars.attackRate, direction, 0);						//	...attack in player's compass direction...
 					creature.ai.nextAction = 2;
 					break;
 				}
@@ -172,18 +172,33 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 3: {				//	Transform into bat!
-					ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[6][0], 1);			//	Set AI timing to last for duration of transformation animation
-					creature.vars.animation = 6;					//	Transform to bat
-					creature.ai.nextAction = 4;						//	Fly as bat
+					creature.vars.transformEndTime = performance.now() + 2000 + Math.random() * 1000;	//	Set transformation duration
+					ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[6][0], 1.5);			//	Set AI timing to last for duration of transformation animation
+					creature.vars.animation = 6;														//	Transform to bat
+					creature.ai.nextAction = 4;															//	Fly as bat
+					creature.vars.isBat = true;
 					creature.vars.hideWeapon = true;
+					creature.vars.moveThroughColliders = true;
 					break;
 				}
 				case 4: {
-					if(performance.now() > creature.vars.transformEndTime) {
-						ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[7][0], 1);		//	Set AI timing to last for duration of transformation animation
-						creature.vars.animation = 7;													//	Transform back to vamp
-						creature.ai.nextAction = 0;
-						creature.movement.speed = creature.vars.speed;
+					if(performance.now() > creature.vars.transformEndTime) {							//	If transform time has elapsed...
+							creature.vars.moveThroughColliders = false;									//	...turn collider back on and check that it does not collide with any other...
+						if(!creature.checkIfCollides()) {
+							console.log("Setting action 5");
+							creature.ai.nextAction = 5;													//	...if it does not, set next action to be transform back from bat
+							clearAiAction(creature);
+						} else {
+							creature.vars.transformEndTime += 200;										//	If it *does* collide, extend anim by another 200 ms and continue random movement
+							creature.vars.moveThroughColliders = true;
+							var action = Math.floor(Math.random() * 2);
+							if(action < 1) {
+								ai.moveAwayFromPlayer(creature, 200, 50, 3.5);
+							} else {
+								ai.moveRandomVector(creature, 200, 50, 3.5);
+							}
+							creature.vars.animation = 8;					//	Bat flying animation
+						}
 					} else {
 						var action = Math.floor(Math.random() * 2);
 						if(action < 1) {
@@ -194,6 +209,14 @@ setAiAction = function(creature) {
 							creature.vars.animation = 8;					//	Bat flying animation
 						}
 					}
+					break;
+				}
+				case 5: {
+					console.log("Turning back from bat");
+					ai.rest(creature, 0, creature.sprite.animations[7][0]);			//	Set AI timing to last for duration of transformation animation
+					creature.vars.animation = 7;									//	Transform back to vamp
+					creature.ai.nextAction = 0;
+					creature.vars.isBat = false;
 					break;
 				}
 				default: {
@@ -359,7 +382,7 @@ var playerTemplates = [
 			// console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
 		},
 		deathResponse: function() {	
-			console.log("The player has died!");
+			// console.log("The player has died!");
 		}
 	}
 ];
@@ -437,7 +460,8 @@ var creatureTemplates = [
 			speed: 0.2,
 			maxHP: 5,
 			currentHP: 5,
-			sprite: { x: 0, y: 2}
+			sprite: { x: 0, y: 2},
+			moveThroughColliders: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -500,7 +524,7 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.5,
 			maxHP: 5,
-			currentHP: 5,
+			currentHP: 15,
 			sprite: { x: 3, y: 4 }
 		},
 		sprite: {
@@ -626,11 +650,12 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.7,
 			maxHP: 5,
-			currentHP: 5,
+			currentHP: 50,
 			sprite: { x: 0, y: 10 },
 			minFacingChangeTime: 50,
 			transformStartTime: 0,
-			transformEndTime: 0
+			transformEndTime: 0,
+			isBat: false
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -697,15 +722,14 @@ var creatureTemplates = [
 			nextAction: 0
 		},
 		inflictDamage: function(damage) {
-			if(this.vars.transformEndTime < performance.now()) {
-				this.vars.currentHP -= damage;
-			}
+			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
-			} else if(this.vars.transformEndTime < performance.now()) {
-				this.vars.transformStartTime = performance.now();
-				this.vars.transformEndTime = performance.now() + 2000 + Math.random() * 6000;
+			} else if(!this.vars.isBat) {
 				this.ai.nextAction = 3;
+				clearAiAction(this);
+			} else {
+				this.ai.nextAction = 4;
 				clearAiAction(this);
 			}
 		},

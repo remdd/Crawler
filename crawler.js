@@ -227,8 +227,21 @@ $(function() {
 		creatures.push(creature6);
 
 		var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
-		creature7.weapon = creatureWeapons[1];
+		creature7.weapon = new Weapon(creatureWeapons[1]);
 		creatures.push(creature7);
+
+		var creature8 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 7);
+		creature8.weapon = new Weapon(creatureWeapons[2]);
+		creatures.push(creature8);
+
+		var creature9 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 9);
+		creature9.weapon = new Weapon(creatureWeapons[2]);
+		creatures.push(creature9);
+
+		var creature10 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 7);
+		creature10.weapon = new Weapon(creatureWeapons[1]);
+		creatures.push(creature10);
+
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -437,6 +450,42 @@ $(function() {
 			}
 			this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 		}
+	}
+	Creature.prototype.checkIfCollides = function() {
+		var collides = false;
+		for(var i = 0; i < colliders.length; i++) {
+			if(colliders[i] !== this) {
+				var top = this.box.topLeft.y;
+				var btm = this.box.bottomRight.y;
+				var left = this.box.topLeft.x;
+				var right = this.box.bottomRight.x;
+
+				if(
+				//	Check if this overlaps any corner of the collider...
+				(top < colliders[i].box.topLeft.y +1 && btm > colliders[i].box.topLeft.y -1 && left < colliders[i].box.topLeft.x +1 && right > colliders[i].box.topLeft.x -1) ||
+				(top < colliders[i].box.bottomRight.y +1 && btm > colliders[i].box.bottomRight.y -1 && left < colliders[i].box.topLeft.x +1 && right > colliders[i].box.topLeft.x -1) ||
+				(top < colliders[i].box.topLeft.y +1 && btm > colliders[i].box.topLeft.y -1 && left < colliders[i].box.bottomRight.x +1 && right > colliders[i].box.bottomRight.x -1) ||
+				(top < colliders[i].box.bottomRight.y +1 && btm > colliders[i].box.bottomRight.y -1 && left < colliders[i].box.bottomRight.x +1 && right > colliders[i].box.bottomRight.x -1) ||
+				//	...or if this overlaps the top or bottom side of the collider...
+				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left < colliders[i].box.topLeft.x +1 && right > colliders[i].box.topLeft.x -1) ||
+				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left < colliders[i].box.bottomRight.x +1 && right > colliders[i].box.bottomRight.x -1) ||
+				//	...or if this overlaps the left or right side of the collider...
+				(top < colliders[i].box.topLeft.y +1 && btm > colliders[i].box.topLeft.y -1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.bottomRight.x +1) ||
+				(top < colliders[i].box.bottomRight.y +1 && btm > colliders[i].box.bottomRight.y -1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.topLeft.x +1) ||
+				//	...or dalls fully inside the collider
+				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.bottomRight.x +1)
+				) {
+					console.log("Collision!");
+					collides = true;
+				}
+			}
+			if(collides) {
+				break;
+			}
+		}
+		if(!collides) { console.log("Does not collide!"); }
+		if(collides) { console.log("Collides..."); }
+		return collides;
 	}
 
 	function leaveCorpse(creature) {
@@ -719,7 +768,7 @@ $(function() {
 		//	DAMAGE CALC GOES HERE
 		var damage = 1;
 		target.inflictDamage(damage);
-		console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
+		// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 	}
 
 	function checkCollision(obj, tryX, tryY) {
@@ -781,22 +830,26 @@ $(function() {
 	function checkColliderCollision(obj, tryX, tryY) {
 		var returnCoords = { x: tryX, y: tryY };
 		for(var i = 0; i < colliders.length; i++) {
-			if(colliders[i] !== obj) {
+			if(colliders[i] !== obj && !colliders[i].vars.moveThroughColliders && !obj.vars.moveThroughColliders) {
 				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
 				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2);
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 
-				if(				//	If obj is in contact with collider...
-					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
-					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
-					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
-					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1)
-
-					//	********************************************************************************************************************
-					//	Also need to add check whether obj is small enough to fit *within* top & bottom or left & right of another collider!
-
-
+				if(
+				//	Check if obj overlaps any corner of the collider...
+				(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
+				(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
+				(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
+				(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
+				//	...or if obj overlaps the top or bottom side of the collider...
+				(newTop > colliders[i].box.topLeft.y -1 && newBtm < colliders[i].box.bottomRight.y +1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
+				(newTop > colliders[i].box.topLeft.y -1 && newBtm < colliders[i].box.bottomRight.y +1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
+				//	...or if obj overlaps the left or right side of the collider...
+				(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL > colliders[i].box.topLeft.x -1 && newR < colliders[i].box.bottomRight.x +1) ||
+				(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL > colliders[i].box.topLeft.x -1 && newR < colliders[i].box.topLeft.x +1) ||
+				//	...or dalls fully inside the collider
+				(newTop > colliders[i].box.topLeft.y -1 && newBtm < colliders[i].box.bottomRight.y +1 && newL > colliders[i].box.topLeft.x -1 && newR < colliders[i].box.bottomRight.x +1)
 				) {
 					if(obj.vars.touchDamage && colliders[i] === player) {
 						obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
