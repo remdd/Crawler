@@ -149,7 +149,7 @@ $(function() {
 		player = new Creature(playerTemplates[playerType], 2, 5);					//	Construct player from playerType
 		player.ctx = playerCtx;														//	Assign player to player canvas
 		player.weapon = new Weapon(playerWeapons[0]);								//	Assign starting weapon
-		Object.assign(player.weapon.position, player.position);
+		// Object.assign(player.weapon.position, player.position);
 		player.vars.lastAttackTime = 0;													//	Initialize to zero
 		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;					//	Time between attacks
 	}
@@ -165,21 +165,21 @@ $(function() {
 		var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
 		creatures.push(creature3);
 
-		var creature5 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
-		creature5.weapon = new Weapon(creatureWeapons[3]);
+		var creature4 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
+		creature4.weapon = new Weapon(creatureWeapons[3]);
+		creatures.push(creature4);
+
+		var creature5 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
+		creature5.weapon = new Weapon(creatureWeapons[1]);
 		creatures.push(creature5);
 
-		// var creature4 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
-		// creature4.weapon = new Weapon(creatureWeapons[1]);
-		// creatures.push(creature4);
+		var creature6 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 8);
+		creature6.weapon = new Weapon(creatureWeapons[2]);
+		creatures.push(creature6);
 
-		// var creature6 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 8);
-		// creature6.weapon = new Weapon(creatureWeapons[2]);
-		// creatures.push(creature6);
-
-		// var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
-		// creature7.weapon = creatureWeapons[1];
-		// creatures.push(creature7);
+		var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
+		creature7.weapon = creatureWeapons[1];
+		creatures.push(creature7);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -359,22 +359,27 @@ $(function() {
 		}
 	}
 	Creature.prototype.kill = function() {
-		if(this.weapon) {
-			delete this.weapon;															//	Delete creature's weapon property
+		if(!this.vars.dead) {
+			this.vars.dead = true;
+			if(this.weapon) {
+				delete this.weapon;															//	Delete creature's weapon property
+			}
+			console.log(colliders);
+			colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
+			console.log(colliders);
+			this.ai.nextAction = -1;														//	Prevent further AI actions
+			this.movement.speed = 0;														//	Zero speed
+			this.movement.moving = false;													//	Stop moving
+			this.position.x = Math.floor(this.position.x);									//	Round co-ords down to prevent blurred drawing on canvas
+			this.position.y = Math.floor(this.position.y);
+			this.vars.animStart = performance.now();										//	Set animation start time to now...
+			if(this.vars.facingRight) {														//	...and set death animation
+				this.vars.animation = 4;
+			} else {
+				this.vars.animation = 5;
+			}
+			this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 		}
-		colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
-		this.ai.nextAction = -1;														//	Prevent further AI actions
-		this.movement.speed = 0;														//	Zero speed
-		this.movement.moving = false;													//	Stop moving
-		this.position.x = Math.floor(this.position.x);									//	Round co-ords down to prevent blurred drawing on canvas
-		this.position.y = Math.floor(this.position.y);
-		this.vars.animStart = performance.now();										//	Set animation start time to now...
-		if(this.vars.facingRight) {														//	...and set death animation
-			this.vars.animation = 4;
-		} else {
-			this.vars.animation = 5;
-		}
-		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 	}
 
 	function Attack(origin, direction) {
@@ -473,11 +478,11 @@ $(function() {
 
 	function drawWeapons() {
 		creatures.forEach(function(creature) {
-			if(creature.weapon && creature.weapon.vars.foreground) {
+			if(creature.weapon && !creature.vars.hideWeapon && creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
 					drawOnCanvas(creature.weapon, attackCtx);
 				}
-			} else if(creature.weapon && !creature.weapon.vars.foreground) {
+			} else if(creature.weapon && !creature.vars.hideWeapon && !creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || creature.vars.lastAttackTime !== 0 && performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
 					drawOnCanvas(creature.weapon, attackCtx);
 					// drawOnCanvas(creature, attackCtx);
@@ -709,6 +714,11 @@ $(function() {
 					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
 					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
 					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1)
+
+					//	********************************************************************************************************************
+					//	Also need to add check whether obj is small enough to fit *within* top & bottom or left & right of another collider!
+
+
 				) {
 					if(obj.vars.touchDamage && colliders[i] === player) {
 						obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
@@ -725,6 +735,29 @@ $(function() {
 			}
 		}
 		return returnCoords;
+	}
+
+	function collisionFixer() {
+		colliders.forEach(function(collider) {
+			if(collider !== player) {
+				if(	checkColliderCollision(collider, player.box.topLeft.x, player.box.topLeft.y).x !== player.box.topLeft.x ||
+					checkColliderCollision(collider, player.box.topLeft.x, player.box.topLeft.y).y !== player.box.topLeft.y ||
+					checkColliderCollision(collider, player.box.bottomRight.x, player.box.topLeft.y).x !== player.box.bottomRight.x ||
+					checkColliderCollision(collider, player.box.bottomRight.x, player.box.topLeft.y).y !== player.box.topLeft.y ||
+					checkColliderCollision(collider, player.box.topLeft.x, player.box.bottomRight.y).x !== player.box.topLeft.x ||
+					checkColliderCollision(collider, player.box.topLeft.x, player.box.bottomRight.y).y !== player.box.bottomRight.y ||
+					checkColliderCollision(collider, player.box.bottomRight.x, player.box.bottomRight.y).x !== player.box.bottomRight.x ||
+					checkColliderCollision(collider, player.box.bottomRight.x, player.box.bottomRight.y).y !== player.box.bottomRight.y ) {
+					console.log(collider);
+					console.log(player);
+					debugger;
+					console.log("STUCK!!!");
+				}
+				else {
+					console.log("Ok!");
+				}
+			}
+		});
 	}
 
 	function drawDebugCanvas() {
@@ -754,6 +787,8 @@ $(function() {
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
+		console.log(colliders);
+		// collisionFixer();
 		// console.log(colliders);
 	}
 
@@ -776,8 +811,8 @@ $(function() {
 		level = loadLevel(0);
 		setupTerrain(level);
 		setupOverlays(level);
-		setUpCreatures();
 		setUpPlayer();
+		setUpCreatures();
 		MainLoop.setUpdate(update).setDraw(draw).start();
 	}
 	start();

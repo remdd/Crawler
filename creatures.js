@@ -30,7 +30,7 @@ setAiAction = function(creature) {
 						if(action < 2) {
 							ai.rest(creature, 500, 250);													//	...rest...
 						} else {
-							ai.moveRandomVector(creature, 1500, 100);										//	...or move in a random direction.
+							ai.moveRandomVector(creature, 1500, 100, 1);									//	...or move in a random direction.
 						}
 						creature.ai.nextAction = 0;
 					}
@@ -58,7 +58,7 @@ setAiAction = function(creature) {
 				case 0: {
 					var action = Math.floor(Math.random() * 1);
 					if(action < 1) {
-						ai.moveRandomVector(creature, 2500, 300);
+						ai.moveRandomVector(creature, 2500, 300, 1);
 					}
 					break;
 				}
@@ -80,7 +80,7 @@ setAiAction = function(creature) {
 					} else {
 						var action = Math.floor(Math.random() * 2);
 						if(action < 1) {
-							ai.moveRandomVector(creature, 1000, 500);
+							ai.moveRandomVector(creature, 1000, 500, 1);
 						} else {
 							ai.rest(creature, 1000, 500);
 						}
@@ -120,7 +120,7 @@ setAiAction = function(creature) {
 						var action = Math.floor(Math.random() * 2);
 						if(action < 1) {
 							creature.vars.touchDamage = true;				//	Set to cause touch damage when moving
-							ai.moveRandomVector(creature, 0, 1000);
+							ai.moveRandomVector(creature, 0, 1000, 1);
 							creature.ai.nextAction = 1;
 						} else {
 							ai.rest(creature, 1000, 500);
@@ -144,6 +144,7 @@ setAiAction = function(creature) {
 			creature.movement.bounceOff = true;
 			switch(creature.ai.nextAction) {
 				case 0: {
+					creature.vars.hideWeapon = false;						//	Redisplay dagger if hidden while flying
 					if(getPlayerDistance(creature) < TILE_SIZE * 4) {
 						ai.moveTowardsPlayer(creature, 300, 350, 2);
 						creature.movement.bounceOff = false;
@@ -153,7 +154,7 @@ setAiAction = function(creature) {
 						if(action < 1) {
 							ai.rest(creature, 500, 500);
 						} else {
-							ai.moveRandomVector(creature, 500, 500);
+							ai.moveRandomVector(creature, 500, 500, 1);
 						}
 						creature.ai.nextAction = 0;
 					}
@@ -168,6 +169,31 @@ setAiAction = function(creature) {
 				case 2: {
 					ai.moveAwayFromPlayer(creature, 500, 500, 2);
 					creature.ai.nextAction = 0;
+					break;
+				}
+				case 3: {				//	Transform into bat!
+					ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[6][0], 1);			//	Set AI timing to last for duration of transformation animation
+					creature.vars.animation = 6;					//	Transform to bat
+					creature.ai.nextAction = 4;						//	Fly as bat
+					creature.vars.hideWeapon = true;
+					break;
+				}
+				case 4: {
+					if(performance.now() > creature.vars.transformEndTime) {
+						ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[7][0], 1);		//	Set AI timing to last for duration of transformation animation
+						creature.vars.animation = 7;													//	Transform back to vamp
+						creature.ai.nextAction = 0;
+						creature.movement.speed = creature.vars.speed;
+					} else {
+						var action = Math.floor(Math.random() * 2);
+						if(action < 1) {
+							ai.moveAwayFromPlayer(creature, 200, 50, 3.5);
+							creature.vars.animation = 8;					//	Bat flying animation
+						} else {
+							ai.moveRandomVector(creature, 200, 50, 3.5);
+							creature.vars.animation = 8;					//	Bat flying animation
+						}
+					}
 					break;
 				}
 				default: {
@@ -205,12 +231,12 @@ var ai = {
 			creature.vars.animation = EnumState.RESTING_L;
 		}
 	},
-	moveRandomVector: function(creature, duration_factor, duration_min) {
+	moveRandomVector: function(creature, duration_factor, duration_min, speed_multiplier) {
 		// console.log("AI: moveRandomVector");
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.direction = Math.random() * Math.PI * 2;
-		creature.movement.speed = creature.vars.speed;
+		creature.movement.speed = creature.vars.speed * speed_multiplier;
 		creature.setFacing();
 		if(creature.vars.facingRight) {
 			creature.vars.animation = EnumState.MOVING_R;
@@ -330,7 +356,7 @@ var playerTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			}
-			console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
+			// console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
 		},
 		deathResponse: function() {	
 			console.log("The player has died!");
@@ -598,11 +624,13 @@ var creatureTemplates = [
 	{
 		name: 'Camp Vamp',
 		vars: {
-			speed: 0.6,
+			speed: 0.7,
 			maxHP: 5,
 			currentHP: 5,
 			sprite: { x: 0, y: 10 },
-			minFacingChangeTime: 50
+			minFacingChangeTime: 50,
+			transformStartTime: 0,
+			transformEndTime: 0
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -639,12 +667,15 @@ var creatureTemplates = [
 				{ x: 13, y: 11 }
 			],
 			animations: [
-				[ 1000, [600, 1000], [0, 1] ],		//	Resting, facing R
-				[ 1000, [600, 1000], [14, 15] ],	//	Resting, facing L
-				[ 400, [100, 200, 300, 400], [6, 8, 7, 9] ],			//	Moving, facing R
-				[ 400, [100, 200, 300, 400], [20, 22, 21, 23] ],		//	Moving, facing L
-				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],					//	Death, facing R
-				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]]					//	Death, facing R
+				[ 500, [300, 500], [0, 1] ],																	//	Resting, facing R
+				[ 500, [300, 500], [14, 15] ],																	//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [6, 8, 7, 9] ],													//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [20, 22, 21, 23] ],												//	Moving, facing L
+				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],		//	Death, facing R
+				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],		//	Death, facing R
+				[ 600, [100, 200, 300, 400, 500, 600], [14, 15, 16, 17, 18, 19] ],								//	Transform into bat
+				[ 600, [100, 200, 300, 400, 500, 600], [19, 18, 17, 16, 15, 14] ],								//	Transform back from bat
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 5] ]														//	Moving as bat
 			]
 		},
 		box: {
@@ -666,9 +697,16 @@ var creatureTemplates = [
 			nextAction: 0
 		},
 		inflictDamage: function(damage) {
-			this.vars.currentHP -= damage;
+			if(this.vars.transformEndTime < performance.now()) {
+				this.vars.currentHP -= damage;
+			}
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
+			} else if(this.vars.transformEndTime < performance.now()) {
+				this.vars.transformStartTime = performance.now();
+				this.vars.transformEndTime = performance.now() + 2000 + Math.random() * 6000;
+				this.ai.nextAction = 3;
+				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
