@@ -1,9 +1,10 @@
 getPlayerDirection = function(creature) {					//	Returns angle in radians from creature position to player position vectors
-	if(player) {
-		return Math.atan2((player.position.y - creature.position.y), (player.position.x - creature.position.x));
-	} else {
-		return Math.random() * Math.PI * 2;
-	}
+	return Math.atan2((player.position.y - creature.position.y), (player.position.x - creature.position.x));
+}
+
+getPlayerCompassDirection = function(creature) {
+	var direction = Math.atan2((player.position.y - creature.position.y), (player.position.x - creature.position.x));
+	return direction;
 }
 
 getPlayerDistance = function(creature) {
@@ -21,7 +22,8 @@ setAiAction = function(creature) {
 				case 0: {
 					//	Next action not specified
 					if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3) {					//	If player is within 3x attack reach...
-						ai.attackPlayer(creature, 0, creature.vars.attackRate, Math.PI / 8);				//	...attack player...
+						var direction = getPlayerDirection(creature);
+						ai.attack(creature, 0, creature.vars.attackRate, direction, Math.PI / 8);		//	...attack in player's general direction...
 						creature.ai.nextAction = 1;															//	...and set next action to 1.
 					} else {
 						var action = Math.floor(Math.random() * 3);											//	Otherwise, randomly choose to...
@@ -52,31 +54,64 @@ setAiAction = function(creature) {
 		}
 
 		case EnumCreature.MINI_GHOST: {
-			var action = Math.floor(Math.random() * 1);
-			if(action < 1) {
-				ai.moveRandomVector(creature, 2500, 300);
-				break;
-			}
-		}
-
-		case EnumCreature.SKELTON: {
 			switch(creature.ai.nextAction) {
 				case 0: {
-					var action = Math.floor(Math.random() * 2);
+					var action = Math.floor(Math.random() * 1);
 					if(action < 1) {
-						ai.moveRandomVector(creature, 1000, 500);
-					} else {
-						ai.rest(creature, 1000, 500);
+						ai.moveRandomVector(creature, 2500, 300);
 					}
-					break;				
+					break;
 				}
 				default: {
 					break;
 				}
 			}
+			break;
+		}
+
+		case EnumCreature.SKELTON: {
+			creature.movement.bounceOff = true;
+			switch(creature.ai.nextAction) {
+				case 0: {
+					if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
+						ai.moveTowardsPlayer(creature, 300, 350, 2);
+						creature.movement.bounceOff = false;
+						creature.ai.nextAction = 1;
+					} else {
+						var action = Math.floor(Math.random() * 2);
+						if(action < 1) {
+							ai.moveRandomVector(creature, 1000, 500);
+						} else {
+							ai.rest(creature, 1000, 500);
+						}
+					}
+					break;				
+				}
+				case 1: {
+					var direction = getPlayerCompassDirection(creature);
+					ai.attack(creature, 0, creature.vars.attackRate, direction, 0);		//	...attack in player's compass direction...
+					creature.ai.nextAction = 2;
+					break;
+				}
+				case 2: {
+					ai.rest(creature, 1000, 500);
+					creature.ai.nextAction = 0;
+					break;
+				}
+				case 3: {
+					ai.moveAwayFromPlayer(creature, 500, 500, 2);											//	...move away from player for 0.5 - 1s, at 2x speed
+					creature.ai.nextAction = 0;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+			break;
 		}
 
 		case EnumCreature.GREEN_SLUDGIE: {
+			creature.vars.touchDamage = false;								//	Reset to stop touch damage
 			switch(creature.ai.nextAction) {
 				case 0: {
 					if(getPlayerDistance(creature) > TILE_SIZE * 5) {
@@ -84,6 +119,7 @@ setAiAction = function(creature) {
 					} else {
 						var action = Math.floor(Math.random() * 2);
 						if(action < 1) {
+							creature.vars.touchDamage = true;				//	Set to cause touch damage when moving
 							ai.moveRandomVector(creature, 0, 1000);
 							creature.ai.nextAction = 1;
 						} else {
@@ -105,16 +141,32 @@ setAiAction = function(creature) {
 		}
 
 		case EnumCreature.CAMP_VAMP: {
+			creature.movement.bounceOff = true;
 			switch(creature.ai.nextAction) {
 				case 0: {
-					creature.vars.animStart = performance.now();
-					ai.rest(creature, 0, 2000);
-					creature.ai.nextAction = 1;
+					if(getPlayerDistance(creature) < TILE_SIZE * 4) {
+						ai.moveTowardsPlayer(creature, 300, 350, 2);
+						creature.movement.bounceOff = false;
+						creature.ai.nextAction = 1;
+					} else {
+						var action = Math.floor(Math.random() * 3);
+						if(action < 1) {
+							ai.rest(creature, 500, 500);
+						} else {
+							ai.moveRandomVector(creature, 500, 500);
+						}
+						creature.ai.nextAction = 0;
+					}
 					break;
 				}
 				case 1: {
-					creature.vars.animStart = performance.now();
-					ai.moveRandomVector(creature, 0, 5000);
+					var direction = getPlayerCompassDirection(creature);
+					ai.attack(creature, 0, creature.vars.attackRate, direction, 0);		//	...attack in player's compass direction...
+					creature.ai.nextAction = 2;
+					break;
+				}
+				case 2: {
+					ai.moveAwayFromPlayer(creature, 500, 500, 2);
 					creature.ai.nextAction = 0;
 					break;
 				}
@@ -122,6 +174,7 @@ setAiAction = function(creature) {
 					break;
 				}
 			}
+			break;
 		}
 
 		default: {
@@ -165,12 +218,11 @@ var ai = {
 			creature.vars.animation = EnumState.MOVING_L;
 		}
 	},
-	attackPlayer: function(creature, duration_factor, duration_min, accuracy) {
+	attack: function(creature, duration_factor, duration_min, direction, accuracy) {
 		// console.log("AI: attacking");
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.speed = 0;
-		var direction = getPlayerDirection(creature);
 		direction += Math.random() * accuracy;
 		direction -= Math.random() * accuracy;
 		creature.attack(direction);
@@ -255,8 +307,8 @@ var playerTemplates = [
 				[ 1000, [600, 1000], [6, 7] ],						//	Resting, facing L
 				[ 400, [100, 200, 300, 400], [5, 4, 3, 2 ] ],		//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [8, 9, 10,11] ],		//	Moving, facing L
-				[ 200, [100, 200 ], [ 12, 0 ] ],					//	Resting Hitflash, facing R
-				[ 200, [100, 200 ], [ 14, 6 ] ],					//	Resting Hitflash, facing L
+				[ 1000, [67, 134, 200, 267, 334, 400, 467, 534, 600, 667, 734, 800, 867, 934, 1000 ], [ 12, 0, 12, 0, 12, 0, 12, 0, 12, 1, 13, 1, 13, 1, 13 ] ],	//	Resting Hitflash, facing R
+				[ 1000, [67, 134, 200, 267, 334, 400, 467, 534, 600, 667, 734, 800, 867, 934, 1000 ], [ 14, 6, 14, 6, 14, 6, 14, 6, 14, 7, 15, 7, 15, 7, 15 ] ],	//	Resting Hitflash, facing L
 				[ 400, [100, 200, 300, 400], [5, 18, 3, 16] ],		//	Moving Hitflash, facing R
 				[ 400, [100, 200, 300, 400], [8, 21, 10,23] ]		//	Moving Hitflash, facing L
 			]
@@ -272,6 +324,16 @@ var playerTemplates = [
 			direction: 0,
 			speed: 0,
 			bounceOff: false
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+			console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
+		},
+		deathResponse: function() {	
+			console.log("The player has died!");
 		}
 	}
 ];
@@ -330,10 +392,13 @@ var creatureTemplates = [
 			action: 0,
 			nextAction: 0
 		},
-		damageResponse: function(creature) {
-			if(creature.vars.currentHP > 0) {
-				creature.ai.nextAction = 2;
-				clearAiAction(creature);
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
@@ -358,13 +423,22 @@ var creatureTemplates = [
 				{ x: 2, y: 2 },
 				{ x: 0, y: 3 },
 				{ x: 1, y: 3 },
-				{ x: 2, y: 3 }
+				{ x: 2, y: 3 },
+				{ x: 3, y: 2 },
+				{ x: 4, y: 2 },
+				{ x: 5, y: 2 },
+				{ x: 3, y: 3 },
+				{ x: 4, y: 3 },
+				{ x: 5, y: 3 },
+				{ x: 0, y: 7 }			//	Empty frame!
 			],
 			animations: [
 				[ 400, [100, 200, 300, 400], [1, 2, 1, 0] ],						//	Resting, facing R
 				[ 400, [100, 200, 300, 400], [4, 5, 4, 3] ],						//	Resting, facing L
 				[ 400, [100, 200, 300, 400], [1, 2, 1, 0] ],						//	Moving, facing R
-				[ 400, [100, 200, 300, 400], [4, 5, 4, 3] ]							//	Moving, facing L
+				[ 400, [100, 200, 300, 400], [4, 5, 4, 3] ],						//	Moving, facing L
+				[ 2000, [100, 200, 300, 400, 2000], [1, 6, 7, 8, 12] ],					//	Death, facing R
+				[ 2000, [100, 200, 300, 400, 2000], [4, 9, 10, 11, 12] ]					//	Death, facing L
 			]
 		},
 		box: {
@@ -385,8 +459,11 @@ var creatureTemplates = [
 			action: 0,
 			nextAction: 0
 		},
-		damageResponse: function() {
-			console.log("ouchy!!");
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
 		},
 		deathResponse: function() {
 			this.kill();
@@ -447,8 +524,14 @@ var creatureTemplates = [
 			action: 0,
 			nextAction: 0
 		},
-		damageResponse: function() {
-			console.log("ouchy!!");
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 3;
+				clearAiAction(this);
+			}
 		},
 		deathResponse: function() {
 			this.kill();
@@ -468,24 +551,9 @@ var creatureTemplates = [
 			size: { x: 1, y: 1 },
 			y_padding: 2,
 			frames: [
-				{ x: 0, y: 8 },
-				{ x: 1, y: 8 },
-				{ x: 2, y: 8 },
-				{ x: 3, y: 8 },
-				{ x: 4, y: 8 },
-				{ x: 5, y: 8 },
-				{ x: 0, y: 9 },
-				{ x: 1, y: 9 },
-				{ x: 2, y: 9 },
-				{ x: 3, y: 9 },
-				{ x: 4, y: 9 },
-				{ x: 5, y: 9 },
-				{ x: 6, y: 8 },
-				{ x: 7, y: 8 },
-				{ x: 8, y: 8 },
-				{ x: 6, y: 9 },
-				{ x: 7, y: 9 },
-				{ x: 8, y: 9 }
+				{x:0,y:8}, {x:1,y:8}, {x:2,y:8}, {x:3,y:8}, {x:4,y:8}, {x:5,y:8},
+				{x:0,y:9}, {x:1,y:9}, {x:2,y:9}, {x:3,y:9}, {x:4,y:9}, {x:5,y:9},
+				{x:6,y:8}, {x:7,y:8}, {x:8,y:8}, {x:6,y:9},	{x:7,y:9}, {x:8,y:9}
 			],
 			animations: [
 				[ 1800, [300, 600, 900, 1200, 1500, 1800], [0, 1, 2, 1, 0, 1] ],		//	Resting, facing R
@@ -499,7 +567,7 @@ var creatureTemplates = [
 		box: {
 			width: 14, 
 			height: 7,
-			type: EnumBoxtype.CREATURE_TOXIC_TO_PLAYER
+			type: EnumBoxtype.CREATURE
 		},
 		movement: {
 			moving: false,
@@ -514,8 +582,14 @@ var creatureTemplates = [
 			action: 0,
 			nextAction: 0
 		},
-		damageResponse: function() {
-			console.log("ouchy!!");
+		touchDamage: function() {
+			return 1;
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
 		},
 		deathResponse: function() {
 			this.kill();
@@ -524,11 +598,11 @@ var creatureTemplates = [
 	{
 		name: 'Camp Vamp',
 		vars: {
-			speed: 0,
+			speed: 0.6,
 			maxHP: 5,
 			currentHP: 5,
 			sprite: { x: 0, y: 10 },
-			minFacingChangeTime: 200
+			minFacingChangeTime: 50
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -545,16 +619,32 @@ var creatureTemplates = [
 				{ x: 7, y: 10 },
 				{ x: 8, y: 10 },
 				{ x: 9, y: 10 },
+				{ x: 10, y: 10 },
+				{ x: 11, y: 10 },
+				{ x: 12, y: 10 },
+				{ x: 13, y: 10 },
 				{ x: 0, y: 11 },
-				{ x: 1, y: 11 }
+				{ x: 1, y: 11 },
+				{ x: 2, y: 11 },
+				{ x: 3, y: 11 },
+				{ x: 4, y: 11 },
+				{ x: 5, y: 11 },
+				{ x: 6, y: 11 },
+				{ x: 7, y: 11 },
+				{ x: 8, y: 11 },
+				{ x: 9, y: 11 },
+				{ x: 10, y: 11 },
+				{ x: 11, y: 11 },
+				{ x: 12, y: 11 },
+				{ x: 13, y: 11 }
 			],
 			animations: [
-				[ 200, [50, 100, 150, 200], [6, 7, 8, 9] ],		//	Resting, facing R
-				[ 200, [50, 100, 150, 200], [6, 7, 8, 9] ],		//	Resting, facing L
-				[ 5000, [50, 100, 150, 200, 250, 4800, 4850, 4900, 4950, 5000], [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5] ],					//	Moving, facing R
-				[ 5000, [50, 100, 150, 200, 250, 4800, 4850, 4900, 4950, 5000], [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5] ],					//	Moving, facing L
-				[ 2400, [800, 1600, 2400], [12, 13, 14]],								//	Death, facing R
-				[ 2400, [800, 1600, 2400], [15, 16, 17]]								//	Death, facing L
+				[ 1000, [600, 1000], [0, 1] ],		//	Resting, facing R
+				[ 1000, [600, 1000], [14, 15] ],	//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [6, 8, 7, 9] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [20, 22, 21, 23] ],		//	Moving, facing L
+				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]],					//	Death, facing R
+				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [10, 11, 12, 13, 24, 25, 26, 27]]					//	Death, facing R
 			]
 		},
 		box: {
@@ -575,8 +665,11 @@ var creatureTemplates = [
 			action: 0,
 			nextAction: 0
 		},
-		damageResponse: function() {
-			console.log("ouchy!!");
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
 		},
 		deathResponse: function() {
 			this.kill();
@@ -589,7 +682,7 @@ var creatureWeapons = [
 		name: 'Green Goblin Claw',
 		vars: {
 			sprite: { x: 2, y: 6},
-			animTime: 50,								//	Length of time the weapon stays animated after attack
+			animTime: 100,								//	Length of time the weapon stays animated after attack
 			hasAttackVariants: true,					//	True if has 2 attack variants
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
@@ -611,11 +704,11 @@ var creatureWeapons = [
 			],
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * -0.6
+				y: TILE_SIZE * -0.5
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 0.7,						//	Reach of attack from centre of creature position
+			reach: TILE_SIZE * 0.6,						//	Reach of attack from centre of creature position
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
 			swipeColor1: 'rgba(255,102,0,0)',
@@ -627,14 +720,14 @@ var creatureWeapons = [
 		}
 	},
 	{
-		name: 'Skelton Sword',
+		name: 'Bone Sword',
 		vars: {
 			sprite: { x: 0, y: 6},
 			animTime: 250,								//	Length of time the weapon stays animated after attack
 			hasAttackVariants: true,					//	True if has 2 attack variants
 			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
 			lastAttackDirection: 0,						//	Store direction of last attack
-			attackRate: 1000,
+			attackRate: 750,
 			drawOffset: { x: 0, y: 0 },
 			foreground: true
 		},
@@ -652,7 +745,7 @@ var creatureWeapons = [
 			],
 			restingDrawOffset: {
 				x: TILE_SIZE * -0.25,
-				y: -TILE_SIZE / 4
+				y: TILE_SIZE * -0.25
 			},
 			attackDrawOffset: {
 				x: 0,
@@ -670,7 +763,98 @@ var creatureWeapons = [
 			arc: Math.PI / 2,							//	90 degree swipe
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
+	},
+	{
+		name: 'Bone Axe',
+		vars: {
+			sprite: { x: 1, y: 6},
+			animTime: 400,								//	Length of time the weapon stays animated after attack
+			hasAttackVariants: true,					//	True if has 2 attack variants
+			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
+			lastAttackDirection: 0,						//	Store direction of last attack
+			attackRate: 1500,
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			displayWhileResting: true,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 1, y: 6 },							//	Right facing
+				{ x: 1.5, y: 6 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -0.125,
+				y: TILE_SIZE * -0.375
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: TILE_SIZE * -0.6
+			}
+		},
+		attack: {
+			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			type: EnumAttack.SWIPE,
+			displayTime: 50,
+			swipeColor1: 'rgba(255,255,255,0)',
+			swipeColor2: 'rgb(70,0,160)',
+			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 2,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},
+	{
+		name: 'Vamp Dagger',
+		vars: {
+			sprite: { x: 4, y: 6},
+			animTime: 200,								//	Length of time the weapon stays animated after attack
+			hasAttackVariants: true,					//	True if has 2 attack variants
+			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
+			lastAttackDirection: 0,						//	Store direction of last attack
+			attackRate: 100,
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			displayWhileResting: true,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 4, y: 6 },							//	Right facing
+				{ x: 4.5, y: 6 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -0.25,
+				y: TILE_SIZE * -0.125
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: TILE_SIZE * -0.6
+			}
+		},
+		attack: {
+			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			type: EnumAttack.SWIPE,
+			displayTime: 200,
+			swipeColor1: 'rgba(255,255,255,0)',
+			swipeColor2: 'rgb(70,0,160)',
+			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 2,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
 	}
+
 ];
 
 

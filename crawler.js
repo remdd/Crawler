@@ -148,7 +148,7 @@ $(function() {
 		var playerType = 0;															//	Set playerType template
 		player = new Creature(playerTemplates[playerType], 2, 5);					//	Construct player from playerType
 		player.ctx = playerCtx;														//	Assign player to player canvas
-		player.weapon = playerWeapons[0];											//	Assign starting weapon
+		player.weapon = new Weapon(playerWeapons[0]);								//	Assign starting weapon
 		Object.assign(player.weapon.position, player.position);
 		player.vars.lastAttackTime = 0;													//	Initialize to zero
 		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;					//	Time between attacks
@@ -159,18 +159,27 @@ $(function() {
 		creatures.push(creature);
 
 		var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
-		creature2.weapon = creatureWeapons[0];
+		creature2.weapon = new Weapon(creatureWeapons[0]);
 		creatures.push(creature2);
 
 		var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
 		creatures.push(creature3);
 
-		var creature4 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
-		creature4.weapon = creatureWeapons[1];
-		creatures.push(creature4);
-
 		var creature5 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
+		creature5.weapon = new Weapon(creatureWeapons[3]);
 		creatures.push(creature5);
+
+		// var creature4 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
+		// creature4.weapon = new Weapon(creatureWeapons[1]);
+		// creatures.push(creature4);
+
+		// var creature6 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 8);
+		// creature6.weapon = new Weapon(creatureWeapons[2]);
+		// creatures.push(creature6);
+
+		// var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
+		// creature7.weapon = creatureWeapons[1];
+		// creatures.push(creature7);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -201,7 +210,6 @@ $(function() {
 
 	function Entity(entityTemplate, x, y) {
 		this.name = entityTemplate.name;
-		this.ctx = entityCtx;
 		this.position = {};
 		this.position.x = x * TILE_SIZE + TILE_SIZE / 2;
 		this.position.y = y * TILE_SIZE + TILE_SIZE / 2;
@@ -209,6 +217,7 @@ $(function() {
 		this.vars = {};
 		Object.assign(this.vars, entityTemplate.vars);				//	Copy vars object
 		this.vars.drawOffset = { x: 0, y: 0 };
+		this.vars.touchDamage = false;								//	Default - does not damage player on contact
 		this.box = {};
 		this.box.topLeft = {}; this.box.bottomRight = {};
 		Object.assign(this.box, entityTemplate.box);				//	Copy box object
@@ -244,6 +253,20 @@ $(function() {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][11]];
 		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][12]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][12]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][13]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][13]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][14]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][14]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][15]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][15]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][16]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][16]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][17]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][17]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][18]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][18]];
+		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][19]) {
+			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][19]];
 		}
 		if(this.weapon && this.weapon.sprite) {
 			if(performance.now() > this.vars.lastAttackTime + this.weapon.vars.animTime) {
@@ -263,7 +286,17 @@ $(function() {
 		// debugs.push(this.box.topLeft, this.box.bottomRight);
 	}
 
-	//	Assign prototype
+	//	Assign Entity prototype
+	Weapon.prototype = Object.create(Entity.prototype);
+	Weapon.prototype.constructor = Weapon;
+
+	function Weapon(weaponTemplate) {
+		Entity.apply(this, arguments);
+		this.attack = weaponTemplate.attack;
+	}
+
+
+	//	Assign Entity prototype
 	Creature.prototype = Object.create(Entity.prototype);
 	Creature.prototype.constructor = Creature;
 
@@ -273,6 +306,7 @@ $(function() {
 		this.vars.animation = 0;									//	Track animation number currently playing
 		this.vars.animEnd = 0;
 		this.vars.lastAttackTime = 0;								//	Track time of last attack
+		this.vars.facingRight = true;
 		this.vars.lastFacingChangeTime = 0;							//	Track time that facing direction last changed
 		if(!this.vars.minFacingChangeTime) {
 			this.vars.minFacingChangeTime = 50;						//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
@@ -282,7 +316,10 @@ $(function() {
 		Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
 		this.movement = {};
 		Object.assign(this.movement, creatureTemplate.movement);	//	Copy movement object for this creature template
-		this.damageResponse = creatureTemplate.damageResponse;		//	Set damage response function from template
+		if(creatureTemplate.touchDamage) {
+			this.touchDamage = creatureTemplate.touchDamage;
+		}
+		this.inflictDamage = creatureTemplate.inflictDamage;		//	Set damage response function from template
 		this.deathResponse = creatureTemplate.deathResponse;		//	Set death response function from template
 		colliders.push(this);										//	Add creature to colliders array
 	}
@@ -323,7 +360,7 @@ $(function() {
 	}
 	Creature.prototype.kill = function() {
 		if(this.weapon) {
-			delete this.weapon;
+			delete this.weapon;															//	Delete creature's weapon property
 		}
 		colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
 		this.ai.nextAction = -1;														//	Prevent further AI actions
@@ -420,22 +457,33 @@ $(function() {
 
 	function drawPlayer() {
 		drawOnCanvas(player, playerCtx);
-		drawOnCanvas(player.weapon, playerCtx);
+		drawOnCanvas(player.weapon, attackCtx);
 	}
 
 	function drawCreatures() {
 		creatures.forEach(function(creature) {
-			if(creature.weapon !== undefined && !creature.weapon.vars.foreground) {
+			if(creature.weapon && !creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
 					drawOnCanvas(creature.weapon, creatureCtx);
 				}
 			}
 			drawOnCanvas(creature, creatureCtx);
-			if(creature.weapon !== undefined && creature.weapon.vars.foreground) {
+		});
+	}
+
+	function drawWeapons() {
+		creatures.forEach(function(creature) {
+			if(creature.weapon && creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
-					drawOnCanvas(creature.weapon, creatureCtx);
+					drawOnCanvas(creature.weapon, attackCtx);
+				}
+			} else if(creature.weapon && !creature.weapon.vars.foreground) {
+				if(creature.weapon.sprite.displayWhileResting || creature.vars.lastAttackTime !== 0 && performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
+					drawOnCanvas(creature.weapon, attackCtx);
+					// drawOnCanvas(creature, attackCtx);
 				}
 			}
+
 		});
 	}
 
@@ -554,10 +602,8 @@ $(function() {
 							player.vars.animation = EnumState.HITFLASH_L;
 						}
 						player.vars.lastDamageTime = performance.now();
-						console.log("Hit player!");
 						hits++;
 						resolveHit(attack, player);				//	If so, resolve hit
-						console.log(player.name + " has " + player.vars.currentHP + " HP.");
 					}
 					if(hits >= attack.maxHits) {														//	If maxHits for Attack is reached...
 						attack.contactPoints.splice(0, attack.contactPoints.length);					//	...clear all contactPoints
@@ -573,7 +619,6 @@ $(function() {
 						&& contactPoint.y >= creature.box.topLeft.y && contactPoint.y <= creature.box.bottomRight.y) {
 							hits++;
 							resolveHit(attack, creature);				//	If so, resolve hit
-							console.log(creature.name + " has " + creature.vars.currentHP + " HP.");
 						}
 						if(hits >= attack.maxHits) {														//	If maxHits for Attack is reached...
 							attack.contactPoints.splice(0, attack.contactPoints.length);					//	...clear all contactPoints
@@ -588,10 +633,10 @@ $(function() {
 	}
 
 	function resolveHit(attack, target) {
-		target.vars.currentHP -= 1;
-		if(target.damageResponse) {
-			target.damageResponse(target);
-		}
+		//	DAMAGE CALC GOES HERE
+		var damage = 1;
+		target.inflictDamage(damage);
+		console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 	}
 
 	function checkCollision(obj, tryX, tryY) {
@@ -626,13 +671,15 @@ $(function() {
 				if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
 					obj.movement.direction = -obj.movement.direction;														//	...invert direction...
 					obj.setFacing();
+				} else if(obj.ai !== undefined) {
+					obj.movement.speed = 0;
+					obj.ai.endTime = performance.now();
 				}
 				tryTerY = Math.floor(((obj.position.y - obj.sprite.y_padding) / TILE_SIZE) + 0.5);								//	...and reset TryTerY to current position
 			} else {
 				returnCoords.y = tryY;																						//	Otherwise, success - return tryY coord
 			}																												//	Else if obj is trying to move up...
 		}
-		// debugger;
 		if(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0 || 			//	If terrain does not exist or is impassable on the right...
 		level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0) {				//	...or on the left...
 			returnCoords.x = obj.position.x;																				//	...set x to return unchanged
@@ -657,12 +704,17 @@ $(function() {
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 
-				if(
+				if(				//	If obj is in contact with collider...
 					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
 					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
 					(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
 					(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1)
 				) {
+					if(obj.vars.touchDamage && colliders[i] === player) {
+						obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
+						player.vars.lastDamageTime = performance.now();
+						player.inflictDamage(obj.touchDamage());
+					}
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
 					if(obj.movement.bounceOff) {
@@ -707,14 +759,14 @@ $(function() {
 
 	//	Master game draw function
 	function draw(interpolationPercentage) {
-		// playerCtx.clearRect(player.position.x - TILE_SIZE, player.position.y - TILE_SIZE, TILE_SIZE * 3, TILE_SIZE * 3);	//	Clear player canvas for player location & surrounding 8 tiles
 		playerCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);	//	Clear player canvas for player location & surrounding 8 tiles
 		attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);				//	Clear entire attack canvas
 		creatureCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);			//	Clear entire creature canvas
 		debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-		drawPlayer();
 		drawCreatures();
+		drawPlayer();
 		drawAttacks();
+		drawWeapons();
 		// drawDebugCanvas();
 		$('#fps').text(MainLoop.getFPS());
 	}
