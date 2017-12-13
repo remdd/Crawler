@@ -13,6 +13,8 @@ $(function() {
 	var viewport_offset_y = 0;
 	var redrawBackground = false;
 
+	var prng = new Random(999);
+
 	setViewportOffset = function() {
 		redrawBackground = false;
 		if(viewport_offset_x < Math.floor(player.position.x - CANVAS_WIDTH * 0.65)) {
@@ -118,6 +120,19 @@ $(function() {
 							sheetTile_x = 4; sheetTile_y = 6; break;
 						}
 					}
+					case 2: {									//	Map edge tiles, render the same as regular walls
+						if(level.terrainArray[i+1] !== undefined && level.terrainArray[i+1][j] === 0) {	
+							if(level.terrainArray[i][j-1] !== undefined && level.terrainArray[i][j-1] === 0) {		
+								sheetTile_x = 0; sheetTile_y = 1; break;		
+							} else if(level.terrainArray[i][j+1] !== undefined && level.terrainArray[i][j+1] === 0) {	
+								sheetTile_x = 2; sheetTile_y = 1; break;		
+							} else {																	
+								sheetTile_x = 1; sheetTile_y = 1; break;		
+							}
+						} else {										
+							sheetTile_x = 4; sheetTile_y = 6; break;
+						}
+					}
 					default: {
 						break;
 					}
@@ -195,7 +210,7 @@ $(function() {
 	//	Set up player
 	function setUpPlayer() {
 		var playerType = 0;															//	Set playerType template
-		player = new Creature(playerTemplates[playerType], 2, 5);					//	Construct player from playerType
+		player = new Creature(playerTemplates[playerType], 5, 5);					//	Construct player from playerType
 		player.ctx = playerCtx;														//	Assign player to player canvas
 		player.weapon = new Weapon(playerWeapons[0]);								//	Assign starting weapon
 		// Object.assign(player.weapon.position, player.position);
@@ -215,43 +230,10 @@ $(function() {
 				}
 			}
 		}
-		// var creature = new Creature(creatureTemplates[EnumCreature.GREEN_SLUDGIE], 4, 4);
-		// creatures.push(creature);
-
-		// var creature2 = new Creature(creatureTemplates[EnumCreature.GREEN_GOBLIN], 3, 6);
-		// creature2.weapon = new Weapon(creatureWeapons[0]);
-		// creatures.push(creature2);
-
-		// var creature3 = new Creature(creatureTemplates[EnumCreature.MINI_GHOST], 13, 10);
-		// creatures.push(creature3);
-
-		// var creature4 = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP], 16, 12);
-		// creature4.weapon = new Weapon(creatureWeapons[3]);
-		// creatures.push(creature4);
-
-		// var creature5 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 8);
-		// creature5.weapon = new Weapon(creatureWeapons[1]);
-		// creatures.push(creature5);
-
-		// var creature6 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 8);
-		// creature6.weapon = new Weapon(creatureWeapons[2]);
-		// creatures.push(creature6);
-
-		// var creature7 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 9);
-		// creature7.weapon = new Weapon(creatureWeapons[1]);
-		// creatures.push(creature7);
-
-		// var creature8 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 7);
-		// creature8.weapon = new Weapon(creatureWeapons[2]);
-		// creatures.push(creature8);
-
-		// var creature9 = new Creature(creatureTemplates[EnumCreature.SKELTON], 16, 9);
-		// creature9.weapon = new Weapon(creatureWeapons[2]);
-		// creatures.push(creature9);
-
-		// var creature10 = new Creature(creatureTemplates[EnumCreature.SKELTON], 15, 7);
-		// creature10.weapon = new Weapon(creatureWeapons[1]);
-		// creatures.push(creature10);
+					var creature = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP]);
+					creature.position.x = 3 * TILE_SIZE + TILE_SIZE / 2;
+					creature.position.y = 3 * TILE_SIZE + TILE_SIZE / 2;
+					creatures.push(creature);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -967,14 +949,19 @@ $(function() {
 
 	//	Start routines
 	function start() {
-		level = loadLevel(0);
-		drawTerrain(level);
-		drawOverlays(level);
-		setUpPlayer();
-		setUpCreatures(level);
-		$('canvas').css('width', CANVAS_WIDTH * 3);
-		$('canvas').css('height', CANVAS_HEIGHT * 3);
-		MainLoop.setUpdate(update).setDraw(draw).start();
+		// debugger;
+		level = levelGen.loadLevel(0);
+		if(level.displayAsMap) {
+			drawMap();
+		} else {
+			drawTerrain(level);
+			drawOverlays(level);
+			setUpPlayer();
+			setUpCreatures(level);
+			$('canvas').css('width', CANVAS_WIDTH * 3);
+			$('canvas').css('height', CANVAS_HEIGHT * 3);
+			MainLoop.setUpdate(update).setDraw(draw).start();
+		}
 	}
 	start();
 
@@ -989,5 +976,22 @@ $(function() {
 		MainLoop.stop();
 	}
 
+	function drawMap() {
+		var mapDiv = $('<div id="mapDiv"></div>');
+		mapDiv.appendTo('body');
+		$('#mapDiv').height(level.height * 5);
+		$('#mapDiv').width(level.width * 5);
+		for(var i = 0; i < level.height; i++) {
+			for(var j = 0; j < level.width; j++) {
+				if(level.terrainArray[i][j] === 0) {
+					var terrain = $('<div class="terrain room"></div>');
+					terrain.appendTo('#mapDiv');
+				} else {
+					var terrain = $('<div class="terrain"></div>');
+					terrain.appendTo('#mapDiv');
+				}
+			}
+		}
+	}
 
 });

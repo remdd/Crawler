@@ -28,3 +28,26 @@ canvas {
 #debugCanvas {
 	z-index: 10;
 }
+
+
+
+
+
+/*	Level map */
+#mapDiv {
+	position: absolute;
+	top: 300px;
+	background: pink;
+	z-index: 99;
+}
+.terrain {
+	width: 5px;
+	height: 5px;
+	margin: 0;
+	padding: 0;
+	background: brown;
+	float: left;
+}
+.room {
+	background: yellow;
+}
