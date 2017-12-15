@@ -1,6 +1,6 @@
 var CANVAS_WIDTH = 240;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
 var CANVAS_HEIGHT = 168;
-
+var SCALE_FACTOR = 3;								//	Factor by which pixels are scaled up for display
 
 var TILE_SIZE = 16;									//	Native tile size in spriteSheet
 

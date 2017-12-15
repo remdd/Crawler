@@ -96,111 +96,31 @@ $(function() {
 
 
 	//	Level setup
-	function drawTerrain(level) {									//	Draw core terrain types
-		for(var i = 0; i < level.terrainArray.length; i++) {
-			for(var j = 0; j < level.terrainArray[i].length; j++) {
-				var sheetTile_x = 0;							//	Count no. of tiles on spriteSheet from left - first col = 0, second col = 1 etc
-				var sheetTile_y = 0;							//	Ditto for rows
-				var tileWidth = 1;								//	Increase if terrain spans multiple tiles
-				var tileHeight = 1;
-				switch(level.terrainArray[i][j]) {
-					case 0: {									//	Plain floor tile
-						sheetTile_x = 2; sheetTile_y = 3; break;
-					}
-					case 1: {									//	Impassable wall tiles
-						if(level.terrainArray[i+1] !== undefined && level.terrainArray[i+1][j] === 0) {		//	Check if wall tile has passable tile below it
-							if(level.terrainArray[i][j-1] !== undefined && level.terrainArray[i][j-1] === 0) {				//	If so, and terrain to left of wall tile is passable, use left end graphic
-								sheetTile_x = 0; sheetTile_y = 1; break;		
-							} else if(level.terrainArray[i][j+1] !== undefined && level.terrainArray[i][j+1] === 0) {		//	If so, and terrain to right of wall tile is passable, use right end graphic
-								sheetTile_x = 2; sheetTile_y = 1; break;		
-							} else {																			//	If neither side is passable, use mid wall graphic
-								sheetTile_x = 1; sheetTile_y = 1; break;		
-							}
-						} else {																//	If wall does not have passable tile below it, use solid inner wall tile
-							sheetTile_x = 4; sheetTile_y = 6; break;
-						}
-					}
-					case 2: {									//	Map edge tiles, render the same as regular walls
-						if(level.terrainArray[i+1] !== undefined && level.terrainArray[i+1][j] === 0) {	
-							if(level.terrainArray[i][j-1] !== undefined && level.terrainArray[i][j-1] === 0) {		
-								sheetTile_x = 0; sheetTile_y = 1; break;		
-							} else if(level.terrainArray[i][j+1] !== undefined && level.terrainArray[i][j+1] === 0) {	
-								sheetTile_x = 2; sheetTile_y = 1; break;		
-							} else {																	
-								sheetTile_x = 1; sheetTile_y = 1; break;		
-							}
-						} else {										
-							sheetTile_x = 4; sheetTile_y = 6; break;
-						}
-					}
-					default: {
-						break;
-					}
-				}
-				if(inViewport(TILE_SIZE * j + (tileWidth * TILE_SIZE / 2), TILE_SIZE * i + (tileHeight * TILE_SIZE / 2))) {
-					bgCtx.drawImage(level.img, 					//	Image to load
-						sheetTile_x * TILE_SIZE, 		//	x-coord to start clipping
-						sheetTile_y * TILE_SIZE, 		//	y-coord to start clipping
-						TILE_SIZE * tileWidth, 			//	width of clipped image
-						TILE_SIZE * tileHeight, 		//	height of clipped image
-						TILE_SIZE * j - viewport_offset_x, 					//	x-coord of canvas placement
-						TILE_SIZE * i - viewport_offset_y, 					//	y-coord of canvas placement
-						TILE_SIZE * tileWidth, 			//	width of image on canvas
-						TILE_SIZE * tileHeight
-					);		//	height of image on canvas
-				}
-			}
-		}
+	function addBackground(level) {
+		var background = $('<div id="background">');
+		background.css('background', level.tiles.solidColor);
+		background.css('width', CANVAS_WIDTH * SCALE_FACTOR);
+		background.css('height', CANVAS_HEIGHT * SCALE_FACTOR);
+		background.appendTo('body');
 	}
 
 	function drawOverlays(level) {									//	Draw inert overlay tile decorators
-		for(var i = 0; i < level.overlayArray.length; i++) {
-			for(var j = 0; j < level.overlayArray[i].length; j++) {
-				var addOverlay = true;
-				var sheetTile_x = 0;							//	Count no. of tiles on spriteSheet from left - first col = 0, second col = 1 etc
-				var sheetTile_y = 0;							//	Ditto for rows
-				var tileWidth = 1;								//	Increase if terrain spans multiple tiles
-				var tileHeight = 1;
-				switch(level.overlayArray[i][j]) {
-					case 0: {									//	No overlay
-						addOverlay = false; break;
-					}
-					case 1: {
-						tileWidth = 2; tileHeight = 3;
-						sheetTile_x = 5; sheetTile_y = 0; break;		//	Staircase top (2x1)
-					}
-					case 2: {
-						tileWidth = 1; tileHeight = 2;
-						sheetTile_x = 3; sheetTile_y = 1; break;		//	Green ooze from wall
-					}
-					case 3: {
-						tileWidth = 1; tileHeight = 1;
-						sheetTile_x = 12; sheetTile_y = 4; break;		//	Red pennant
-					}
-					case 4: {
-						tileWidth = 1; tileHeight = 1;
-						sheetTile_x = 3; sheetTile_y = 0; break;		//	Blue wall pipe 1
-					}
-					case 5: {
-						tileWidth = 1; tileHeight = 3;
-						sheetTile_x = 6; sheetTile_y = 3; break;		//	Wall column (1x3)
-					}
-					default: {
-						break;
-					}
-				}
-				if(addOverlay) {
-					if(inViewport(TILE_SIZE * j + (tileWidth * TILE_SIZE / 2), TILE_SIZE * i + (tileHeight * TILE_SIZE / 2))) {
-						bgCtx.drawImage(level.img, 					//	Image to load
-							sheetTile_x * TILE_SIZE, 		//	x-coord to start clipping
-							sheetTile_y * TILE_SIZE, 		//	y-coord to start clipping
-							TILE_SIZE * tileWidth, 			//	width of clipped image
-							TILE_SIZE * tileHeight, 		//	height of clipped image
-							TILE_SIZE * j - viewport_offset_x, 					//	x-coord of canvas placement
-							TILE_SIZE * i - viewport_offset_y, 					//	y-coord of canvas placement
-							TILE_SIZE * tileWidth, 			//	width of image on canvas
-							TILE_SIZE * tileHeight
-						);		//	height of image on canvas
+		for(var i = 0; i < level.terrainArray.length; i++) {
+			for(var j = 0; j < level.terrainArray[i].length; j++) {
+				if(inViewport(TILE_SIZE * j + (TILE_SIZE / 2), TILE_SIZE * i + (TILE_SIZE / 2))) {
+					if(level.overlayArray[i][j] !== undefined && level.overlayArray[i][j] !== 0) {
+						var overlay = level.overlayArray[i][j];
+						bgCtx.drawImage(level.img, 						//	Image to load
+							overlay.x * TILE_SIZE, 						//	x-coord to start clipping
+							overlay.y * TILE_SIZE, 						//	y-coord to start clipping
+							TILE_SIZE, 									//	width of clipped image
+							TILE_SIZE, 									//	height of clipped image
+							TILE_SIZE * j - viewport_offset_x, 			//	x-coord of canvas placement
+							TILE_SIZE * i - viewport_offset_y, 			//	y-coord of canvas placement
+							TILE_SIZE, 									//	width of image on canvas
+							TILE_SIZE									//	height of image on canvas
+						);
+
 					}
 				}
 			}
@@ -209,13 +129,12 @@ $(function() {
 
 	//	Set up player
 	function setUpPlayer() {
-		var playerType = 0;															//	Set playerType template
-		player = new Creature(playerTemplates[playerType], 5, 5);					//	Construct player from playerType
-		player.ctx = playerCtx;														//	Assign player to player canvas
-		player.weapon = new Weapon(playerWeapons[0]);								//	Assign starting weapon
-		// Object.assign(player.weapon.position, player.position);
-		player.vars.lastAttackTime = 0;													//	Initialize to zero
-		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;					//	Time between attacks
+		var playerType = 0;																						//	Set playerType template
+		player = new Creature(playerTemplates[playerType], level.playerStart.x, level.playerStart.y);			//	Construct player from playerType
+		player.ctx = playerCtx;																					//	Assign player to player canvas
+		player.weapon = new Weapon(playerWeapons[0]);															//	Assign starting weapon
+		player.vars.lastAttackTime = 0;																			//	Initialize to zero
+		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
 	}
 
 	function setUpCreatures(level) {
@@ -230,10 +149,12 @@ $(function() {
 				}
 			}
 		}
-					var creature = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP]);
-					creature.position.x = 3 * TILE_SIZE + TILE_SIZE / 2;
-					creature.position.y = 3 * TILE_SIZE + TILE_SIZE / 2;
-					creatures.push(creature);
+
+					// var creature = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP]);
+					// creature.position.x = 3 * TILE_SIZE + TILE_SIZE / 2;
+					// creature.position.y = 3 * TILE_SIZE + TILE_SIZE / 2;
+					// creatures.push(creature);
+
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -249,8 +170,8 @@ $(function() {
 					entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
 					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
 					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
-					entity.position.x, 	//	x-coord of canvas placement
-					entity.position.y, 	//	y-coord of canvas placement
+					Math.floor(entity.position.x), 	//	x-coord of canvas placement
+					Math.floor(entity.position.y), 	//	y-coord of canvas placement
 					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
 					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
 				);
@@ -263,8 +184,8 @@ $(function() {
 					entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
 					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
 					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
-					entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - viewport_offset_x, 	//	x-coord of canvas placement
-					entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - viewport_offset_y, 	//	y-coord of canvas placement
+					Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - viewport_offset_x), 	//	x-coord of canvas placement
+					Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - viewport_offset_y), 	//	y-coord of canvas placement
 					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
 					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
 				);
@@ -931,7 +852,6 @@ $(function() {
 	function draw(interpolationPercentage) {
 		if(redrawBackground) {
 			bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-			drawTerrain(level);
 			drawOverlays(level);
 			drawCorpses();
 		}
@@ -954,12 +874,12 @@ $(function() {
 		if(level.displayAsMap) {
 			drawMap();
 		} else {
-			drawTerrain(level);
+			addBackground(level);
 			drawOverlays(level);
 			setUpPlayer();
 			setUpCreatures(level);
-			$('canvas').css('width', CANVAS_WIDTH * 3);
-			$('canvas').css('height', CANVAS_HEIGHT * 3);
+			$('canvas').css('width', CANVAS_WIDTH * SCALE_FACTOR);
+			$('canvas').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
 			MainLoop.setUpdate(update).setDraw(draw).start();
 		}
 	}
@@ -983,7 +903,10 @@ $(function() {
 		$('#mapDiv').width(level.width * 5);
 		for(var i = 0; i < level.height; i++) {
 			for(var j = 0; j < level.width; j++) {
-				if(level.terrainArray[i][j] === 0) {
+				if(level.terrainArray[i][j] === 0 && level.fillArray[i][j] === 2) {
+					var terrain = $('<div class="terrain filledRoom"></div>');
+					terrain.appendTo('#mapDiv');
+				} else if(level.terrainArray[i][j] === 0 && level.fillArray[i][j] !== 2) {
 					var terrain = $('<div class="terrain room"></div>');
 					terrain.appendTo('#mapDiv');
 				} else {

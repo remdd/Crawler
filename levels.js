@@ -5,9 +5,27 @@ var level = {
 	terrainArray: [],
 	creatureArray: [],
 	overlayArray: [],
+	fillArray: [],
 	rooms: [],
 	corridors: [],
-	displayAsMap: false
+	playerStart: {
+		x: 0,
+		y: 0
+	},
+	bossStart: {
+		x: 0,
+		y: 0
+	},
+	displayAsMap: false,
+	vars: {
+		connectorSparseness: 20,
+		corridorStraightness: 5,
+		wallDecorFrequency: 3,
+		tallDecorRarity: 5,
+		minSpecialRooms: 1,
+		maxSpecialRooms: 4,
+		deadEndFactor: 0.5					//	Fraction of dead ends that get filled in is 1 divided by this number
+	}
 }
 
 //	Level generator
@@ -16,10 +34,50 @@ var levelGen = {
 		switch(levelNumber) {
 			case 0: {
 				level.img = document.getElementById('tilesetImg');
-				level.height = 100;
-				level.width = 100;
-				var roomAttempts = 100;
-				this.setupTerrain(level.height, level.width, roomAttempts);
+				level.tiles = {
+					tileset: 'Dungeon1',
+					floor: { y:0,x:0 },
+					solid: { y:1,x:0 },
+					solidColor: '#1c1117',
+					wallFace: [{ y:1,x:2 }, { y:1,x:1 }, { y:1,x:3 }, { y:1,x:4 }],					//	Wall arrays in order of no ends, left end, right end, both ends
+					wallTop: [{ y:0,x:2 }, { y:0,x:1 }, { y:0,x:3 }, { y:0,x:4 }],
+					//	Wall bottoms in order of wall-above *3, wall-left *3, wall-right *3, wall-above&left, wall-above&right, wall-l&r, wall-above&l&r
+					wallBtm: [{ y:2,x:1 }, { y:2,x:2 }, { y:2,x:3 }, { y:0,x:12}, { y:1,x:12}, { y:2,x:12}, { y:0,x:13}, { y:1,x:13}, { y:2,x:13}, 
+						{ y:0,x:14}, { y:1,x:14}, { y:3,x:14}, { y:2,x:14} ],
+					wallDecorSmall: [
+						{y: 1, x: 5},					//	Pipe end 1
+						{y: 1, x: 6},					//	Pipe end 2
+						{y: 1, x: 7},					//	Grille 1
+						{y: 1, x: 8},					//	Grille 2
+						{y: 2, x: 5},					//	Dark block
+						{y: 2, x: 6},					//	Pipe end 3
+						{y: 2, x: 7},					//	Hole 1
+						{y: 2, x: 8},					//	Hole 2
+						{y: 3, x: 4},					//	Faceplate
+						{y: 3, x: 5},					//	Banner 1
+						{y: 3, x: 6},					//	Banner 2
+						{y: 3, x: 7},					//	Banner 3
+						{y: 3, x: 8},					//	Banner 4
+						{y: 4, x: 4}					//	Chains
+					],
+					wallDecorTall: [
+						{y: 1, x: 9, height: 2, offset_y: 0},			//	Green goo
+						{y: 0, x: 10, height: 3, offset_y: -1},			//	Column
+						{y: 0, x: 11, height: 3, offset_y: -1}			//	Red fountain face
+					],
+					roomTilesets: [
+						{
+							floor: { y:2,x:1 },
+							wall: {}
+						}
+					]
+				}
+
+				//	Set up terrain array
+				level.height = 120;
+				level.width = 120;
+				this.setupTerrain();
+
 				return level;
 				break;
 			}
@@ -29,13 +87,26 @@ var levelGen = {
 		}
 	},
 
-	setupTerrain: function(height, width, roomAttempts) {
+	setupTerrain: function() {
+		this.setupInitialGrid(level.height, level.width);
 
-		this.setupInitialGrid(height, width);
+		//	Set up special rooms
+		this.setupStartAndBossRooms();
+		level.specialRooms = 0;					//	Count number of successfully added special rooms
+		this.setupSpecialRooms();
 
+		//	Fill remaining map with random rooms and corridors
+		level.roomAttempts = 300;
+		this.fillOutMap();
+
+		//	Add basic tileset overlays
+		this.addBasicOverlays();
+	},
+
+
+	fillOutMap: function() {
 		//	Add rooms
-		var startRoom = new Room(2, 2, 5, 5);
-		for(var i = 0; i < roomAttempts; i++) {
+		for(var i = 0; i < level.roomAttempts; i++) {
 			var room = new Room();
 		}
 		console.log(level.rooms);
@@ -47,8 +118,97 @@ var levelGen = {
 			}
 		}
 
-		//	Add a random selection of connectors between corridors and rooms
-		var potentialConnectors = [];
+		//	Add some doors to rooms on 1-3 of their walls
+		level.rooms.forEach(function(room) {
+			var doors = 0;
+			var tries = 100;
+			var rand = Math.floor(Math.random() * 10);
+			var doorDirections = [];
+			if(rand < 5) {
+				doors = 1;
+			} else if(rand < 8) {
+				doors = 2;
+			} else {
+				doors = 3;
+			}
+			// doors = 4;
+			while(doors && tries) {
+				var direction = Math.floor(Math.random() * 4);
+				if(!doorDirections.includes(direction)) {
+					switch(direction) {
+						case 0: {						//	Up
+							var x = Math.floor(Math.random() * room.width);
+							if(	level.terrainArray[room.origin_y-3] !== undefined && 
+								level.terrainArray[room.origin_y-3][room.origin_x+x] !== undefined && 
+								level.terrainArray[room.origin_y-2][room.origin_x+x-1] !== 0 && level.terrainArray[room.origin_y-2][room.origin_x+x+1] !== 0 &&
+								level.terrainArray[room.origin_y-3][room.origin_x+x] === 0) 
+							{
+								level.terrainArray[room.origin_y-2][room.origin_x+x] = 0;
+								level.terrainArray[room.origin_y-1][room.origin_x+x] = 0;
+								room.doors.push({y: room.origin_y-1, x: room.origin_x+x});
+								doors--;
+								doorDirections.push(direction);
+							}
+							break;
+						}
+						case 1: {						//	Down
+							var x = Math.floor(Math.random() * room.width);
+							if(	level.terrainArray[room.origin_y+room.height+2] !== undefined &&
+								level.terrainArray[room.origin_y+room.height+2][room.origin_x+x] !== undefined && 
+								level.terrainArray[room.origin_y+room.height+1][room.origin_x+x-1] !== 0 && level.terrainArray[room.origin_y+room.height+1][room.origin_x+x+1] !== 0 &&
+								level.terrainArray[room.origin_y+room.height+2][room.origin_x+x] === 0) 
+							{
+								level.terrainArray[room.origin_y+room.height+1][room.origin_x+x] = 0;
+								level.terrainArray[room.origin_y+room.height][room.origin_x+x] = 0;
+								room.doors.push({y: room.origin_y+room.height, x: room.origin_x+x});
+								doors--;
+								doorDirections.push(direction);
+							}
+							break;
+						}
+						case 2: {						//	Left
+							var y = Math.floor(Math.random() * room.height);
+							if(	level.terrainArray[room.origin_y+y][room.origin_x-2] !== undefined && 
+								level.terrainArray[room.origin_y+y+2] !== undefined && level.terrainArray[room.origin_y+y-2] !== undefined &&
+								level.terrainArray[room.origin_y+y+2][room.origin_x-1] !== 0 && level.terrainArray[room.origin_y+y-2][room.origin_x-1] !== 0 &&
+								level.terrainArray[room.origin_y+y+1][room.origin_x-1] !== 0 && level.terrainArray[room.origin_y+y-1][room.origin_x-1] !== 0 &&
+								level.terrainArray[room.origin_y+y][room.origin_x-2] === 0) 
+							{
+								level.terrainArray[room.origin_y+y][room.origin_x-1] = 0;
+								room.doors.push({y: room.origin_y+y, x: room.origin_x-1});
+								doors--;
+								doorDirections.push(direction);
+							}
+							break;
+						}
+						case 3: {						//	Right
+							// debugger;
+							var y = Math.floor(Math.random() * room.height);
+							if(	level.terrainArray[room.origin_y+y][room.origin_x+room.width+1] !== undefined && 
+								level.terrainArray[room.origin_y+y+2] !== undefined && level.terrainArray[room.origin_y+y-2] !== undefined &&
+								level.terrainArray[room.origin_y+y+2][room.origin_x+room.width] !== 0 && level.terrainArray[room.origin_y+y-2][room.origin_x+room.width] !== 0 &&
+								level.terrainArray[room.origin_y+y+1][room.origin_x+room.width] !== 0 && level.terrainArray[room.origin_y+y-1][room.origin_x+room.width] !== 0 &&
+								level.terrainArray[room.origin_y+y][room.origin_x+room.width+1] === 0) 
+							{
+								level.terrainArray[room.origin_y+y][room.origin_x+room.width] = 0;
+								room.doors.push({y: room.origin_y+y, x: room.origin_x+room.width});
+								doors--;
+								doorDirections.push(direction);
+							}
+							break;
+						}
+						default: {
+							break;
+						}
+					}
+					tries--;
+				}
+			}
+		});
+
+		console.log(level.corridors);
+
+		// Add random connectors
 		for(var i = 1; i < level.terrainArray.length - 2; i++) {
 			for(var j = 1; j < level.terrainArray[0].length - 1; j++) {
 				if(level.terrainArray[i][j] === 1) {												//	If the tile is solid rock...
@@ -56,42 +216,383 @@ var levelGen = {
 						level.terrainArray[i+2][j] !== 0 && level.terrainArray[i+1][j] !== 0 &&		//	...and the 2 tiles below are not open...
 						level.terrainArray[i-2][j] !== 0 && level.terrainArray[i-1][j] !== 0		//	...and the 2 tiles above are not open...
 					) {
-						potentialConnectors.push( [{ y: i, x: j }]);									//	...push to array.
-					} else if(level.terrainArray[i - 1][j] === 0 && level.terrainArray[i + 2][j] === 0) { 	//	...or if the tiles above and *2* below are open...
-						potentialConnectors.push( [{ y: i, x: j}, { y: i+1, x: j }] );
+						var rand = Math.floor(Math.random() * level.vars.connectorSparseness);
+						if(rand < 1) {
+							level.terrainArray[i][j] = 0;
+						}
+					} else if(level.terrainArray[i-1][j] === 0 && level.terrainArray[i + 2][j] === 0 &&		//	...or if the tiles above and *2* below are open...
+						level.terrainArray[i][j-1] !== 0 && level.terrainArray[i][j-1] !== 0				//	...and the tiles to left and right are not open...
+					) { 	
+						var rand = Math.floor(Math.random() * level.vars.connectorSparseness);
+						if(rand < 1) {
+							level.terrainArray[i][j] = 0;
+							level.terrainArray[i+1][j] = 0;
+						}
 					}
 				}
 			}
 		}
-		var connectorSparseness = 4;						//	Higher numbers mean fewer random connectors
-		potentialConnectors.forEach(function(connector) {
-			if(Math.floor(Math.random() * connectorSparseness) < 1) {
-				connector.forEach(function(tile) {
-					level.terrainArray[tile.y][tile.x] = 0;
-				});
-			}
-		});
 
-		//	Iterate through rooms to ensure they all have at least 1 connector, add one if not
-		level.rooms.forEach(function(room) {
+		//	Fill fillArray, starting from start room
+		level.fillArray = arrayClone(level.terrainArray);
+		fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
 
-		});
+		console.log(level);
 
+		// 	If boss room does not connect to player start room, regenerate map
+		if(level.fillArray[level.bossStart.y][level.bossStart.x] !== 2) {
+			console.log("Regenerating...");
+			this.setupTerrain();
+		}
+
+		// Fill in any areas not connected to the main network
+		fillInUnreaachableAreas();
+
+		// Pick some dead ends and back-fill them
+		reduceDeadEnds();
 	},
 
-	setupInitialGrid(height, width) {
-		for(var i = 0; i < height; i++) {
+	setupInitialGrid: function() {
+		level.terrainArray.length = 0;
+		level.fillArray.length = 0;
+		level.overlayArray.length = 0;
+		level.rooms.length = 0;
+		level.corridors.length = 0;
+		for(var i = 0; i < level.height; i++) {
 			level.terrainArray[i] = [];
-			for(var j = 0; j < width; j++) {
-				if(i === 0 || i === height || j === 0 || j === width) {
-					level.terrainArray[i][j] = 2;								//	2 = edge tile
+			for(var j = 0; j < level.width; j++) {
+				level.terrainArray[i][j] = 1;								//	1 = regular impassable wall tile
+			}
+		}
+	},
+
+	setupStartAndBossRooms: function() {
+		var startRand = Math.floor(Math.random() * 5);
+		var startSizeX = 7 - startRand; 
+		var startSizeY = 3 + startRand;
+		var bossRand = Math.floor(Math.random() * 5);
+		var bossSizeX = 8 + bossRand;
+		var bossSizeY = 12 - bossRand; 
+		var startPosX, startPosY, bossPosX, bossPosY;
+		// var startCorner = Math.floor(Math.random() * 4);
+		var startCorner = 0;
+		switch(startCorner) {
+			case 0: {
+				startPosY = Math.floor(Math.random() * level.terrainArray.length * 0.3 +2);
+				startPosX = Math.floor(Math.random() * level.terrainArray[0].length * 0.3 +2);
+				bossPosY = level.terrainArray.length - (Math.floor(Math.random() * level.terrainArray.length * 0.3)) - bossSizeY -2;
+				bossPosX = level.terrainArray[0].length - (Math.floor(Math.random() * level.terrainArray[0].length * 0.3)) - bossSizeX -2;
+			}
+			default: {
+				break;
+			}
+		}
+		level.playerStart.y = startPosY + 1;
+		level.playerStart.x = startPosX + 1;
+		level.bossStart.y = bossPosY + 1;
+		level.bossStart.x = bossPosX + 1;
+		var startRoom = new Room(startPosY, startPosX, startSizeY, startSizeX, 'start');
+		var bossRoom = new Room(bossPosY, bossPosX, bossSizeY, bossSizeX, 'boss');
+	},
+
+	setupSpecialRooms: function() {
+		//	Placeholder!
+	},
+
+	addBasicOverlays: function() {
+		//	First iterate terrain array and set every tile to either floor or solid
+		for(var i = 0; i < level.terrainArray.length; i++) {
+			level.overlayArray.push([]);
+			for(var j = 0; j < level.terrainArray[0].length; j++) {
+				if(level.terrainArray[i][j] === 0) {
+					level.overlayArray[i][j] = level.tiles.floor;
 				} else {
-					level.terrainArray[i][j] = 1;								//	1 = regular impassable wall tile
+					level.overlayArray[i][j] = level.tiles.solid;
+				}
+			}
+		}
+		//	Then iterate terrain array and add basic wall faces
+		for(var i = 1; i < level.terrainArray.length-1; i++) {
+			for(var j = 1; j < level.terrainArray[0].length-1; j++) {
+				if(	level.terrainArray[i][j] === 0 && level.terrainArray[i-1][j] === 1) {
+					if(level.terrainArray[i-1][j-1] === 0 && level.terrainArray[i-1][j+1] === 0) {
+						level.overlayArray[i-1][j] = level.tiles.wallFace[3];
+					} else if(level.terrainArray[i-1][j-1] === 0 && level.terrainArray[i-1][j+1] === 1) {
+						level.overlayArray[i-1][j] = level.tiles.wallFace[1];
+					} else if(level.terrainArray[i-1][j-1] === 1 && level.terrainArray[i-1][j+1] === 0) {
+						level.overlayArray[i-1][j] = level.tiles.wallFace[2];
+					} else if(level.terrainArray[i-1][j-1] === 1 && level.terrainArray[i-1][j+1] === 1) {
+						level.overlayArray[i-1][j] = level.tiles.wallFace[0];
+					} 
+				}
+			}
+		}
+		//	Then iterate terrain array and add wall tops, wall decor, dirt at base of walls
+		for(var i = 0; i < level.terrainArray.length; i++) {
+			for(var j = 0; j < level.terrainArray[0].length; j++) {
+				//	If tile is solid and tile 2 below it is floor (add wall tops)...
+				if(level.terrainArray[i+2] !== undefined && level.terrainArray[i+2][j] !== undefined && level.terrainArray[i+1][j] === 1 && level.terrainArray[i+2][j] === 0) {
+					//	...add a wall top overlay, depending on whether this is an end wall or not
+					if(level.terrainArray[i+1][j-1] === 0 && level.terrainArray[i+1][j+1] === 0) {
+						level.overlayArray[i][j] = level.tiles.wallTop[3];		//	both ends
+					} else if(level.terrainArray[i+1][j-1] === 0) {
+						level.overlayArray[i][j] = level.tiles.wallTop[1];		//	left end
+					} else if(level.terrainArray[i+1][j+1] === 0) {
+						level.overlayArray[i][j] = level.tiles.wallTop[2];		//	right end
+					} else {
+						level.overlayArray[i][j] = level.tiles.wallTop[0];		//	no ends
+					}
+				}
+				//	...or if tile is wall face with floor on tile below it (randomly add wall decor)...
+				else if(level.terrainArray[i][j] === 1 && level.terrainArray[i+1] !== undefined && level.terrainArray[i+1][j] === 0 && 
+					level.terrainArray[i][j-1] !== undefined && level.terrainArray[i][j-1] === 1 && level.terrainArray[i][j+1] !== undefined && level.terrainArray[i][j+1] === 1) {
+					var smallDecor = true;
+					var allowTallDecor = false;
+					if(level.terrainArray[i+1][j-1] === 0 && level.terrainArray[i+1][j+1] === 0) {
+						allowTallDecor = true;
+					}
+					//	Randomly determine whether wall face should have decor added...
+					if(allowTallDecor) {
+						var rand = Math.floor(Math.random() * level.vars.tallDecorRarity);
+						if(rand < 1) {
+							smallDecor = false;
+						}
+					}
+					if(smallDecor) {
+						var rand = Math.floor(Math.random() * level.vars.wallDecorFrequency);
+						if(rand < 1) {
+							var rand2 = Math.floor(Math.random() * level.tiles.wallDecorSmall.length);
+							level.overlayArray[i][j] = level.tiles.wallDecorSmall[rand2];
+						}
+					} else {
+						var rand = Math.floor(Math.random() * level.vars.wallDecorFrequency);
+						if(rand < 1) {
+							var rand2 = Math.floor(Math.random() * level.tiles.wallDecorTall.length);
+							for(var k = 0; k < level.tiles.wallDecorTall[rand2].height; k++) {
+								level.overlayArray[i+k+level.tiles.wallDecorTall[rand2].offset_y][j] = {
+									y: level.tiles.wallDecorTall[rand2].y + k,
+									x: level.tiles.wallDecorTall[rand2].x
+								};
+							}
+						}
+					}
+				}
+				//	...or if tile is floor with no existing decor (add dirt at base of wall faces)...
+				else if(level.terrainArray[i][j] === 0  && level.overlayArray[i][j] === level.tiles.floor) {
+					//	...plus tile above is wall face...
+					if(	level.terrainArray[i-1] !== undefined && level.terrainArray[i-1][j-1] !== undefined && level.terrainArray[i-1][j+1] !== undefined && 
+						level.terrainArray[i-1][j] === 1 && level.terrainArray[i][j-1] === 0 && level.terrainArray[i][j+1] === 0) 
+					{
+						var rand = Math.floor(Math.random() * 3);
+						level.overlayArray[i][j] = level.tiles.wallBtm[rand];
+					//	...or both tiles above and left and above and right are inner wall corners...
+					} else if(
+						level.terrainArray[i-1] !== undefined && level.terrainArray[i-1][j-1] !== undefined && level.terrainArray[i-1][j+1] !== undefined &&
+						level.terrainArray[i][j-1] === 1 && level.terrainArray[i][j+1] === 1 && level.terrainArray[i-1][j] === 1) 
+					{
+						level.overlayArray[i][j] = level.tiles.wallBtm[12];
+					//	...or tile above and left is inner wall corner...
+					} else if(
+						level.terrainArray[i-1][j-1] !== undefined && level.terrainArray[i-1][j-1] === 1 && level.terrainArray[i][j-1] === 1 && level.terrainArray[i-1][j] === 1) 
+					{
+						level.overlayArray[i][j] = level.tiles.wallBtm[9];
+					//	...or tile above and right is inner wall corner...
+					} else if(
+						level.terrainArray[i-1][j+1] !== undefined && level.terrainArray[i-1][j+1] === 1 && level.terrainArray[i][j+1] === 1 && level.terrainArray[i-1][j] === 1) 
+					{
+						level.overlayArray[i][j] = level.tiles.wallBtm[10];
+					//	...or tiles left and right are wall faces...
+					} else if(
+						level.terrainArray[i-1] !== undefined && level.terrainArray[i][j-1] !== undefined && level.terrainArray[i][j+1] !== undefined &&
+						level.terrainArray[i-1][j-1] === 1 && level.terrainArray[i-1][j+1] === 1 && level.terrainArray[i][j-1] === 1 && level.terrainArray[i][j+1] === 1) 
+					{
+						level.overlayArray[i][j] = level.tiles.wallBtm[11];
+					//	...or tile to left is wall face...
+					} else if(
+						level.terrainArray[i-1] !== undefined && level.terrainArray[i-1][j-1] !== undefined && level.terrainArray[i-1][j-1] === 1 && level.terrainArray[i][j-1] === 1) 
+					{
+						var rand = Math.floor(Math.random() * 3) + 3;
+						level.overlayArray[i][j] = level.tiles.wallBtm[rand];
+					//	...or tile to right is wall face...
+					} else if(
+						level.terrainArray[i-1] !== undefined && level.terrainArray[i-1][j+1] !== undefined && level.terrainArray[i-1][j+1] === 1 && level.terrainArray[i][j+1] === 1) 
+					{
+						var rand = Math.floor(Math.random() * 3) + 6;
+						level.overlayArray[i][j] = level.tiles.wallBtm[rand];
+					}
 				}
 			}
 		}
 	},
+
+	//	Add a random number of connectors to each corridor (not currently used)
+	addCorridorConnectors: function() {
+		level.corridors.forEach(function(corridor) {
+			var crossConnectors = Math.floor(Math.random() * corridor.tiles.length / 5) + 1;
+			var tries = 100;
+			while(crossConnectors && tries) {
+				var rand = Math.floor(Math.random() * corridor.tiles.length);
+				var direction = Math.floor(Math.random() * 4);
+				switch(direction) {
+					case 0: {				//	Up
+						if(	level.terrainArray[corridor.tiles[rand].y-3] !== undefined && 
+							level.terrainArray[corridor.tiles[rand].y-3][corridor.tiles[rand].x] !== undefined && 
+							level.terrainArray[corridor.tiles[rand].y-2][corridor.tiles[rand].x-1] !== 0 && level.terrainArray[corridor.tiles[rand].y-2][corridor.tiles[rand].x+1] !== 0 &&
+							level.terrainArray[corridor.tiles[rand].y-3][corridor.tiles[rand].x] === 0) 
+						{
+							level.terrainArray[corridor.tiles[rand].y-2][corridor.tiles[rand].x] = 0;
+							level.terrainArray[corridor.tiles[rand].y-1][corridor.tiles[rand].x] = 0;
+							crossConnectors--;
+						}
+						break;
+					}
+					case 1: {				//	Down
+						if(	level.terrainArray[corridor.tiles[rand].y+3] !== undefined && 
+							level.terrainArray[corridor.tiles[rand].y+3][corridor.tiles[rand].x] !== undefined && 
+							level.terrainArray[corridor.tiles[rand].y+2][corridor.tiles[rand].x-1] !== 0 && level.terrainArray[corridor.tiles[rand].y-2][corridor.tiles[rand].x+1] !== 0 &&
+							level.terrainArray[corridor.tiles[rand].y+3][corridor.tiles[rand].x] === 0) 
+						{
+							level.terrainArray[corridor.tiles[rand].y+2][corridor.tiles[rand].x] = 0;
+							level.terrainArray[corridor.tiles[rand].y+1][corridor.tiles[rand].x] = 0;
+							crossConnectors--;
+						}
+						break;
+					}
+					case 2: {				//	Left
+						if(	level.terrainArray[corridor.tiles[rand].y-2] !== undefined && level.terrainArray[corridor.tiles[rand].y+2] !== undefined &&
+							level.terrainArray[corridor.tiles[rand].y][corridor.tiles[rand].x-1] !== undefined && 
+							level.terrainArray[corridor.tiles[rand].y-2][corridor.tiles[rand].x-1] !== 0 && level.terrainArray[corridor.tiles[rand].y+2][corridor.tiles[rand].x-1] !== 0 &&
+							level.terrainArray[corridor.tiles[rand].y-1][corridor.tiles[rand].x-1] !== 0 && level.terrainArray[corridor.tiles[rand].y+1][corridor.tiles[rand].x-1] !== 0 &&
+							level.terrainArray[corridor.tiles[rand].y][corridor.tiles[rand].x-1] === 0) 
+						{
+							level.terrainArray[corridor.tiles[rand].y][corridor.tiles[rand].x-1] = 0;
+							crossConnectors--;
+						}
+						break;
+					}
+					case 2: {				//	Left
+						if(	level.terrainArray[corridor.tiles[rand].y-2] !== undefined && level.terrainArray[corridor.tiles[rand].y+2] !== undefined &&
+							level.terrainArray[corridor.tiles[rand].y][corridor.tiles[rand].x+1] !== undefined && 
+							level.terrainArray[corridor.tiles[rand].y-2][corridor.tiles[rand].x+1] !== 0 && level.terrainArray[corridor.tiles[rand].y+2][corridor.tiles[rand].x+1] !== 0 &&
+							level.terrainArray[corridor.tiles[rand].y-1][corridor.tiles[rand].x+1] !== 0 && level.terrainArray[corridor.tiles[rand].y+1][corridor.tiles[rand].x+1] !== 0 &&
+							level.terrainArray[corridor.tiles[rand].y][corridor.tiles[rand].x+1] === 0) 
+						{
+							level.terrainArray[corridor.tiles[rand].y][corridor.tiles[rand].x+1] = 0;
+							crossConnectors--;
+						}
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				tries--;
+			}
+		});
+	}
 };
+
+function fillInUnreaachableAreas() {
+	for(var i = 0; i < level.fillArray.length; i++) {
+		for(var j = 0; j < level.fillArray[0].length; j++) {
+			if(level.fillArray[i][j] !== 2) {
+				level.terrainArray[i][j] = 1;
+			}
+		}
+	}
+}
+
+
+function reduceDeadEnds() {
+	console.log(level.terrainArray);
+	for(var i = 1; i < level.terrainArray.length -1; i++) {
+		for(var j = 1; j < level.terrainArray[0].length -1; j++) {
+			if(level.terrainArray[i][j] === 0) {
+				var exits = getExits(i, j);
+				if(exits.length === 1) {
+					var fillIn = 0;					
+					// var fillIn = Math.floor(Math.random() * level.vars.deadEndFactor);
+					if(fillIn < 1) {
+						fillTunnel(i, j);
+					}
+				}
+			}
+		}
+	}
+}
+
+function getExits(y, x) {
+	var exits = [];
+	exits.length = 0;
+	if(level.terrainArray[y-1][x] === 0) {
+		exits.push({y: y-1, x: x});
+	}
+	if(level.terrainArray[y+1][x] === 0) {
+		exits.push({y: y+1, x: x});
+	}
+	if(level.terrainArray[y][x-1] === 0) {
+		exits.push({y: y, x: x-1});
+	}
+	if(level.terrainArray[y][x+1] === 0) {
+		exits.push({y: y, x: x+1});
+	}
+	return exits;
+}
+
+function fillTunnel(y, x) {
+	// debugger;
+	var exits = getExits(y, x);
+	if(exits.length === 1) {
+		level.terrainArray[y][x] = 1;
+		fillTunnel(exits[0].y, exits[0].x);
+	}
+}
+
+function fill(arr, startY, startX, fillValue, fillWith) {
+	arr[startY][startX] = fillWith;
+	var filling = true;
+	while(filling) {
+		filling = false;
+		for(var i = 1; i < arr.length -1; i++) {
+			for(var j = 1; j < arr[0].length -1; j++) {
+				if(arr[i][j] === fillWith) {
+					if(arr[i-1][j] === fillValue) { 
+						arr[i-1][j] = fillWith;
+						filling = true;
+					}
+					if(arr[i+1][j] === fillValue) { 
+						arr[i+1][j] = fillWith;
+						filling = true;
+					}
+					if(arr[i][j-1] === fillValue) { 
+						arr[i][j-1] = fillWith;
+						filling = true;
+					}
+					if(arr[i][j+1] === fillValue) { 
+						arr[i][j+1] = fillWith;
+						filling = true;
+					}
+				}
+			}
+		}
+	}
+};
+
+function arrayClone(arr) {
+    var i, copy;
+    if( Array.isArray( arr ) ) {
+        copy = arr.slice( 0 );
+        for( i = 0; i < copy.length; i++ ) {
+            copy[ i ] = arrayClone( copy[ i ] );
+        }
+        return copy;
+    } else if( typeof arr === 'object' ) {
+        throw 'Cannot clone array containing an object!';
+    } else {
+        return arr;
+    }
+
+}
 
 function checkForCorridorStart(y, x) {
 	if(
@@ -204,7 +705,7 @@ Corridor.prototype.chooseDigDirection = function() {
 		this.digging = false;
 	} else {
 		if(this.validDirections.includes(this.digDirection)) {
-			var turn = Math.floor(Math.random() * 3);							//	Probability weighting of continuing to dig in straight line if possible
+			var turn = Math.floor(Math.random() * level.vars.corridorStraightness);						//	Probability weighting of continuing to dig in straight line if possible
 			if(turn < 1) {
 				var digDir = Math.floor(Math.random() * this.validDirections.length);
 				this.digDirection = this.validDirections[digDir];
@@ -290,29 +791,12 @@ Corridor.prototype.checkDirection = function(direction) {
 	return direction;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //	Room constructor
-Room = function(origin_y, origin_x, height, width) {
-	this.min_size = 4;
-	this.max_size = 15;
+Room = function(origin_y, origin_x, height, width, type) {
+	this.type = type;
+	this.doors = [];
+	this.min_size = 5;
+	this.max_size = 10;
 	if(!origin_y) {
 		this.origin_y = Math.floor(Math.random() * level.height);
 	} else {
@@ -360,4 +844,6 @@ Room.prototype.checkIfFits = function() {
 	}
 	return true;
 }
+
+
 
