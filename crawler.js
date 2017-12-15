@@ -13,7 +13,9 @@ $(function() {
 	var viewport_offset_y = 0;
 	var redrawBackground = false;
 
-	var prng = new Random(999);
+	// var seed = Math.floor(Math.random() * 1000000);
+	var seed = 3;
+	var prng = new Random(seed);
 
 	setViewportOffset = function() {
 		redrawBackground = false;
@@ -96,7 +98,7 @@ $(function() {
 
 
 	//	Level setup
-	function addBackground(level) {
+	function addBackground() {
 		var background = $('<div id="background">');
 		background.css('background', level.tiles.solidColor);
 		background.css('width', CANVAS_WIDTH * SCALE_FACTOR);
@@ -104,7 +106,7 @@ $(function() {
 		background.appendTo('body');
 	}
 
-	function drawOverlays(level) {									//	Draw inert overlay tile decorators
+	function drawOverlays() {											//	Draw inert overlay tile decorators
 		for(var i = 0; i < level.terrainArray.length; i++) {
 			for(var j = 0; j < level.terrainArray[i].length; j++) {
 				if(inViewport(TILE_SIZE * j + (TILE_SIZE / 2), TILE_SIZE * i + (TILE_SIZE / 2))) {
@@ -120,7 +122,6 @@ $(function() {
 							TILE_SIZE, 									//	width of image on canvas
 							TILE_SIZE									//	height of image on canvas
 						);
-
 					}
 				}
 			}
@@ -137,7 +138,7 @@ $(function() {
 		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
 	}
 
-	function setUpCreatures(level) {
+	function setUpCreatures() {
 		for(var i = 0; i < level.creatureArray.length; i++) {
 			for(var j = 0; j < level.creatureArray[i].length; j++) {
 				if(level.creatureArray[i][j]) {
@@ -852,7 +853,7 @@ $(function() {
 	function draw(interpolationPercentage) {
 		if(redrawBackground) {
 			bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-			drawOverlays(level);
+			drawOverlays();
 			drawCorpses();
 		}
 		playerCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);	//	Clear player canvas for player location & surrounding 8 tiles
@@ -870,18 +871,16 @@ $(function() {
 	//	Start routines
 	function start() {
 		// debugger;
-		level = levelGen.loadLevel(0);
-		if(level.displayAsMap) {
-			drawMap();
-		} else {
-			addBackground(level);
-			drawOverlays(level);
-			setUpPlayer();
-			setUpCreatures(level);
-			$('canvas').css('width', CANVAS_WIDTH * SCALE_FACTOR);
-			$('canvas').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
-			MainLoop.setUpdate(update).setDraw(draw).start();
-		}
+		level = levelGen.loadLevel(0, prng);
+		setUpPlayer();
+		setViewportOffset();
+		addBackground();
+		drawOverlays();
+		setUpCreatures();
+		$('canvas').css('width', CANVAS_WIDTH * SCALE_FACTOR);
+		$('canvas').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
+		MainLoop.setUpdate(update).setDraw(draw).start();
+		drawMap();
 	}
 	start();
 
@@ -899,8 +898,8 @@ $(function() {
 	function drawMap() {
 		var mapDiv = $('<div id="mapDiv"></div>');
 		mapDiv.appendTo('body');
-		$('#mapDiv').height(level.height * 5);
-		$('#mapDiv').width(level.width * 5);
+		$('#mapDiv').height(level.height * 3);
+		$('#mapDiv').width(level.width * 3);
 		for(var i = 0; i < level.height; i++) {
 			for(var j = 0; j < level.width; j++) {
 				if(level.terrainArray[i][j] === 0 && level.fillArray[i][j] === 2) {

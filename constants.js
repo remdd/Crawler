@@ -38,6 +38,12 @@ var EnumBoxtype = {
 	ITEM: 4
 }
 
+var EnumRoomtype = {
+	MUD_PATCH: 0,
+	COBBLES: 1,
+	GREY_STONE: 2
+}
+
 var playerSprite = document.getElementById('playerSpriteImg');
 var monsterSprites = document.getElementById('monsterSprites');
 
