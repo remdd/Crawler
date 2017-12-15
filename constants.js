@@ -51,11 +51,6 @@ var bgCanvas = $('<canvas id="bgCanvas" width="' + CANVAS_WIDTH + '" height="' +
 var bgCtx = bgCanvas.get(0).getContext('2d');
 bgCanvas.appendTo('body');
 
-var entityCanvas = $('<canvas id="entityCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
-var entityCtx = entityCanvas.get(0).getContext('2d');
-entityCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
-entityCanvas.appendTo('body');
-
 var creatureCanvas = $('<canvas id="creatureCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
 var creatureCtx = creatureCanvas.get(0).getContext('2d');
 creatureCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
@@ -65,6 +60,11 @@ var playerCanvas = $('<canvas id="playerCanvas" width="' + CANVAS_WIDTH + '" hei
 var playerCtx = playerCanvas.get(0).getContext('2d');
 playerCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
 playerCanvas.appendTo('body');
+
+var fgCanvas = $('<canvas id="fgCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
+var fgCtx = fgCanvas.get(0).getContext('2d');
+fgCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
+fgCanvas.appendTo('body');
 
 var attackCanvas = $('<canvas id="attackCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
 var attackCtx = attackCanvas.get(0).getContext('2d');

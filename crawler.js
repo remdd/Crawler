@@ -12,6 +12,7 @@ $(function() {
 	var viewport_offset_x = 0;
 	var viewport_offset_y = 0;
 	var redrawBackground = false;
+	var redrawObstacles = false;
 
 	// var seed = Math.floor(Math.random() * 1000000);
 	var seed = 3;
@@ -126,6 +127,31 @@ $(function() {
 				}
 			}
 		}
+	}
+
+	function drawObstacles() {
+		for(var i = 0; i < level.obstacles.length; i++) {
+			// debugger;
+			if(inViewport(TILE_SIZE * level.obstacles[i].x + (TILE_SIZE / 2), TILE_SIZE * level.obstacles[i].y + (TILE_SIZE / 2))) {
+				var ctx;
+				var obstacle = level.obstacles[i];
+				if((obstacle.y * TILE_SIZE) + TILE_SIZE * obstacle.size.y / 2 > player.position.y) {
+					ctx = fgCtx;
+				} else {
+					ctx = bgCtx;
+				}
+				ctx.drawImage(level.img, 						//	Image to load
+					obstacle.sprite.x * TILE_SIZE, 						//	x-coord to start clipping
+					obstacle.sprite.y * TILE_SIZE, 						//	y-coord to start clipping
+					obstacle.size.x * TILE_SIZE, 						//	width of clipped image
+					obstacle.size.y * TILE_SIZE, 						//	height of clipped image
+					TILE_SIZE * obstacle.x - viewport_offset_x, 		//	x-coord of canvas placement
+					TILE_SIZE * obstacle.y - viewport_offset_y, 		//	y-coord of canvas placement
+					obstacle.size.x * TILE_SIZE, 						//	width of image on canvas
+					obstacle.size.y * TILE_SIZE							//	height of image on canvas
+				);
+			}
+		}	
 	}
 
 	//	Set up player
@@ -853,8 +879,10 @@ $(function() {
 	function draw(interpolationPercentage) {
 		if(redrawBackground) {
 			bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+			fgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 			drawOverlays();
 			drawCorpses();
+			drawObstacles();
 		}
 		playerCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);	//	Clear player canvas for player location & surrounding 8 tiles
 		attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);				//	Clear entire attack canvas
@@ -876,6 +904,7 @@ $(function() {
 		setViewportOffset();
 		addBackground();
 		drawOverlays();
+		drawObstacles();
 		setUpCreatures();
 		$('canvas').css('width', CANVAS_WIDTH * SCALE_FACTOR);
 		$('canvas').css('height', CANVAS_HEIGHT * SCALE_FACTOR);

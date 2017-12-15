@@ -4,9 +4,12 @@ var level = {
 	width: 0,
 	terrainArray: [],
 	creatureArray: [],
+	obstacleArray: [],
 	overlayArray: [],
 	fillArray: [],
+	obstacles: [],
 	rooms: [],
+	obstacles: [],
 	corridors: [],
 	playerStart: {
 		x: 0,
@@ -17,8 +20,11 @@ var level = {
 		y: 0
 	},
 	displayAsMap: false,
+	validLevel: false,
 	vars: {
-		connectorSparseness: 20,
+		roomAttempts: 300,
+		verticalConnectorSparseness: 10,
+		horizontalConnectorSparseness: 25,
 		corridorStraightness: 5,
 		wallDecorFrequency: 8,
 		tallDecorRarity: 5,
@@ -35,6 +41,8 @@ var levelGen = {
 		level.seed = prng;
 		switch(levelNumber) {
 			case 0: {
+				level.height = 70;
+				level.width = 70;
 				level.img = document.getElementById('tilesetImg');
 				level.tiles = {
 					tileset: 'Dungeon1',
@@ -85,6 +93,9 @@ var levelGen = {
 					],
 					greyWallDecor: [
 						{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}
+					],
+					door: [
+						{y:8,x:1}, {y:8,x:2}, {y:8,x:3}
 					]
 				},
 				level.roomTypes = [
@@ -92,8 +103,6 @@ var levelGen = {
 				]
 
 				//	Set up terrain array
-				level.height = 70;
-				level.width = 70;
 				this.setupTerrain();
 
 				return level;
@@ -106,16 +115,10 @@ var levelGen = {
 	},
 
 	setupTerrain: function() {
-		this.setupInitialGrid(level.height, level.width);
-
-		//	Set up special rooms
-		this.setupStartAndBossRooms();
-		level.specialRooms = 0;					//	Count number of successfully added special rooms
-		this.setupSpecialRooms();
-
-		//	Fill remaining map with random rooms and corridors
-		level.roomAttempts = 300;
-		this.fillOutMap();
+		//	Fill remaining map with random rooms and corridors - final overall layout is set here
+		while(!level.validLevel) {
+			this.fillOutMap();
+		}
 
 		//	Add basic tileset overlays
 		this.addBasicOverlays();
@@ -124,13 +127,25 @@ var levelGen = {
 		level.rooms.forEach(function(room) {
 			room.setupOverlays();
 		});
+
+		this.addDoors();
+
 		console.log(level.rooms);
+		console.log(level.obstacles);
 	},
 
 
 	fillOutMap: function() {
+		this.clearLevel();
+		this.setupInitialGrid(level.height, level.width);
+
+		//	Set up special rooms
+		this.setupStartAndBossRooms();
+		level.specialRooms = 0;					//	Count number of successfully added special rooms
+		this.setupSpecialRooms();
+
 		//	Add rooms
-		for(var i = 0; i < level.roomAttempts; i++) {
+		for(var i = 0; i < level.vars.roomAttempts; i++) {
 			var room = new Room();
 		}
 
@@ -141,34 +156,37 @@ var levelGen = {
 			}
 		}
 
-		//	Add some doors to rooms on 1-3 of their walls
+		//	Add some connecting doors to rooms on 1-3 of their walls
 		level.rooms.forEach(function(room) {
 			var doors = 0;
 			var tries = 100;
 			var rand = Math.floor(level.seed.nextFloat() * 10);
 			var doorDirections = [];
-			if(rand < 5) {
+			// if(rand < 5) {
+			// 	doors = 1;
+			// } else if(rand < 8) {
+			// 	doors = 2;
+			// } else {
+			// 	doors = 3;
+			// }
+			if(rand < 8) {
 				doors = 1;
-			} else if(rand < 8) {
-				doors = 2;
 			} else {
-				doors = 3;
+				doors = 2;
 			}
-			// doors = 4;
 			while(doors && tries) {
-				var direction = Math.floor(level.seed.nextFloat() * 4);
+				var direction = Math.floor(level.seed.nextFloat() * 2);
 				if(!doorDirections.includes(direction)) {
 					switch(direction) {
 						case 0: {						//	Up
 							var x = Math.floor(level.seed.nextFloat() * room.width);
-							if(	level.terrainArray[room.origin_y-3] !== undefined && 
-								level.terrainArray[room.origin_y-3][room.origin_x+x] !== undefined && 
-								level.terrainArray[room.origin_y-2][room.origin_x+x-1] !== 0 && level.terrainArray[room.origin_y-2][room.origin_x+x+1] !== 0 &&
-								level.terrainArray[room.origin_y-3][room.origin_x+x] === 0) 
+							if(	level.terrainArray[room.origin.y-3] !== undefined && 
+								level.terrainArray[room.origin.y-3][room.origin.x+x] !== undefined && 
+								level.terrainArray[room.origin.y-2][room.origin.x+x-1] !== 0 && level.terrainArray[room.origin.y-2][room.origin.x+x+1] !== 0 &&
+								level.terrainArray[room.origin.y-3][room.origin.x+x] === 0) 
 							{
-								level.terrainArray[room.origin_y-2][room.origin_x+x] = 0;
-								level.terrainArray[room.origin_y-1][room.origin_x+x] = 0;
-								room.doors.push({y: room.origin_y-1, x: room.origin_x+x});
+								level.terrainArray[room.origin.y-2][room.origin.x+x] = 0;
+								level.terrainArray[room.origin.y-1][room.origin.x+x] = 0;
 								doors--;
 								doorDirections.push(direction);
 							}
@@ -176,14 +194,13 @@ var levelGen = {
 						}
 						case 1: {						//	Down
 							var x = Math.floor(level.seed.nextFloat() * room.width);
-							if(	level.terrainArray[room.origin_y+room.height+2] !== undefined &&
-								level.terrainArray[room.origin_y+room.height+2][room.origin_x+x] !== undefined && 
-								level.terrainArray[room.origin_y+room.height+1][room.origin_x+x-1] !== 0 && level.terrainArray[room.origin_y+room.height+1][room.origin_x+x+1] !== 0 &&
-								level.terrainArray[room.origin_y+room.height+2][room.origin_x+x] === 0) 
+							if(	level.terrainArray[room.origin.y+room.height+2] !== undefined &&
+								level.terrainArray[room.origin.y+room.height+2][room.origin.x+x] !== undefined && 
+								level.terrainArray[room.origin.y+room.height+1][room.origin.x+x-1] !== 0 && level.terrainArray[room.origin.y+room.height+1][room.origin.x+x+1] !== 0 &&
+								level.terrainArray[room.origin.y+room.height+2][room.origin.x+x] === 0) 
 							{
-								level.terrainArray[room.origin_y+room.height+1][room.origin_x+x] = 0;
-								level.terrainArray[room.origin_y+room.height][room.origin_x+x] = 0;
-								room.doors.push({y: room.origin_y+room.height, x: room.origin_x+x});
+								level.terrainArray[room.origin.y+room.height+1][room.origin.x+x] = 0;
+								level.terrainArray[room.origin.y+room.height][room.origin.x+x] = 0;
 								doors--;
 								doorDirections.push(direction);
 							}
@@ -191,14 +208,13 @@ var levelGen = {
 						}
 						case 2: {						//	Left
 							var y = Math.floor(level.seed.nextFloat() * room.height);
-							if(	level.terrainArray[room.origin_y+y][room.origin_x-2] !== undefined && 
-								level.terrainArray[room.origin_y+y+2] !== undefined && level.terrainArray[room.origin_y+y-2] !== undefined &&
-								level.terrainArray[room.origin_y+y+2][room.origin_x-1] !== 0 && level.terrainArray[room.origin_y+y-2][room.origin_x-1] !== 0 &&
-								level.terrainArray[room.origin_y+y+1][room.origin_x-1] !== 0 && level.terrainArray[room.origin_y+y-1][room.origin_x-1] !== 0 &&
-								level.terrainArray[room.origin_y+y][room.origin_x-2] === 0) 
+							if(	level.terrainArray[room.origin.y+y][room.origin.x-2] !== undefined && 
+								level.terrainArray[room.origin.y+y+2] !== undefined && level.terrainArray[room.origin.y+y-2] !== undefined &&
+								level.terrainArray[room.origin.y+y+2][room.origin.x-1] !== 0 && level.terrainArray[room.origin.y+y-2][room.origin.x-1] !== 0 &&
+								level.terrainArray[room.origin.y+y+1][room.origin.x-1] !== 0 && level.terrainArray[room.origin.y+y-1][room.origin.x-1] !== 0 &&
+								level.terrainArray[room.origin.y+y][room.origin.x-2] === 0) 
 							{
-								level.terrainArray[room.origin_y+y][room.origin_x-1] = 0;
-								room.doors.push({y: room.origin_y+y, x: room.origin_x-1});
+								level.terrainArray[room.origin.y+y][room.origin.x-1] = 0;
 								doors--;
 								doorDirections.push(direction);
 							}
@@ -207,14 +223,13 @@ var levelGen = {
 						case 3: {						//	Right
 							// debugger;
 							var y = Math.floor(level.seed.nextFloat() * room.height);
-							if(	level.terrainArray[room.origin_y+y][room.origin_x+room.width+1] !== undefined && 
-								level.terrainArray[room.origin_y+y+2] !== undefined && level.terrainArray[room.origin_y+y-2] !== undefined &&
-								level.terrainArray[room.origin_y+y+2][room.origin_x+room.width] !== 0 && level.terrainArray[room.origin_y+y-2][room.origin_x+room.width] !== 0 &&
-								level.terrainArray[room.origin_y+y+1][room.origin_x+room.width] !== 0 && level.terrainArray[room.origin_y+y-1][room.origin_x+room.width] !== 0 &&
-								level.terrainArray[room.origin_y+y][room.origin_x+room.width+1] === 0) 
+							if(	level.terrainArray[room.origin.y+y][room.origin.x+room.width+1] !== undefined && 
+								level.terrainArray[room.origin.y+y+2] !== undefined && level.terrainArray[room.origin.y+y-2] !== undefined &&
+								level.terrainArray[room.origin.y+y+2][room.origin.x+room.width] !== 0 && level.terrainArray[room.origin.y+y-2][room.origin.x+room.width] !== 0 &&
+								level.terrainArray[room.origin.y+y+1][room.origin.x+room.width] !== 0 && level.terrainArray[room.origin.y+y-1][room.origin.x+room.width] !== 0 &&
+								level.terrainArray[room.origin.y+y][room.origin.x+room.width+1] === 0) 
 							{
-								level.terrainArray[room.origin_y+y][room.origin_x+room.width] = 0;
-								room.doors.push({y: room.origin_y+y, x: room.origin_x+room.width});
+								level.terrainArray[room.origin.y+y][room.origin.x+room.width] = 0;
 								doors--;
 								doorDirections.push(direction);
 							}
@@ -229,9 +244,7 @@ var levelGen = {
 			}
 		});
 
-		console.log(level.corridors);
-
-		// Add random connectors
+		// Add some more random connectors
 		for(var i = 1; i < level.terrainArray.length - 2; i++) {
 			for(var j = 1; j < level.terrainArray[0].length - 1; j++) {
 				if(level.terrainArray[i][j] === 1) {												//	If the tile is solid rock...
@@ -239,14 +252,14 @@ var levelGen = {
 						level.terrainArray[i+2][j] !== 0 && level.terrainArray[i+1][j] !== 0 &&		//	...and the 2 tiles below are not open...
 						level.terrainArray[i-2][j] !== 0 && level.terrainArray[i-1][j] !== 0		//	...and the 2 tiles above are not open...
 					) {
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.connectorSparseness);
+						var rand = Math.floor(level.seed.nextFloat() * level.vars.horizontalConnectorSparseness);
 						if(rand < 1) {
 							level.terrainArray[i][j] = 0;
 						}
 					} else if(level.terrainArray[i-1][j] === 0 && level.terrainArray[i + 2][j] === 0 &&		//	...or if the tiles above and *2* below are open...
 						level.terrainArray[i][j-1] !== 0 && level.terrainArray[i][j-1] !== 0				//	...and the tiles to left and right are not open...
 					) { 	
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.connectorSparseness);
+						var rand = Math.floor(level.seed.nextFloat() * level.vars.verticalConnectorSparseness);
 						if(rand < 1) {
 							level.terrainArray[i][j] = 0;
 							level.terrainArray[i+1][j] = 0;
@@ -260,33 +273,40 @@ var levelGen = {
 		level.fillArray = arrayClone(level.terrainArray);
 		fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
 
-		console.log(level);
-
 		// 	If boss room does not connect to player start room, regenerate map
 		if(level.fillArray[level.bossStart.y][level.bossStart.x] !== 2) {
-			console.log("Regenerating...");
-			this.setupTerrain();
+			console.log("Invalid level, clearing...");
+			level.validLevel = false;
+		} else {
+			// Fill in any areas not connected to the main network
+			fillInUnreaachableAreas();
+			// Pick some dead ends and back-fill them
+			reduceDeadEnds();
+			level.validLevel = true;
+			console.log(level);
 		}
 
-		// Fill in any areas not connected to the main network
-		fillInUnreaachableAreas();
-
-		// Pick some dead ends and back-fill them
-		reduceDeadEnds();
 	},
 
-	setupInitialGrid: function() {
+	clearLevel: function() {
 		level.terrainArray.length = 0;
+		level.obstacleArray.length = 0;
 		level.fillArray.length = 0;
 		level.overlayArray.length = 0;
 		level.rooms.length = 0;
+		level.obstacles.length = 0;
 		level.corridors.length = 0;
+	},
+
+	setupInitialGrid: function() {
 		for(var i = 0; i < level.height; i++) {
 			level.terrainArray[i] = [];
+			level.obstacleArray[i] = [];
 			for(var j = 0; j < level.width; j++) {
 				level.terrainArray[i][j] = 1;								//	1 = regular impassable wall tile
 			}
 		}
+
 	},
 
 	setupStartAndBossRooms: function() {
@@ -512,13 +532,32 @@ var levelGen = {
 				tries--;
 			}
 		});
+	},
+
+	addDoors: function() {
+		level.rooms.forEach(function(room) {
+			for(var i = room.origin.x; i < room.origin.x + room.width; i++) {
+				if(level.terrainArray[room.origin.y-1][i] === 0 && level.terrainArray[room.origin.y-1][i-1] === 1 && level.terrainArray[room.origin.y-1][i+1] === 1) {
+					var addDoor = true;
+					level.obstacles.forEach(function(obstacle) {
+						if(obstacle.y - room.origin.y-1 <= 2 && obstacle.y - room.origin.y-1 >= 2 && obstacle.x - i <= 2 && obstacle.x - i >= 2) {
+							addDoor = false;
+						}
+					});
+					if(addDoor) {
+						var door = new Obstacle(room.origin.y-2, i, 2, 1, 'door');
+					}
+				}
+			}
+		});
+
 	}
 };
 
 function fillInUnreaachableAreas() {
 	level.rooms.forEach(function(room) {
 		var roomFill = arrayClone(level.terrainArray);
-		fill(roomFill, room.origin_y + 1, room.origin_x + 1, 0, 2);
+		fill(roomFill, room.origin.y + 1, room.origin.x + 1, 0, 2);
 		if(roomFill[level.playerStart.y][level.playerStart.x] !== 2) {
 			level.rooms.splice(level.rooms.indexOf(room), 1);
 		}
@@ -849,8 +888,8 @@ Room = function(origin_y, origin_x, height, width, type) {
 				} else if(mud_width > this.width -2) {
 					mud_width = this.width -2;
 				}
-				mud_origin_y = this.origin_y + 1 + Math.floor(level.seed.nextFloat() * (this.height - mud_height -1));
-				mud_origin_x = this.origin_x + 1 + Math.floor(level.seed.nextFloat() * (this.width - mud_width - 1)); 
+				mud_origin_y = this.origin.y + 1 + Math.floor(level.seed.nextFloat() * (this.height - mud_height -1));
+				mud_origin_x = this.origin.x + 1 + Math.floor(level.seed.nextFloat() * (this.width - mud_width - 1)); 
 				for(var i = 0; i < mud_height; i++) {
 					for(var j = 0; j < mud_width; j++) {
 						if(i === 0 && j === 0) {
@@ -889,23 +928,23 @@ Room = function(origin_y, origin_x, height, width, type) {
 				for(var i = 0; i < this.height; i++) {
 					for(var j = 0; j < this.width; j++) {
 						var rand = Math.floor(level.seed.nextFloat() * 4);
-						level.overlayArray[this.origin_y+i][this.origin_x+j] = level.tiles.cobbleFloor[rand];
+						level.overlayArray[this.origin.y+i][this.origin.x+j] = level.tiles.cobbleFloor[rand];
 					}
 				}
 				for(var i = 0; i < this.height; i++) {
-					if(level.terrainArray[this.origin_y+i][this.origin_x-1] === 0) {
-						level.overlayArray[this.origin_y+i][this.origin_x] = level.tiles.cobbleFloor[4];
+					if(level.terrainArray[this.origin.y+i][this.origin.x-1] === 0) {
+						level.overlayArray[this.origin.y+i][this.origin.x] = level.tiles.cobbleFloor[4];
 					}
-					if(level.terrainArray[this.origin_y+i][this.origin_x + this.width] === 0) {
-						level.overlayArray[this.origin_y+i][this.origin_x + this.width-1] = level.tiles.cobbleFloor[5];
+					if(level.terrainArray[this.origin.y+i][this.origin.x + this.width] === 0) {
+						level.overlayArray[this.origin.y+i][this.origin.x + this.width-1] = level.tiles.cobbleFloor[5];
 					}
 				}
 				for(var i = 0; i < this.width; i++) {
-					if(level.terrainArray[this.origin_y-1][this.origin_x+i] === 0) {
-						level.overlayArray[this.origin_y][this.origin_x+i] = level.tiles.cobbleFloor[6];
+					if(level.terrainArray[this.origin.y-1][this.origin.x+i] === 0) {
+						level.overlayArray[this.origin.y][this.origin.x+i] = level.tiles.cobbleFloor[6];
 					}
-					if(level.terrainArray[this.origin_y+this.height+1][this.origin_x+i] === 0) {
-						level.overlayArray[this.origin_y+this.height][this.origin_x+i] = level.tiles.cobbleFloor[7];
+					if(level.terrainArray[this.origin.y+this.height+1][this.origin.x+i] === 0) {
+						level.overlayArray[this.origin.y+this.height][this.origin.x+i] = level.tiles.cobbleFloor[7];
 					}
 				}
 			}
@@ -916,45 +955,45 @@ Room = function(origin_y, origin_x, height, width, type) {
 				for(var i = 0; i < this.height; i++) {
 					for(var j = 0; j < this.width; j++) {
 						var rand = Math.floor(level.seed.nextFloat() * 4);
-						level.overlayArray[this.origin_y+i][this.origin_x+j] = level.tiles.greyCobbleFloor[rand];
+						level.overlayArray[this.origin.y+i][this.origin.x+j] = level.tiles.greyCobbleFloor[rand];
 					}
 				}
 				for(var i = 0; i < this.height; i++) {
-					if(level.terrainArray[this.origin_y+i][this.origin_x-1] === 0) {
-						level.overlayArray[this.origin_y+i][this.origin_x] = level.tiles.greyCobbleFloor[4];
+					if(level.terrainArray[this.origin.y+i][this.origin.x-1] === 0) {
+						level.overlayArray[this.origin.y+i][this.origin.x] = level.tiles.greyCobbleFloor[4];
 					}
-					if(level.terrainArray[this.origin_y+i][this.origin_x + this.width] === 0) {
-						level.overlayArray[this.origin_y+i][this.origin_x + this.width-1] = level.tiles.greyCobbleFloor[5];
-					}
-				}
-				for(var i = 0; i < this.width; i++) {
-					if(level.terrainArray[this.origin_y-1][this.origin_x+i] === 0) {
-						level.overlayArray[this.origin_y][this.origin_x+i] = level.tiles.greyCobbleFloor[6];
-					}
-					if(level.terrainArray[this.origin_y+this.height+1][this.origin_x+i] === 0) {
-						level.overlayArray[this.origin_y+this.height][this.origin_x+i] = level.tiles.greyCobbleFloor[7];
+					if(level.terrainArray[this.origin.y+i][this.origin.x + this.width] === 0) {
+						level.overlayArray[this.origin.y+i][this.origin.x + this.width-1] = level.tiles.greyCobbleFloor[5];
 					}
 				}
 				for(var i = 0; i < this.width; i++) {
-					if(level.terrainArray[this.origin_y-1][this.origin_x+i] === 1) {
-						if(level.terrainArray[this.origin_y-1][this.origin_x+i-1] === 0 && level.terrainArray[this.origin_y-1][this.origin_x+i+1] === 0) {
-							level.overlayArray[this.origin_y-1][this.origin_x+i] = level.tiles.greyWallFace[3];
-							level.overlayArray[this.origin_y-2][this.origin_x+i] = level.tiles.greyWallTop[3];
-						} else if(i === 0 || (level.terrainArray[this.origin_y-1][this.origin_x+i-1] === 0 && level.terrainArray[this.origin_y-1][this.origin_x+i+1] === 1)) {
-							level.overlayArray[this.origin_y-1][this.origin_x+i] = level.tiles.greyWallFace[1];
-							level.overlayArray[this.origin_y-2][this.origin_x+i] = level.tiles.greyWallTop[1];
-						} else if(i === this.width-1 || (level.terrainArray[this.origin_y-1][this.origin_x+i-1] === 1 && level.terrainArray[this.origin_y-1][this.origin_x+i+1] === 0)) {
-							level.overlayArray[this.origin_y-1][this.origin_x+i] = level.tiles.greyWallFace[2];
-							level.overlayArray[this.origin_y-2][this.origin_x+i] = level.tiles.greyWallTop[2];
-						} else if(level.terrainArray[this.origin_y-1][this.origin_x+i-1] === 1 && level.terrainArray[this.origin_y-1][this.origin_x+i+1] === 1) {
+					if(level.terrainArray[this.origin.y-1][this.origin.x+i] === 0) {
+						level.overlayArray[this.origin.y][this.origin.x+i] = level.tiles.greyCobbleFloor[6];
+					}
+					if(level.terrainArray[this.origin.y+this.height+1][this.origin.x+i] === 0) {
+						level.overlayArray[this.origin.y+this.height][this.origin.x+i] = level.tiles.greyCobbleFloor[7];
+					}
+				}
+				for(var i = 0; i < this.width; i++) {
+					if(level.terrainArray[this.origin.y-1][this.origin.x+i] === 1) {
+						if(level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 0 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 0) {
+							level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[3];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[3];
+						} else if(i === 0 || (level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 0 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 1)) {
+							level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[1];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[1];
+						} else if(i === this.width-1 || (level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 1 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 0)) {
+							level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[2];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[2];
+						} else if(level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 1 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 1) {
 							var rand = Math.floor(level.seed.nextFloat() * 2)
 							if(rand < 1) {
-								level.overlayArray[this.origin_y-1][this.origin_x+i] = level.tiles.greyWallFace[0];
+								level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[0];
 							} else {
 								var rand2 = Math.floor(level.seed.nextFloat() * level.tiles.greyWallDecor.length);
-								level.overlayArray[this.origin_y-1][this.origin_x+i] = level.tiles.greyWallDecor[rand2];
+								level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallDecor[rand2];
 							}
-							level.overlayArray[this.origin_y-2][this.origin_x+i] = level.tiles.greyWallTop[0];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[0];
 						}
 					}
 				}
@@ -969,15 +1008,16 @@ Room = function(origin_y, origin_x, height, width, type) {
 	this.doors = [];
 	this.min_size = 5;
 	this.max_size = 10;
+	this.origin = {};
 	if(!origin_y) {
-		this.origin_y = Math.floor(level.seed.nextFloat() * level.height);
+		this.origin.y = Math.floor(level.seed.nextFloat() * level.height);
 	} else {
-		this.origin_y = origin_y;
+		this.origin.y = origin_y;
 	}
 	if(!origin_x) {
-		this.origin_x = Math.floor(level.seed.nextFloat() * level.width);
+		this.origin.x = Math.floor(level.seed.nextFloat() * level.width);
 	} else {
-		this.origin_x = origin_x;
+		this.origin.x = origin_x;
 	}
 	if(!width) {
 		this.width = this.random_size(this.min_size, this.max_size);
@@ -995,9 +1035,9 @@ Room = function(origin_y, origin_x, height, width, type) {
 	}
 }
 Room.prototype.draw = function() {
-	if(!(this.origin_y + this.height > level.height - 1 || this.origin_x + this.width > level.width -1)) {
-		for(var i = this.origin_y; i < this.origin_y + this.height; i++) {
-			for(var j = this.origin_x; j < this.origin_x + this.width; j++) {
+	if(!(this.origin.y + this.height > level.height - 1 || this.origin.x + this.width > level.width -1)) {
+		for(var i = this.origin.y; i < this.origin.y + this.height; i++) {
+			for(var j = this.origin.x; j < this.origin.x + this.width; j++) {
 				level.terrainArray[i][j] = 0;
 			}
 		}
@@ -1007,8 +1047,8 @@ Room.prototype.random_size = function(min, max) {
 	return Math.floor(level.seed.nextFloat() * (max - min)) + min;
 }
 Room.prototype.checkIfFits = function() {
-	for(var i = this.origin_y - 2; i < this.origin_y + this.height + 2; i++) {
-		for(var j = this.origin_x - 1; j < this.origin_x + this.width + 1; j++) {
+	for(var i = this.origin.y - 2; i < this.origin.y + this.height + 2; i++) {
+		for(var j = this.origin.x - 1; j < this.origin.x + this.width + 1; j++) {
 			if(level.terrainArray[i] === undefined || level.terrainArray[i][j] === undefined || level.terrainArray[i][j] === 0) {
 				return false;
 			} 
@@ -1017,5 +1057,27 @@ Room.prototype.checkIfFits = function() {
 	return true;
 }
 
-
-
+Obstacle = function(y, x, size_y, size_x, type) {
+	this.y = y;
+	this.x = x;
+	this.size = {
+		y: size_y,
+		x: size_x
+	}
+	this.type = type;
+	switch(this.type) {
+		case 'door': {
+			this.closed = true;
+			this.sprite = level.tiles.door[0];
+			level.obstacleArray[this.y+1][this.x] = 1;
+			level.terrainArray[this.y+1][this.x] = 2;
+			this.open = function() {
+			}
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+	level.obstacles.push(this);
+}
