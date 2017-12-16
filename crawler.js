@@ -1,6 +1,11 @@
 $(function() {
 	var level;											//	Current level object, loaded from levels.js
 
+	var game = {
+		redrawBackground: false,
+		redrawObstaclesTo: 0
+	}
+
 	var creatures = [];
 	var attacks = [];
 	var colliders = [];							//	Store any active collision boxes - player, creatures, obstacles etc
@@ -11,21 +16,21 @@ $(function() {
 
 	var viewport_offset_x = 0;
 	var viewport_offset_y = 0;
-	var redrawBackground = false;
-	var redrawObstacles = false;
+
+	var interactDistance = 15;						//	Distance at which player can interact with interactables
 
 	// var seed = Math.floor(Math.random() * 1000000);
 	var seed = 3;
 	var prng = new Random(seed);
 
 	setViewportOffset = function() {
-		redrawBackground = false;
+		game.redrawBackground = false;
 		if(viewport_offset_x < Math.floor(player.position.x - CANVAS_WIDTH * 0.65)) {
 			viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.65);
-			redrawBackground = true;
+			game.redrawBackground = true;
 		} else if(viewport_offset_x > Math.floor(player.position.x - CANVAS_WIDTH * 0.35)) {
 			viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.35);
-			redrawBackground = true;
+			game.redrawBackground = true;
 		}
 		if(viewport_offset_x < 0) {
 			viewport_offset_x = 0;
@@ -35,10 +40,10 @@ $(function() {
 
 		if(viewport_offset_y < Math.floor(player.position.y - CANVAS_HEIGHT * 0.65)) {
 			viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.65);
-			redrawBackground = true;
+			game.redrawBackground = true;
 		} else if(viewport_offset_y > Math.floor(player.position.y - CANVAS_HEIGHT * 0.35)) {
 			viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.35);
-			redrawBackground = true;
+			game.redrawBackground = true;
 		}
 		if(viewport_offset_y < 0) {
 			viewport_offset_y = 0;
@@ -59,7 +64,7 @@ $(function() {
 
 
 	//	Player controls
-	//	Keyboard input helper object
+	//	Keyboard input helper object to manage held down keys
 	var Key = {
 		_pressed: {},
 		MOVE_LEFT: 'KeyA',
@@ -92,10 +97,12 @@ $(function() {
 		Key.onKeyup(event);
 	}, false);
 	window.addEventListener('keydown', function(event) {
-		Key.onKeydown(event);
+		if(event.code === 'Space') {
+			interact();
+		} else {
+			Key.onKeydown(event);
+		}
 	}, false);
-
-
 
 
 	//	Level setup
@@ -135,7 +142,9 @@ $(function() {
 			if(inViewport(TILE_SIZE * level.obstacles[i].x + (TILE_SIZE / 2), TILE_SIZE * level.obstacles[i].y + (TILE_SIZE / 2))) {
 				var ctx;
 				var obstacle = level.obstacles[i];
-				if((obstacle.y * TILE_SIZE) + TILE_SIZE * obstacle.size.y / 2 > player.position.y) {
+				if(obstacle.ctx) {
+					ctx = obstacle.ctx;
+				} else if((obstacle.y * TILE_SIZE) + TILE_SIZE * obstacle.size.y / 2 > player.position.y) {
 					ctx = fgCtx;
 				} else {
 					ctx = bgCtx;
@@ -429,6 +438,19 @@ $(function() {
 		return collides;
 	}
 
+	interact = function() {
+		console.log("Interacting!");
+		level.obstacles.forEach(function(obstacle) {
+			if(getDistanceToPlayer((obstacle.x + obstacle.size.x / 2) * TILE_SIZE, (obstacle.y + obstacle.size.y / 2) * TILE_SIZE) < interactDistance) {
+				game.redrawObstaclesTo = performance.now() + obstacle.interact();
+			}
+		});
+	}
+
+	function getDistanceToPlayer(x, y) {
+		return Math.sqrt(((x - player.position.x) * (x - player.position.x)) + ((y - player.position.y) * (y - player.position.y)));
+	}
+
 	function leaveCorpse(creature) {
 		var corpse = {
 			position: {},
@@ -585,6 +607,8 @@ $(function() {
 		if(Key.isDown(Key.ATTACK_DOWN)) { player.attack(Math.PI / 2); }
 		if(Key.isDown(Key.ATTACK_LEFT)) { player.attack(Math.PI); }
 		if(Key.isDown(Key.ATTACK_RIGHT)) { player.attack(0); }
+
+		if(Key.isDown(Key.INTERACT)) { interact(); }
 
 		if(!Key.isDown(Key.MOVE_UP) && !Key.isDown(Key.MOVE_DOWN) && !Key.isDown(Key.MOVE_LEFT) && !Key.isDown(Key.MOVE_RIGHT)) { player.vars.moving = false; }
 		if(moving != player.vars.moving) { 
@@ -843,6 +867,17 @@ $(function() {
 		});
 	}
 
+	function updateObstacles() {
+		level.obstacles.forEach(function(obstacle) {
+			if(obstacle.animated) {
+				if(performance.now() > obstacle.animStart + obstacle.animTime) {
+					obstacle.interactionEnd();
+					game.redrawObstaclesTo = performance.now() + 1;
+				}
+			}
+		});
+	}
+
 	function drawDebugCanvas() {
 		if(performance.now() % 5000 < 50) {				//	Clear all debugs every 5 seconds
 			debugs = [];
@@ -870,6 +905,7 @@ $(function() {
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
+		updateObstacles();
 		// collisionFixer();
 		setViewportOffset();
 		// console.log(colliders);
@@ -877,12 +913,12 @@ $(function() {
 
 	//	Master game draw function
 	function draw(interpolationPercentage) {
-		if(redrawBackground) {
+		if(game.redrawBackground || game.redrawObstaclesTo > performance.now()) {
 			bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 			fgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 			drawOverlays();
-			drawCorpses();
 			drawObstacles();
+			drawCorpses();
 		}
 		playerCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);	//	Clear player canvas for player location & surrounding 8 tiles
 		attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);				//	Clear entire attack canvas

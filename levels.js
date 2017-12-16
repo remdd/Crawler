@@ -1071,7 +1071,19 @@ Obstacle = function(y, x, size_y, size_x, type) {
 			this.sprite = level.tiles.door[0];
 			level.obstacleArray[this.y+1][this.x] = 1;
 			level.terrainArray[this.y+1][this.x] = 2;
-			this.open = function() {
+			this.interact = function() {
+				this.open = true;
+				this.animated = true;
+				this.animTime = 100;
+				this.animStart = performance.now();
+				this.sprite = level.tiles.door[1];
+				level.terrainArray[this.y+1][this.x] = 0;
+				return this.animTime;
+			}
+			this.interactionEnd = function() {
+				this.animated = false;
+				this.ctx = bgCtx;
+				this.sprite = level.tiles.door[2];
 			}
 			break;
 		}
