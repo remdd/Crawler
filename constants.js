@@ -27,7 +27,16 @@ var EnumCreature = {
 	MINI_GHOST: 2,
 	SKELTON: 3,
 	GREEN_SLUDGIE: 4,
-	CAMP_VAMP: 5
+	CAMP_VAMP: 5,
+	URK: 6
+}
+
+var EnumCreatureWeapon = {
+	GREEN_GOBLIN_CLAW: 1,
+	BONE_SWORD: 2,
+	BONE_AXE: 3,
+	VAMP_DAGGER: 4,
+	URK_SWORD: 5
 }
 
 var EnumBoxtype = {
@@ -42,6 +51,12 @@ var EnumRoomtype = {
 	MUD_PATCH: 0,
 	COBBLES: 1,
 	GREY_STONE: 2
+}
+
+var EnumObstacleType = {
+	DOOR: 0,
+	COMMON_FLOATING_DECOR: 1,
+	RARE_FLOATING_DECOR: 2
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

@@ -1,318 +1,3 @@
-getPlayerDirection = function(creature) {					//	Returns angle in radians from creature position to player position vectors
-	return Math.atan2((player.position.y - creature.position.y), (player.position.x - creature.position.x));
-}
-
-getPlayerCompassDirection = function(creature) {
-	var direction = Math.atan2((player.position.y - creature.position.y), (player.position.x - creature.position.x));
-	return direction;
-}
-
-getPlayerDistance = function(creature) {
-	if(player) {
-		return Math.sqrt(Math.pow(player.position.y - creature.position.y, 2) + Math.pow(player.position.x - creature.position.x, 2));
-	}
-}
-
-setAiAction = function(creature) {
-	// console.log("Setting AI action...");
-	switch(creature.ai.type) {
-
-		case EnumCreature.GREEN_GOBLIN: {
-			switch(creature.ai.nextAction) {
-				case 0: {
-					//	Next action not specified
-					if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3) {					//	If player is within 3x attack reach...
-						var direction = getPlayerDirection(creature);
-						ai.attack(creature, 0, creature.vars.attackRate, direction, Math.PI / 8);		//	...attack in player's general direction...
-						creature.ai.nextAction = 1;															//	...and set next action to 1.
-					} else {
-						var action = Math.floor(Math.random() * 3);											//	Otherwise, randomly choose to...
-						if(action < 2) {
-							ai.rest(creature, 500, 250);													//	...rest...
-						} else {
-							ai.moveRandomVector(creature, 1500, 100, 1);									//	...or move in a random direction.
-						}
-						creature.ai.nextAction = 0;
-					}
-					break;
-				}
-				case 1: {
-					ai.moveAwayFromPlayer(creature, 0, 500, 1);											//	...move away from player for 500ms, at 1x speed
-					creature.ai.nextAction = 0;
-					break;
-				}
-				case 2: {
-					ai.moveAwayFromPlayer(creature, 0, 500, 2);											//	...move away from player for 500ms, at 1x speed
-					creature.ai.nextAction = 0;
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-			break;
-		}
-
-		case EnumCreature.MINI_GHOST: {
-			switch(creature.ai.nextAction) {
-				case 0: {
-					var action = Math.floor(Math.random() * 1);
-					if(action < 1) {
-						ai.moveRandomVector(creature, 2500, 300, 1);
-					}
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-			break;
-		}
-
-		case EnumCreature.SKELTON: {
-			creature.movement.bounceOff = true;
-			switch(creature.ai.nextAction) {
-				case 0: {
-					if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
-						var action = Math.floor(Math.random() * 4)
-						if(action < 3) {
-							ai.moveTowardsPlayer(creature, 300, 350, 2);
-							creature.movement.bounceOff = false;
-							creature.ai.nextAction = 1;
-						} else {
-							ai.moveRandomVector(creature, 300, 350, 2);
-						}
-					} else {
-						var action = Math.floor(Math.random() * 2);
-						if(action < 1) {
-							ai.moveRandomVector(creature, 1000, 500, 1);
-						} else {
-							ai.rest(creature, 1000, 500);
-						}
-					}
-					break;				
-				}
-				case 1: {
-					var direction = getPlayerCompassDirection(creature);
-					ai.attack(creature, 0, creature.vars.attackRate, direction, 0);		//	...attack in player's compass direction...
-					creature.ai.nextAction = 2;
-					break;
-				}
-				case 2: {
-					ai.rest(creature, 1000, 500);
-					creature.ai.nextAction = 0;
-					break;
-				}
-				case 3: {
-					ai.moveAwayFromPlayer(creature, 500, 500, 2);											//	...move away from player for 0.5 - 1s, at 2x speed
-					creature.ai.nextAction = 0;
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-			break;
-		}
-
-		case EnumCreature.GREEN_SLUDGIE: {
-			creature.vars.touchDamage = false;								//	Reset to stop touch damage
-			switch(creature.ai.nextAction) {
-				case 0: {
-					if(getPlayerDistance(creature) > TILE_SIZE * 5) {
-						ai.rest(creature, 1000, 500);
-					} else {
-						var action = Math.floor(Math.random() * 2);
-						if(action < 1) {
-							creature.vars.touchDamage = true;				//	Set to cause touch damage when moving
-							ai.moveRandomVector(creature, 0, 1000, 1);
-							creature.ai.nextAction = 1;
-						} else {
-							ai.rest(creature, 1000, 500);
-						}
-					}
-					break;
-				}
-				case 1: {
-					ai.rest(creature, 0, 1000);
-					creature.ai.nextAction = 0;
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-			break;
-		}
-
-		case EnumCreature.CAMP_VAMP: {
-			creature.movement.bounceOff = true;
-			switch(creature.ai.nextAction) {
-				case 0: {
-					creature.vars.hideWeapon = false;						//	Redisplay dagger if hidden while flying
-					if(getPlayerDistance(creature) < TILE_SIZE * 4) {
-						ai.moveTowardsPlayer(creature, 300, 350, 2);
-						creature.movement.bounceOff = false;
-						creature.ai.nextAction = 1;
-					} else {
-						var action = Math.floor(Math.random() * 3);
-						if(action < 1) {
-							ai.rest(creature, 500, 500);
-						} else {
-							ai.moveRandomVector(creature, 500, 500, 1);
-						}
-						creature.ai.nextAction = 0;
-					}
-					break;
-				}
-				case 1: {
-					var direction = getPlayerCompassDirection(creature);
-					ai.attack(creature, 0, creature.vars.attackRate, direction, 0);						//	...attack in player's compass direction...
-					creature.ai.nextAction = 2;
-					break;
-				}
-				case 2: {
-					ai.moveAwayFromPlayer(creature, 500, 500, 2);
-					creature.ai.nextAction = 0;
-					break;
-				}
-				case 3: {				//	Transform into bat!
-					creature.vars.transformEndTime = performance.now() + 2000 + Math.random() * 8000;	//	Set transformation duration
-					ai.moveAwayFromPlayer(creature, 0, creature.sprite.animations[6][0], 1.5);			//	Set AI timing to last for duration of transformation animation
-					creature.vars.animation = 6;														//	Transform to bat
-					creature.ai.nextAction = 4;															//	Fly as bat
-					creature.vars.isBat = true;
-					creature.vars.hideWeapon = true;
-					creature.vars.moveThroughColliders = true;
-					break;
-				}
-				case 4: {
-					if(performance.now() > creature.vars.transformEndTime) {							//	If transform time has elapsed...
-							creature.vars.moveThroughColliders = false;									//	...turn collider back on and check that it does not collide with any other...
-						if(!creature.checkIfCollides()) {
-							creature.ai.nextAction = 5;													//	...if it does not, set next action to be transform back from bat
-							clearAiAction(creature);
-						} else {
-							creature.vars.transformEndTime += 200;										//	If it *does* collide, extend anim by another 200 ms and continue random movement
-							creature.vars.moveThroughColliders = true;
-							var action = Math.floor(Math.random() * 2);
-							if(action < 1) {
-								ai.moveAwayFromPlayer(creature, 200, 50, 3.5);
-							} else {
-								ai.moveRandomVector(creature, 200, 50, 3.5);
-							}
-							creature.vars.animation = 8;					//	Bat flying animation
-						}
-					} else {
-						var action = Math.floor(Math.random() * 3);
-						if(action < 1) {
-							ai.moveAwayFromPlayer(creature, 200, 50, 3.5);
-							creature.vars.animation = 8;					//	Bat flying animation
-						} else {
-							ai.moveRandomVector(creature, 200, 50, 3.5);
-							creature.vars.animation = 8;					//	Bat flying animation
-						}
-					}
-					break;
-				}
-				case 5: {
-					ai.rest(creature, 0, creature.sprite.animations[7][0]);			//	Set AI timing to last for duration of transformation animation
-					creature.vars.animation = 7;									//	Transform back to vamp
-					creature.ai.nextAction = 0;
-					creature.vars.isBat = false;
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-			break;
-		}
-
-		default: {
-			break;
-		}
-	}
-}
-
-setAiTiming = function(creature, duration) {
-	creature.ai.startTime = performance.now();
-	creature.ai.endTime = performance.now() + duration;
-	creature.vars.animStart = performance.now();
-	creature.vars.animEnd = performance.now() + duration;
-}
-clearAiAction = function(creature) {
-	creature.ai.endTime = performance.now();
-}
-
-var ai = {
-	rest: function(creature, duration_factor, duration_min) {
-		// console.log("AI: rest");
-		var duration = Math.random() * duration_factor + duration_min;
-		setAiTiming(creature, duration);
-		creature.movement.speed = 0;
-		if(creature.vars.facingRight) {
-			creature.vars.animation = EnumState.RESTING_R;
-		} else {
-			creature.vars.animation = EnumState.RESTING_L;
-		}
-	},
-	moveRandomVector: function(creature, duration_factor, duration_min, speed_multiplier) {
-		// console.log("AI: moveRandomVector");
-		var duration = Math.random() * duration_factor + duration_min;
-		setAiTiming(creature, duration);
-		creature.movement.direction = Math.random() * Math.PI * 2;
-		creature.movement.speed = creature.vars.speed * speed_multiplier;
-		creature.setFacing();
-		if(creature.vars.facingRight) {
-			creature.vars.animation = EnumState.MOVING_R;
-		} else {
-			creature.vars.animation = EnumState.MOVING_L;
-		}
-	},
-	attack: function(creature, duration_factor, duration_min, direction, accuracy) {
-		// console.log("AI: attacking");
-		var duration = Math.random() * duration_factor + duration_min;
-		setAiTiming(creature, duration);
-		creature.movement.speed = 0;
-		direction += Math.random() * accuracy;
-		direction -= Math.random() * accuracy;
-		creature.attack(direction);
-		if(direction >= 0) {
-			creature.facingRight = true;
-		} else {
-			creature.facingRight = false;
-		}
-	},
-	moveAwayFromPlayer: function(creature, duration_factor, duration_min, speed_multiplier) {
-		// console.log("AI: moveAwayFromPlayer " + speed_multiplier);
-		var duration = Math.random() * duration_factor + duration_min;
-		setAiTiming(creature, duration);
-		creature.movement.direction = getPlayerDirection(creature) + Math.PI;
-		creature.movement.speed = creature.vars.speed * speed_multiplier;
-		creature.setFacing();
-		if(creature.vars.facingRight) {
-			creature.vars.animation = EnumState.MOVING_R;
-		} else {
-			creature.vars.animation = EnumState.MOVING_L;
-		}
-	},
-	moveTowardsPlayer: function(creature, duration_factor, duration_min, speed_multiplier) {
-		// console.log("AI: moveAwayFromPlayer " + speed_multiplier);
-		var duration = Math.random() * duration_factor + duration_min;
-		setAiTiming(creature, duration);
-		creature.movement.direction = getPlayerDirection(creature);
-		creature.movement.speed = creature.vars.speed * speed_multiplier;
-		creature.setFacing();
-		if(creature.vars.facingRight) {
-			creature.vars.animation = EnumState.MOVING_R;
-		} else {
-			creature.vars.animation = EnumState.MOVING_L;
-		}
-	}
-}
-
-
 var playerTemplates = [
 	{
 		name: 'Hero',
@@ -440,10 +125,6 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumCreature.GREEN_GOBLIN,
-			startTime: 0,
-			endTime: 500,
-			action: 0,
-			nextAction: 0
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -458,7 +139,7 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			return 1;
+			return EnumCreatureWeapon.GREEN_GOBLIN_CLAW;
 		}	
 	},
 	{
@@ -511,10 +192,6 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumCreature.MINI_GHOST,
-			startTime: 0,
-			endTime: 500,
-			action: 0,
-			nextAction: 0
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -576,10 +253,6 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumCreature.SKELTON,
-			startTime: 0,
-			endTime: 500,
-			action: 0,
-			nextAction: 0
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -596,9 +269,9 @@ var creatureTemplates = [
 		addWeapon: function() {
 			var rand = Math.floor(Math.random() * 3);
 			if(rand < 1) {
-				return 2;
+				return EnumCreatureWeapon.BONE_AXE;
 			} else {
-				return 3;
+				return EnumCreatureWeapon.BONE_SWORD;
 			}
 		}
 	},
@@ -642,10 +315,6 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumCreature.GREEN_SLUDGIE,
-			startTime: 0,
-			endTime: 500,
-			action: 0,
-			nextAction: 0
 		},
 		touchDamage: function() {
 			return 1;
@@ -731,10 +400,6 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumCreature.CAMP_VAMP,
-			startTime: 0,
-			endTime: 500,
-			action: 0,
-			nextAction: 0
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -752,21 +417,96 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			return 4;
+			return EnumCreatureWeapon.VAMP_DAGGER;
 		}
-	}
+	},
+	{
+		name: 'Urk',
+		vars: {
+			speed: 0.5,
+			maxHP: 7,
+			currentHP: 7,
+			sprite: { x: 0, y: 12},
+			minFacingChangeTime: 20
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 12 },	//	Resting facing R 1
+				{ x: 1, y: 12 },	//	Resting facing R 2
+				{ x: 2, y: 12 },	//	Moving facing R 1
+				{ x: 3, y: 12 },	//	Moving facing R 2
+				{ x: 4, y: 12 },	//	Moving facing R 3
+				{ x: 5, y: 12 },	//	Death facing R 1
+				{ x: 6, y: 12 },	//	Death facing R 2
+				{ x: 7, y: 12 },	//	Death facing R 3
+				{ x: 0, y: 13 },	//	Resting facing L 1
+				{ x: 1, y: 13 },	//	Resting facing L 2
+				{ x: 2, y: 13 },	//	Moving facing L 1
+				{ x: 3, y: 13 },	//	Moving facing L 2
+				{ x: 4, y: 13 },	//	Moving facing L 3
+				{ x: 5, y: 13 },	//	Death facing L 1
+				{ x: 6, y: 13 },	//	Death facing L 2
+				{ x: 7, y: 13 }		//	Death facing L 3
+			],
+			animations: [
+				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
+				[ 800, [500, 800], [ 8, 9] ],											//	Resting, facing L
+				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [ 10,11,12,9 ] ],							//	Moving, facing L
+				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
+				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 16,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumCreature.URK,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.URK_SWORD;
+		}	
+	},
 ];
 
 var creatureWeapons = [
 	{},				//	0 is blank - not a weapon!
 	{
 		name: 'Green Goblin Claw',
+		use: function(direction) {
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
 		vars: {
 			sprite: { x: 2, y: 6},
 			animTime: 100,								//	Length of time the weapon stays animated after attack
-			hasAttackVariants: true,					//	True if has 2 attack variants
-			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
-			lastAttackDirection: 0,						//	Store direction of last attack
 			attackRate: 800,
 			drawOffset: { x: 0, y: 0 },
 			foreground: false
@@ -785,11 +525,13 @@ var creatureWeapons = [
 			],
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * -0.5
+				y: TILE_SIZE * -0.6
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 0.6,						//	Reach of attack from centre of creature position
+			reach: TILE_SIZE * 0.7,						//	Reach of attack from centre of creature position
+			damagePlayer: true,
+			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
 			swipeColor1: 'rgba(255,102,0,0)',
@@ -802,13 +544,18 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Bone Sword',
+		use: function(direction) {
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
 		vars: {
 			sprite: { x: 0, y: 6},
 			animTime: 250,								//	Length of time the weapon stays animated after attack
-			hasAttackVariants: true,					//	True if has 2 attack variants
-			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
-			lastAttackDirection: 0,						//	Store direction of last attack
-			attackRate: 750,
+			attackRate: 500,
 			drawOffset: { x: 0, y: 0 },
 			foreground: true
 		},
@@ -825,16 +572,18 @@ var creatureWeapons = [
 				{ x: 0.5, y: 6 }						//	Left facing
 			],
 			restingDrawOffset: {
-				x: TILE_SIZE * -0.25,
-				y: TILE_SIZE * -0.25
+				x: TILE_SIZE * -4/16,
+				y: TILE_SIZE * -4/16
 			},
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * -0.6
+				y: TILE_SIZE * -9/16
 			}
 		},
 		attack: {
 			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
 			swipeColor1: 'rgba(255,255,255,0)',
@@ -847,13 +596,18 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Bone Axe',
+		use: function(direction) {
+			this.chop(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
 		vars: {
 			sprite: { x: 1, y: 6},
-			animTime: 400,								//	Length of time the weapon stays animated after attack
-			hasAttackVariants: true,					//	True if has 2 attack variants
-			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
-			lastAttackDirection: 0,						//	Store direction of last attack
-			attackRate: 1500,
+			animTime: 800,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,
 			drawOffset: { x: 0, y: 0 },
 			foreground: true
 		},
@@ -870,16 +624,18 @@ var creatureWeapons = [
 				{ x: 1.5, y: 6 }						//	Left facing
 			],
 			restingDrawOffset: {
-				x: TILE_SIZE * -0.125,
-				y: TILE_SIZE * -0.375
+				x: TILE_SIZE * -2/16,
+				y: TILE_SIZE * -5/16
 			},
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * -0.6
+				y: TILE_SIZE * -9/16
 			}
 		},
 		attack: {
 			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
 			swipeColor1: 'rgba(255,255,255,0)',
@@ -892,12 +648,17 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Vamp Dagger',
+		use: function(direction) {
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
 		vars: {
 			sprite: { x: 4, y: 6},
 			animTime: 200,								//	Length of time the weapon stays animated after attack
-			hasAttackVariants: true,					//	True if has 2 attack variants
-			lastAttackVariant: 0,						//	Hold variant of last attack - 0 or 1
-			lastAttackDirection: 0,						//	Store direction of last attack
 			attackRate: 100,
 			drawOffset: { x: 0, y: 0 },
 			foreground: true
@@ -920,11 +681,13 @@ var creatureWeapons = [
 			},
 			attackDrawOffset: {
 				x: 0,
-				y: TILE_SIZE * -0.6
+				y: TILE_SIZE * -9/16
 			}
 		},
 		attack: {
 			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 200,
 			swipeColor1: 'rgba(255,255,255,0)',
@@ -934,8 +697,59 @@ var creatureWeapons = [
 			arc: Math.PI / 2,							//	90 degree swipe
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
+	},
+	{
+		name: 'Urk Sword',
+		use: function(direction) {
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			sprite: { x: 2, y: 7},
+			animTime: 500,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			displayWhileResting: true,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 2, y: 7 },							//	Right facing
+				{ x: 2.5, y: 7 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -10/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 1.125,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 150,
+			swipeColor1: 'rgba(255,255,255,0)',
+			swipeColor2: 'rgb(70,0,160)',
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 2,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
 	}
-
 ];
 
 

@@ -9,18 +9,20 @@ $(function() {
 	var creatures = [];
 	var attacks = [];
 	var colliders = [];							//	Store any active collision boxes - player, creatures, obstacles etc
-	var debugs = [];									//	Store any objects to be passed to debug canvas
-	var corpses = [];
+	var nearbyColliders = [];					//	Store any colliders near the player to be checked every tick
+	var debugs = [];							//	Store any objects to be passed to debug canvas
+	var decor = [];
+	var drawables = [];
 
-	var focused = true;									//	Track whether browser tab is focused by user
+	var focused = true;							//	Track whether browser tab is focused by user
 
 	var viewport_offset_x = 0;
 	var viewport_offset_y = 0;
 
-	var interactDistance = 15;						//	Distance at which player can interact with interactables
+	var interactDistance = 15;					//	Distance at which player can interact with interactables
 
 	// var seed = Math.floor(Math.random() * 1000000);
-	var seed = 3;
+	var seed = 99;
 	var prng = new Random(seed);
 
 	setViewportOffset = function() {
@@ -168,9 +170,11 @@ $(function() {
 		var playerType = 0;																						//	Set playerType template
 		player = new Creature(playerTemplates[playerType], level.playerStart.x, level.playerStart.y);			//	Construct player from playerType
 		player.ctx = playerCtx;																					//	Assign player to player canvas
-		player.weapon = new Weapon(playerWeapons[0]);															//	Assign starting weapon
+		player.weapon = new Weapon(playerWeapons[0], player);													//	Assign starting weapon
 		player.vars.lastAttackTime = 0;																			//	Initialize to zero
 		player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
+		player.weapon.reset();
+		player.updateGear();
 	}
 
 	function setUpCreatures() {
@@ -180,25 +184,19 @@ $(function() {
 					var creature = new Creature(creatureTemplates[level.creatureArray[i][j]]);
 					creature.position.x = j * TILE_SIZE + TILE_SIZE / 2;
 					creature.position.y = i * TILE_SIZE + TILE_SIZE / 2;
+					creature.updateBox();
 					creatures.push(creature);
-					console.log(creature);
 				}
 			}
 		}
-
-					// var creature = new Creature(creatureTemplates[EnumCreature.CAMP_VAMP]);
-					// creature.position.x = 3 * TILE_SIZE + TILE_SIZE / 2;
-					// creature.position.y = 3 * TILE_SIZE + TILE_SIZE / 2;
-					// creatures.push(creature);
-
 	}
 
 	function drawOnCanvas(entity, ctx) {
 		if(inViewport(entity.position.x, entity.position.y)) {
-			if(entity.hasOwnProperty('rotation')) {
+			if(entity.vars.hasOwnProperty('rotation')) {
 				ctx.save();
 				ctx.translate(entity.position.x - viewport_offset_x, entity.position.y - viewport_offset_y);
-				ctx.rotate(entity.rotation);
+				ctx.rotate(entity.vars.rotation);
 				entity.position.x = entity.vars.drawOffset.x - TILE_SIZE * entity.sprite.size.x / 2; 
 				entity.position.y = entity.vars.drawOffset.y - TILE_SIZE * entity.sprite.size.y / 2;
 				ctx.drawImage(entity.sprite.spriteSheet,
@@ -206,22 +204,22 @@ $(function() {
 					entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
 					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
 					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
-					Math.floor(entity.position.x), 	//	x-coord of canvas placement
-					Math.floor(entity.position.y), 	//	y-coord of canvas placement
-					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
-					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
+					Math.floor(entity.position.x), 													//	x-coord of canvas placement
+					Math.floor(entity.position.y), 													//	y-coord of canvas placement
+					entity.sprite.size.x * TILE_SIZE, 												//	width of image on canvas
+					entity.sprite.size.y * TILE_SIZE												//	height of image on canvas
 				);
 				ctx.restore();
 			} else {
-				entity.position.x += entity.vars.drawOffset.x; 
-				entity.position.y += entity.vars.drawOffset.y;
+				// entity.position.x += entity.vars.drawOffset.x; 
+				// entity.position.y += entity.vars.drawOffset.y;
 				ctx.drawImage(entity.sprite.spriteSheet,
 					entity.vars.sprite.x * TILE_SIZE, 												//	x-coord to start clipping
 					entity.vars.sprite.y * TILE_SIZE, 												//	y-coord to start clipping
 					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
 					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
-					Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - viewport_offset_x), 	//	x-coord of canvas placement
-					Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - viewport_offset_y), 	//	y-coord of canvas placement
+					Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - viewport_offset_x) + entity.vars.drawOffset.x, 	//	x-coord of canvas placement
+					Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - viewport_offset_y) + entity.vars.drawOffset.y, 	//	y-coord of canvas placement
 					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
 					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
 				);
@@ -246,57 +244,48 @@ $(function() {
 		this.vars.animStart = performance.now();
 	}
 	Entity.prototype.animate = function() {
-		var pointInAnimLoop = Math.floor((performance.now() - this.vars.animStart) % this.sprite.animations[this.vars.animation][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
+		this.vars.pointInAnimLoop = Math.floor((performance.now() - this.vars.animStart) % this.sprite.animations[this.vars.animation][0]);			//	Find current point in anim loop in ms, from 0 to duaration of anim
 		//	Need to generalize this
-		if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][0]) {
+		if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][0]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][0]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][1]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][1]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][1]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][2]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][2]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][2]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][3]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][3]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][3]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][4]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][4]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][4]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][5]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][5]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][5]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][6]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][6]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][6]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][7]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][7]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][7]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][8]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][8]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][8]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][9]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][9]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][9]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][10]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][10]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][10]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][11]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][11]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][11]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][12]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][12]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][12]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][13]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][13]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][13]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][14]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][14]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][14]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][15]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][15]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][15]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][16]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][16]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][16]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][17]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][17]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][17]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][18]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][18]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][18]];
-		} else if(pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][19]) {
+		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][19]) {
 			this.vars.sprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][19]];
-		}
-		if(this.weapon && this.weapon.sprite) {
-			if(performance.now() > this.vars.lastAttackTime + this.weapon.vars.animTime) {
-				if(pointInAnimLoop <= this.sprite.animations[EnumState.RESTING_R][1][0]) {
-					this.weapon.vars.drawOffset.y = 0;
-				} else {
-					this.weapon.vars.drawOffset.y = 1;
-				}
-			}
 		}
 	}
 	Entity.prototype.updateBox = function() {
@@ -311,11 +300,35 @@ $(function() {
 	Weapon.prototype = Object.create(Entity.prototype);
 	Weapon.prototype.constructor = Weapon;
 
-	function Weapon(weaponTemplate) {
+	function Weapon(weaponTemplate, holder) {
 		Entity.apply(this, arguments);
+		this.use = weaponTemplate.use;
+		this.reset = weaponTemplate.reset;
 		this.attack = weaponTemplate.attack;
+		this.holder = holder;
+		this.vars.attacking = false;
 	}
-
+	Weapon.prototype.swipe = function(direction) {
+		this.vars.lastAttackTime = performance.now();
+		this.vars.endAttackAnimationTime = performance.now() + this.vars.animTime;
+		this.vars.lastAttackDirection = direction;
+		var rand = Math.floor(Math.random() * 2);
+		if(rand < 1) {
+			this.vars.rotation = direction + 3 * this.attack.arc / 2;
+		} else {
+			this.vars.rotation = direction + 1 * this.attack.arc / 2;
+		}
+	}
+	Weapon.prototype.chop = function(direction) {
+		this.vars.lastAttackTime = performance.now();
+		this.vars.endAttackAnimationTime = performance.now() + this.vars.animTime;
+		this.vars.lastAttackDirection = direction;
+		if(this.holder.vars.facingRight) {
+			this.vars.rotation = direction + 3 * this.attack.arc / 2;
+		} else {
+			this.vars.rotation = direction + 1 * this.attack.arc / 2;
+		}
+	}
 
 	//	Assign Entity prototype
 	Creature.prototype = Object.create(Entity.prototype);
@@ -330,15 +343,19 @@ $(function() {
 		this.vars.facingRight = true;
 		this.vars.lastFacingChangeTime = 0;							//	Track time that facing direction last changed
 		if(!this.vars.minFacingChangeTime) {
-			this.vars.minFacingChangeTime = 50;						//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
+			this.vars.minFacingChangeTime = 200;					//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
 		}
 		this.ctx = creatureCtx;										//	Draw on Creature Canvas
 		this.ai = {};
 		Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
+		this.ai.startTime = 0;
+		this.ai.endTime = 500;
+		this.ai.action = 0;
+		this.ai.nextAction = 0;		
 		this.movement = {};
 		Object.assign(this.movement, creatureTemplate.movement);	//	Copy movement object for this creature template
 		if(creatureTemplate.addWeapon) {
-			var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()]);
+			var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
 			this.weapon = weapon;
 		}
 		if(creatureTemplate.touchDamage) {
@@ -357,28 +374,31 @@ $(function() {
 		this.updateBox();
 	}
 	Creature.prototype.attack = function(direction) {
-		if(performance.now() - this.vars.lastAttackTime > this.vars.attackRate * this.weapon.vars.attackRate) {
-			if((direction < Math.PI * 2 && direction > Math.PI * 1.5) || (direction >= 0 && direction < Math.PI * 0.5) && !this.vars.facingRight) {
-				this.vars.facingRight = true;
-			} else if((direction < Math.PI * 1.5 && direction > Math.PI / 2 ) && this.vars.facingRight) {
-				this.vars.facingRight = false;
-			} 
-		new Attack(this, direction);
+		if(this.weapon && performance.now() > this.vars.lastAttackTime + this.weapon.vars.attackRate) {
+			this.setFacing(direction);
 			this.vars.lastAttackTime = performance.now();
+			var attack = this.weapon.use(direction);
+			this.weapon.vars.attacking = true;
+			attack.attacker = this;
+			new Attack(attack, direction);
 		}
 	}
-	Creature.prototype.setFacing = function() {
+	Creature.prototype.setFacing = function(direction) {
 		if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
 			this.vars.lastFacingChangeTime = performance.now();
-			if(Math.cos(this.movement.direction) >= 0) {
+			if(Math.cos(direction) >= 0) {
 				this.vars.facingRight = true;
 				if(this.vars.animation === EnumState.MOVING_L) {
 					this.vars.animation = EnumState.MOVING_R;
+				} else if(this.vars.animation === EnumState.RESTING_L) {
+					this.vars.animation = EnumState.RESTING_R;
 				}
 			} else {
 				this.vars.facingRight = false;
 				if(this.vars.animation === EnumState.MOVING_R) {
 					this.vars.animation = EnumState.MOVING_L;
+				} else if(this.vars.animation === EnumState.RESTING_L) {
+					this.vars.animation = EnumState.RESTING_R;
 				}
 			}
 		}
@@ -439,10 +459,11 @@ $(function() {
 	}
 
 	interact = function() {
-		console.log("Interacting!");
 		level.obstacles.forEach(function(obstacle) {
-			if(getDistanceToPlayer((obstacle.x + obstacle.size.x / 2) * TILE_SIZE, (obstacle.y + obstacle.size.y / 2) * TILE_SIZE) < interactDistance) {
-				game.redrawObstaclesTo = performance.now() + obstacle.interact();
+			if(inViewport(obstacle.x * TILE_SIZE, obstacle.y * TILE_SIZE) && obstacle.interact) {
+				if(getDistanceToPlayer((obstacle.x + obstacle.size.x / 2) * TILE_SIZE, (obstacle.y + obstacle.size.y / 2) * TILE_SIZE) < interactDistance) {
+					game.redrawObstaclesTo = performance.now() + obstacle.interact();
+				}
 			}
 		});
 	}
@@ -467,51 +488,35 @@ $(function() {
 		corpse.vars.drawOffset.x = Math.floor(creature.vars.drawOffset.x);
 		corpse.vars.drawOffset.y = Math.floor(creature.vars.drawOffset.y);
 		drawOnCanvas(corpse, bgCtx);
-		corpses.push(corpse);
+		decor.push(corpse);
 	}
 
-
-
-
-	function Attack(origin, direction) {
-		Object.assign(this, origin.weapon.attack);
-		this.attacker = origin;
-		if(origin.weapon.sprite) {
-			this.sprite = origin.weapon.sprite.current;
-		}
-		this.origin = {
-			x: origin.position.x,
-			y: origin.position.y + origin.sprite.size.y * TILE_SIZE / 2 - origin.box.height / 2
-		}
+	function Attack(attack, direction) {
+		Object.assign(this, attack);
 		this.direction = direction;
-		origin.weapon.vars.lastAttackDirection = direction;
-		if(origin.weapon.vars.hasAttackVariants) {
-			origin.weapon.vars.lastAttackVariant = Math.floor(Math.random() * 2);
-			origin.weapon.sprite.lastAttackVariant = Math.floor(Math.random() * origin.weapon.sprite.attackVariants);
-		}
 		this.created = performance.now();
 		switch(this.type) {
 			case(EnumAttack.SWIPE): {
 				this.contactPoints = [
-					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.50) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc * 0.50) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.28) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc * 0.28) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.15) * this.reach, y: this.origin.y + Math.sin(this.direction - this.arc * 0.15) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction) * this.reach, y: this.origin.y + Math.sin(this.direction) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.15) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc * 0.15) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.28) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc * 0.28) * this.reach },
-					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.50) * this.reach, y: this.origin.y + Math.sin(this.direction + this.arc * 0.50) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction - this.arc * 0.50) * this.reach, y: this.attacker.position.y + Math.sin(this.direction - this.arc * 0.50) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction - this.arc * 0.28) * this.reach, y: this.attacker.position.y + Math.sin(this.direction - this.arc * 0.28) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction - this.arc * 0.15) * this.reach, y: this.attacker.position.y + Math.sin(this.direction - this.arc * 0.15) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction) * this.reach, y: this.attacker.position.y + Math.sin(this.direction) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction + this.arc * 0.15) * this.reach, y: this.attacker.position.y + Math.sin(this.direction + this.arc * 0.15) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction + this.arc * 0.28) * this.reach, y: this.attacker.position.y + Math.sin(this.direction + this.arc * 0.28) * this.reach },
+					{ x: this.attacker.position.x + Math.cos(this.direction + this.arc * 0.50) * this.reach, y: this.attacker.position.y + Math.sin(this.direction + this.arc * 0.50) * this.reach },
 
-					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.50) * this.reach / 2, y: this.origin.y + Math.sin(this.direction - this.arc * 0.50) * this.reach / 2},
-					{ x: this.origin.x + Math.cos(this.direction - this.arc * 0.28) * this.reach / 2, y: this.origin.y + Math.sin(this.direction - this.arc * 0.28) * this.reach / 2},
-					{ x: this.origin.x + Math.cos(this.direction) * this.reach / 2, y: this.origin.y + Math.sin(this.direction) * this.reach / 2},
-					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.28) * this.reach / 2, y: this.origin.y + Math.sin(this.direction + this.arc * 0.28) * this.reach / 2},
-					{ x: this.origin.x + Math.cos(this.direction + this.arc * 0.50) * this.reach / 2, y: this.origin.y + Math.sin(this.direction + this.arc * 0.50) * this.reach / 2}
+					{ x: this.attacker.position.x + Math.cos(this.direction - this.arc * 0.50) * this.reach / 2, y: this.attacker.position.y + Math.sin(this.direction - this.arc * 0.50) * this.reach / 2},
+					{ x: this.attacker.position.x + Math.cos(this.direction - this.arc * 0.28) * this.reach / 2, y: this.attacker.position.y + Math.sin(this.direction - this.arc * 0.28) * this.reach / 2},
+					{ x: this.attacker.position.x + Math.cos(this.direction) * this.reach / 2, y: this.attacker.position.y + Math.sin(this.direction) * this.reach / 2},
+					{ x: this.attacker.position.x + Math.cos(this.direction + this.arc * 0.28) * this.reach / 2, y: this.attacker.position.y + Math.sin(this.direction + this.arc * 0.28) * this.reach / 2},
+					{ x: this.attacker.position.x + Math.cos(this.direction + this.arc * 0.50) * this.reach / 2, y: this.attacker.position.y + Math.sin(this.direction + this.arc * 0.50) * this.reach / 2}
 				];
 				break;
 			}
 			case(EnumAttack.STAB): {
 				this.contactPoints = [
-					{ x: origin.position.x + Math.cos(this.direction) * this.reach, y: origin.position.y + Math.sin(this.direction) * this.reach }
+					{ x: attacker.position.x + Math.cos(this.direction) * this.reach, y: attacker.position.y + Math.sin(this.direction) * this.reach }
 				];
 				break;
 			}
@@ -527,8 +532,8 @@ $(function() {
 	function drawAttack(attack) {
 		switch(attack.type) {
 			case(EnumAttack.SWIPE): {
-				var origin_x = attack.origin.x - viewport_offset_x;
-				var origin_y = attack.origin.y - viewport_offset_y;
+				var origin_x = attack.attacker.position.x - viewport_offset_x;
+				var origin_y = attack.attacker.position.y - viewport_offset_y;
 				attackCtx.moveTo(origin.x,origin.y);
 				attackCtx.beginPath();
 				attackCtx.arc(origin_x, origin_y, attack.reach, attack.direction - attack.arc / 2, attack.direction + attack.arc / 2);
@@ -543,7 +548,7 @@ $(function() {
 			}
 			case(EnumAttack.STAB): {
 				attackCtx.beginPath();
-				attackCtx.moveTo(attack.origin.x, attack.origin.y + attack.stabOffset_y);
+				attackCtx.moveTo(attack.attacker.x, attack.attacker.y + attack.stabOffset_y);
 				attackCtx.lineTo(attack.contactPoints[0].x, attack.contactPoints[0].y);
 				attackCtx.strokeStyle = attack.stabColor1;
 				attackCtx.lineWidth = attack.stabWidth;
@@ -562,11 +567,11 @@ $(function() {
 		creatures.forEach(function(creature) {
 			if(creature.vars.moveThroughColliders) {
 				drawOnCanvas(creature, attackCtx);
-			} else if(creature.weapon && !creature.weapon.vars.foreground) {
-				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
-					drawOnCanvas(creature.weapon, creatureCtx);
-				}
-				drawOnCanvas(creature, creatureCtx);
+			// } else if(creature.weapon && !creature.weapon.vars.foreground) {
+			// 	if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
+			// 		drawOnCanvas(creature.weapon, creatureCtx);
+			// 	}
+			// 	drawOnCanvas(creature, creatureCtx);
 			} else {
 				drawOnCanvas(creature, creatureCtx);
 			}
@@ -594,6 +599,12 @@ $(function() {
 			drawAttack(attack);
 		});
 	}
+
+	// function updateDrawables() {
+	// 	creatures.forEach(function(creature) {
+	// 		if(inViewport(creature.))
+	// 	});
+	// }
 
 	//	Update player movement
 	function updatePlayer() {
@@ -626,36 +637,37 @@ $(function() {
 			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
 			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
 		}
-		updateGear(player);
 		player.animate();
+		player.updateGear();
 	}
 
-	function updateGear(creature) {
-		if(creature.weapon !== undefined) {																						//	If creature has a weapon...
-			creature.weapon.position.x = creature.position.x;																	//	...set its position to equal that of creature.
-			creature.weapon.position.y = creature.position.y + creature.sprite.size.y * TILE_SIZE / 2 - creature.box.height / 2;
-			if(performance.now() - creature.vars.lastAttackTime < creature.weapon.vars.animTime) {								//	If within animtime of last attack...
-				creature.weapon.vars.drawOffset.x = creature.weapon.sprite.attackDrawOffset.x;									//	...set weapon's drawOffset to attackDrawOffset...
-				creature.weapon.vars.drawOffset.y = creature.weapon.sprite.attackDrawOffset.y;
-				if(creature.weapon.vars.lastAttackVariant === 0) {																//	...	and if lastAttackVariant is 0...
-					creature.weapon.rotation = creature.weapon.vars.lastAttackDirection + Math.PI / 2 - creature.weapon.attack.arc /2;	//	...rotate weapon to display half arc *above* attack direction...
-				} else {																										//	...or if lastAttackVariant is 1...
-					creature.weapon.rotation = creature.weapon.vars.lastAttackDirection + Math.PI / 2 + creature.weapon.attack.arc /2;	//	...rotate weapon to display half arc *below* attack direction.
+	Creature.prototype.updateGear = function() {
+		if(this.weapon) {																									//	If creature has a weapon...
+			this.weapon.position.x = this.position.x;																		//	Set weapon position to that of holder..
+			this.weapon.position.y = this.position.y;
+			if(this.weapon.vars.attacking && performance.now() > this.weapon.vars.endAttackAnimationTime) {					//	If its attack animation time has expired...
+				this.weapon.vars.attacking = false;																			//	...reset its 'attacking' flag...
+				this.weapon.reset();																						//	...and run its reset function.
+			}
+			if(this.weapon.vars.attacking) {																				//	If *still* attacking...
+				this.weapon.vars.drawOffset.y = this.weapon.sprite.attackDrawOffset.y;										//	Set its y draw offset to the 'attacking' value...
+				if(this.vars.facingRight) {
+					this.weapon.vars.drawOffset.x = this.weapon.sprite.attackDrawOffset.x;									//	...and the x offset +ve or -ve depending on facing.
+				} else {
+					this.weapon.vars.drawOffset.x = -this.weapon.sprite.attackDrawOffset.x;
 				}
-			} else {
-				if(creature.weapon.sprite.displayWhileResting) {																//	Else if has not attacked recently...
-					delete creature.weapon.rotation;																			//	...remove any weapon rotation.
-					creature.weapon.vars.drawOffset.y = 0;
-					if(creature.vars.facingRight) {																				//	If facingRight...
-						creature.weapon.vars.sprite = creature.weapon.sprite.frames[0];											//	...set R facing weapon sprite...
-						creature.weapon.position.x += creature.weapon.sprite.restingDrawOffset.x;								//	...and offset it.
-						creature.weapon.position.y += creature.weapon.sprite.restingDrawOffset.y;
-					} else {
-						creature.weapon.vars.sprite = creature.weapon.sprite.frames[1];											//	Else if not facingRight, set L facing weapon sprite...
-						creature.weapon.position.x -= creature.weapon.sprite.restingDrawOffset.x;								//	...and offset it.
-						creature.weapon.position.y += creature.weapon.sprite.restingDrawOffset.y;
-					}
-				}	
+			} else if(this.weapon.sprite.displayWhileResting) {
+				this.weapon.vars.drawOffset.y = this.weapon.sprite.restingDrawOffset.y;										//	If *not* attacking...
+				if(this.vars.facingRight) {																					//	...if holder is facing right...
+					this.weapon.vars.sprite = this.weapon.sprite.frames[0];													//	...set the weapon's right-facing sprite...
+					this.weapon.vars.drawOffset.x = this.weapon.sprite.restingDrawOffset.x;									//	...and set +ve offset x
+				} else {
+					this.weapon.vars.sprite = this.weapon.sprite.frames[1];
+					this.weapon.vars.drawOffset.x = -this.weapon.sprite.restingDrawOffset.x;								//	If facing left, set -ve offset x
+				}
+				if(this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
+					this.weapon.vars.drawOffset.y += 1;
+				}
 			}
 		}
 	}
@@ -673,11 +685,9 @@ $(function() {
 				setAiAction(creature);																		//	...assign a new one.
 			}
 			creature.animate();																				//	Animate creature
+			creature.updateGear();
 			if(creature.movement.speed > 0) {																//	If creature has a current movement speed...
 				creature.move(creature.movement.direction, creature.movement.speed);						//	...move it accordingly
-			}
-			if(creature.weapon !== undefined) {
-				updateGear(creature);
 			}
 		});
 	}
@@ -695,7 +705,7 @@ $(function() {
 		attacks.forEach(function(attack) {																							//	For each attack...
 			var hits = 0;																											//	Count successful hits
 			attack.contactPoints.forEach(function(contactPoint) {																	//	...iterate contact points...
-				if(attack.attacker !== player) {																					//	...and if attacker was not player...
+				if(attack.damagePlayer) {																					//	...and if attacker was not player...
 					if(contactPoint.x >= player.box.topLeft.x - 1 && contactPoint.x <= player.box.bottomRight.x + 1 				//	...check if attack falls within player's box...
 					&& contactPoint.y >= player.box.topLeft.y - 1 && contactPoint.y <= player.box.bottomRight.y + 1) {
 						if(player.vars.facingRight) {
@@ -715,7 +725,7 @@ $(function() {
 					// }
 				}
 				creatures.forEach(function(creature) {
-					if(attack.attacker !== creature) {
+					if(attack.damageCreatures) {
 						//	Check whether contactPoint falls within bounding box of any creature
 						if(contactPoint.x >= creature.box.topLeft.x && contactPoint.x <= creature.box.bottomRight.x
 						&& contactPoint.y >= creature.box.topLeft.y && contactPoint.y <= creature.box.bottomRight.y) {
@@ -772,7 +782,7 @@ $(function() {
 				returnCoords.y = obj.position.y;																			//	If so, set y to return unchanged...
 				if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
 					obj.movement.direction = -obj.movement.direction;														//	...invert direction...
-					obj.setFacing();
+					obj.setFacing(obj.movement.direction);
 				} else if(obj.ai !== undefined) {
 					obj.movement.speed = 0;
 					obj.ai.endTime = performance.now();
@@ -787,7 +797,7 @@ $(function() {
 			returnCoords.x = obj.position.x;																				//	...set x to return unchanged
 			if(obj.movement.bounceOff) {																					//	...and if obj bounces off...
 				obj.movement.direction += Math.PI;																			//	...and invert direction.
-				obj.setFacing();
+				obj.setFacing(obj.movement.direction);
 			}
 		} else {
 			returnCoords.x = tryX;																							//	Otherwise, success - return tryX coord
@@ -830,7 +840,7 @@ $(function() {
 					returnCoords.y = obj.position.y;
 					if(obj.movement.bounceOff) {
 						obj.movement.direction = obj.movement.direction + Math.PI;
-						obj.setFacing();
+						obj.setFacing(obj.movement.direction);
 					}
 				}
 			}
@@ -861,9 +871,9 @@ $(function() {
 		});
 	}
 
-	function drawCorpses() {
-		corpses.forEach(function(corpse) {
-			drawOnCanvas(corpse, bgCtx);
+	function drawDecor() {
+		decor.forEach(function(decor) {
+			drawOnCanvas(decor, bgCtx);
 		});
 	}
 
@@ -879,13 +889,15 @@ $(function() {
 	}
 
 	function drawDebugCanvas() {
-		if(performance.now() % 5000 < 50) {				//	Clear all debugs every 5 seconds
-			debugs = [];
-		}
-		// debugs.forEach(function(debug) {
-		// 	debugCtx.strokeStyle = 'red';
-		// 	debugCtx.strokeRect(debug.x, debug.y, 1, 1);
-		// });
+		debugs = [];
+		var debug = { x: player.position.x, y: player.position.y, color: 'red'};
+		var debug2 = { x: player.weapon.position.x, y: player.weapon.position.y, color: 'green'};
+		debugs.push(debug);
+		debugs.push(debug2);
+		debugs.forEach(function(debug) {
+			debugCtx.strokeStyle = debug.color;
+			debugCtx.strokeRect(debug.x - viewport_offset_x, debug.y - viewport_offset_y, 1, 1);
+		});
 		colliders.forEach(function(collider) {
 			debugCtx.strokeStyle = 'green';
 			debugCtx.strokeRect(collider.box.topLeft.x, collider.box.topLeft.y, 1, 1);
@@ -917,8 +929,8 @@ $(function() {
 			bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 			fgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 			drawOverlays();
+			drawDecor();
 			drawObstacles();
-			drawCorpses();
 		}
 		playerCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);	//	Clear player canvas for player location & surrounding 8 tiles
 		attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);				//	Clear entire attack canvas
@@ -936,6 +948,7 @@ $(function() {
 	function start() {
 		// debugger;
 		level = levelGen.loadLevel(0, prng);
+		console.log(level);
 		setUpPlayer();
 		setViewportOffset();
 		addBackground();

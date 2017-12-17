@@ -20,7 +20,12 @@ var level = {
 		y: 0
 	},
 	displayAsMap: false,
-	validLevel: false,
+	validLevel: false
+}
+
+
+//	Level generator
+var levelGen = {
 	vars: {
 		roomAttempts: 300,
 		verticalConnectorSparseness: 10,
@@ -28,15 +33,15 @@ var level = {
 		corridorStraightness: 5,
 		wallDecorFrequency: 8,
 		tallDecorRarity: 5,
+		commonFloatingDecorScarcity: 30,
+		rareFloatingDecorScarcity: 60,
 		minSpecialRooms: 1,
 		maxSpecialRooms: 4,
 		deadEndFactor: 0.5,					//	Fraction of dead ends that get filled in is 1 divided by this number
-		basicRoomScarcity: 5				//	1 = 100% basic rooms, 2 = 50% etc				
-	}
-}
+		basicRoomScarcity: 5,				//	1 = 100% basic rooms, 2 = 50% etc				
+		addCreatureAttempts: 20
+	},
 
-//	Level generator
-var levelGen = {
 	loadLevel: function(levelNumber, prng) {
 		level.seed = prng;
 		switch(levelNumber) {
@@ -76,6 +81,12 @@ var levelGen = {
 						{y: 0, x: 10, height: 3, offset_y: -1},			//	Column
 						{y: 0, x: 11, height: 3, offset_y: -1}			//	Red fountain face
 					],
+					commonForegroundDecor: [
+						{y:6,x:8}, {y:6,x:9}, {y:6,x:10}, {y:6,x:11}, {y:7,x:8}, {y:7,x:9}, {y:7,x:10}, {y:8,x:9} 
+					],
+					rareForegroundDecor: [
+						{y:5,x:8}, {y:5,x:9}, {y:5,x:10}, {y:5,x:11}, {y:7,x:11}, {y:8,x:8}, {y:8,x:10}, {y:6,x:11}, {y:5,x:12}, {y:6,x:12}
+					],
 					lightMudFloor: [
 						{y:2,x:0}, {y:3,x:0}, {y:3,x:1}, {y:3,x:2}, {y:3,x:3}, {y:4,x:0}, {y:4,x:1}, {y:4,x:2}, {y:4,x:3}, {y:5,x:0}, {y:5,x:1}, {y:5,x:2}, {y:5,x:3}
 					],
@@ -92,30 +103,75 @@ var levelGen = {
 						{y:5,x:5}, {y:5,x:4}, {y:5,x:6}, {y:5,x:7}
 					],
 					greyWallDecor: [
-						{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}
+						{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}
 					],
 					door: [
 						{y:8,x:1}, {y:8,x:2}, {y:8,x:3}
+					],
+					tiledFloor: [
+						{y:9,x:8}
 					]
-				},
+				};
 				level.roomTypes = [
 					EnumRoomtype.MUD_PATCH, EnumRoomtype.COBBLES, EnumRoomtype.GREY_STONE
-				]
-
-				//	Set up terrain array
-				this.setupTerrain();
-
-				return level;
+				];
+				level.startRoomContents = function() {
+					console.log("Adding start room contents");
+					// this.addCreature(EnumCreature.GREEN_GOBLIN);
+				};
+				level.boss = EnumCreature.CAMP_VAMP;
+				level.bossRoomContents = function() {
+					console.log("Adding boss room contents");
+					//	Remove any existing obstacles
+					var that = this;
+					level.obstacles.forEach(function(obstacle) {
+						if(obstacle.y >= that.origin.y && obstacle.y <= that.origin.y + that.height && obstacle.x >= that.origin.x && obstacle.x <= that.origin.x + that.width) {
+							console.log("Deleting obstacle...");
+							obstacle.sprite = {y:-1, x:-1};				//	Placeholder! Need to actually delete the obstacle, but couldn't get .splice to work for some reason... revisit
+						}
+					});
+					//	Add tiled floor
+					for(var i = this.origin.y; i < this.origin.y + this.height + 1; i++) {
+						for(var j = this.origin.x; j < this.origin.x + this.width; j++) {
+							if(level.terrainArray[i][j] === 0) {
+								level.overlayArray[i][j] = level.tiles.tiledFloor[0];
+							}
+						}
+					}
+					//	Add boss and other creatures
+					this.addCreature(level.boss);
+					var rand = Math.floor(level.seed.nextFloat() * 3) + 3		//	From 3 - 5
+					for(var i = 0; i < rand; i++) {
+						this.addCreature(EnumCreature.SKELTON);
+					}
+				};
+				level.commonCreatures = [
+					EnumCreature.GREEN_GOBLIN,
+					EnumCreature.GREEN_SLUDGIE,
+					EnumCreature.SKELTON,
+				];
+				level.uncommonCreatures = [
+					EnumCreature.MINI_GHOST,
+					EnumCreature.URK
+				];
+				level.rareCreatures = [
+					EnumCreature.MINI_GHOST
+				];
+				level.randomRoomFactor = 10;			//	Sets range of possible random room contents for generator
+				level.randomRoomIncrease = 0;				//	Increment for higher levels, added to random level selector
 				break;
 			}
 			default: {
 				break;
 			}
 		}
+		//	Generate level and return it to game
+		this.generateLevel();
+		return level;
 	},
 
-	setupTerrain: function() {
-		//	Fill remaining map with random rooms and corridors - final overall layout is set here
+	generateLevel: function() {
+		//	Generate layouts and discard if invalid until a valid one is created
 		while(!level.validLevel) {
 			this.fillOutMap();
 		}
@@ -128,10 +184,16 @@ var levelGen = {
 			room.setupOverlays();
 		});
 
+		//	Add floating decor graphics (obstacles)
+		this.addFloatingDecor();
+		//	Add doors
 		this.addDoors();
-
-		console.log(level.rooms);
-		console.log(level.obstacles);
+		//	Run each room's 'addContents' function
+		level.rooms.forEach(function(room) {
+			room.addContents();
+		});
+		//	Add a smattering of extra random creatures
+		this.addRandomCreatures();
 	},
 
 
@@ -145,7 +207,7 @@ var levelGen = {
 		this.setupSpecialRooms();
 
 		//	Add rooms
-		for(var i = 0; i < level.vars.roomAttempts; i++) {
+		for(var i = 0; i < levelGen.vars.roomAttempts; i++) {
 			var room = new Room();
 		}
 
@@ -156,19 +218,12 @@ var levelGen = {
 			}
 		}
 
-		//	Add some connecting doors to rooms on 1-3 of their walls
+		//	Add some connectors to rooms on 1-2 of their walls
 		level.rooms.forEach(function(room) {
 			var doors = 0;
 			var tries = 100;
 			var rand = Math.floor(level.seed.nextFloat() * 10);
 			var doorDirections = [];
-			// if(rand < 5) {
-			// 	doors = 1;
-			// } else if(rand < 8) {
-			// 	doors = 2;
-			// } else {
-			// 	doors = 3;
-			// }
 			if(rand < 8) {
 				doors = 1;
 			} else {
@@ -252,14 +307,14 @@ var levelGen = {
 						level.terrainArray[i+2][j] !== 0 && level.terrainArray[i+1][j] !== 0 &&		//	...and the 2 tiles below are not open...
 						level.terrainArray[i-2][j] !== 0 && level.terrainArray[i-1][j] !== 0		//	...and the 2 tiles above are not open...
 					) {
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.horizontalConnectorSparseness);
+						var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.horizontalConnectorSparseness);
 						if(rand < 1) {
 							level.terrainArray[i][j] = 0;
 						}
 					} else if(level.terrainArray[i-1][j] === 0 && level.terrainArray[i + 2][j] === 0 &&		//	...or if the tiles above and *2* below are open...
 						level.terrainArray[i][j-1] !== 0 && level.terrainArray[i][j-1] !== 0				//	...and the tiles to left and right are not open...
 					) { 	
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.verticalConnectorSparseness);
+						var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.verticalConnectorSparseness);
 						if(rand < 1) {
 							level.terrainArray[i][j] = 0;
 							level.terrainArray[i+1][j] = 0;
@@ -270,7 +325,11 @@ var levelGen = {
 		}
 
 		//	Fill fillArray, starting from start room
-		level.fillArray = arrayClone(level.terrainArray);
+		level.fillArray.length = 0;
+		for(var i = 0; i < level.fillArray.length; i++) {
+			level.fillArray[i] = [];
+		}
+		level.fillArray = cloneArray(level.terrainArray);
 		fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
 
 		// 	If boss room does not connect to player start room, regenerate map
@@ -282,8 +341,10 @@ var levelGen = {
 			fillInUnreaachableAreas();
 			// Pick some dead ends and back-fill them
 			reduceDeadEnds();
+			// Fill in any areas not connected to the main network again
+			// (not totally sure why this is required again but it seems to be to remove occasional overlays in inaccessible areas!)
+			fillInUnreaachableAreas();
 			level.validLevel = true;
-			console.log(level);
 		}
 
 	},
@@ -302,8 +363,12 @@ var levelGen = {
 		for(var i = 0; i < level.height; i++) {
 			level.terrainArray[i] = [];
 			level.obstacleArray[i] = [];
+			level.overlayArray[i] = [];
+			level.creatureArray[i] = [];
 			for(var j = 0; j < level.width; j++) {
 				level.terrainArray[i][j] = 1;								//	1 = regular impassable wall tile
+				level.creatureArray[i][j] = 0;								//	0 = no creature
+
 			}
 		}
 
@@ -334,8 +399,9 @@ var levelGen = {
 		level.playerStart.x = startPosX + 1;
 		level.bossStart.y = bossPosY + 1;
 		level.bossStart.x = bossPosX + 1;
-		var startRoom = new Room(startPosY, startPosX, startSizeY, startSizeX, 'start');
-		var bossRoom = new Room(bossPosY, bossPosX, bossSizeY, bossSizeX, 'boss');
+
+		var startRoom = new Room(startPosY, startPosX, startSizeY, startSizeX, 'start', level.startRoomContents);
+		var bossRoom = new Room(bossPosY, bossPosX, bossSizeY, bossSizeX, 'boss', level.bossRoomContents);
 	},
 
 	setupSpecialRooms: function() {
@@ -345,7 +411,6 @@ var levelGen = {
 	addBasicOverlays: function() {
 		//	First iterate terrain array and set every tile to either floor or solid
 		for(var i = 0; i < level.terrainArray.length; i++) {
-			level.overlayArray.push([]);
 			for(var j = 0; j < level.terrainArray[0].length; j++) {
 				if(level.terrainArray[i][j] === 0) {
 					level.overlayArray[i][j] = level.tiles.floor;
@@ -396,19 +461,19 @@ var levelGen = {
 					}
 					//	Randomly determine whether wall face should have decor added...
 					if(allowTallDecor) {
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.tallDecorRarity);
+						var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.tallDecorRarity);
 						if(rand < 1) {
 							smallDecor = false;
 						}
 					}
 					if(smallDecor) {
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.wallDecorFrequency);
+						var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.wallDecorFrequency);
 						if(rand < 1) {
 							var rand2 = Math.floor(level.seed.nextFloat() * level.tiles.wallDecorSmall.length);
 							level.overlayArray[i][j] = level.tiles.wallDecorSmall[rand2];
 						}
 					} else {
-						var rand = Math.floor(level.seed.nextFloat() * level.vars.wallDecorFrequency);
+						var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.wallDecorFrequency);
 						if(rand < 1) {
 							var rand2 = Math.floor(level.seed.nextFloat() * level.tiles.wallDecorTall.length);
 							for(var k = 0; k < level.tiles.wallDecorTall[rand2].height; k++) {
@@ -464,6 +529,24 @@ var levelGen = {
 						level.overlayArray[i][j] = level.tiles.wallBtm[rand];
 					}
 				}
+			}
+		}
+	},
+
+	addFloatingDecor: function() {
+		for(var i = 1; i < level.terrainArray.length - 1; i++) {
+			for(var j = 1; j < level.terrainArray[0].length - 1; j++) {
+				if(level.terrainArray[i][j] === 0 && (level.terrainArray[i][j-1] === 0 || level.terrainArray[i][j+1] === 0)) {
+					var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.commonFloatingDecorScarcity);
+					if(rand < 1) {
+						var decor = new Obstacle(i, j, 1, 1, EnumObstacleType.COMMON_FLOATING_DECOR);
+					} else {
+						var rand2 = Math.floor(level.seed.nextFloat() * levelGen.vars.rareFloatingDecorScarcity);
+						if(rand2 < 1) {
+							var decor = new Obstacle(i, j, 1, 1, EnumObstacleType.RARE_FLOATING_DECOR);
+						}
+					}
+				} 
 			}
 		}
 	},
@@ -545,18 +628,23 @@ var levelGen = {
 						}
 					});
 					if(addDoor) {
-						var door = new Obstacle(room.origin.y-2, i, 2, 1, 'door');
+						var door = new Obstacle(room.origin.y-2, i, 2, 1, EnumObstacleType.DOOR);
 					}
 				}
 			}
 		});
 
+	},
+
+	addRandomCreatures: function() {
+
 	}
 };
 
 function fillInUnreaachableAreas() {
+	//	Iterate through rooms and check that when filled they connect to player start - if not, delete them
 	level.rooms.forEach(function(room) {
-		var roomFill = arrayClone(level.terrainArray);
+		var roomFill = cloneArray(level.terrainArray);
 		fill(roomFill, room.origin.y + 1, room.origin.x + 1, 0, 2);
 		if(roomFill[level.playerStart.y][level.playerStart.x] !== 2) {
 			level.rooms.splice(level.rooms.indexOf(room), 1);
@@ -564,8 +652,9 @@ function fillInUnreaachableAreas() {
 	});
 	for(var i = 0; i < level.fillArray.length; i++) {
 		for(var j = 0; j < level.fillArray[0].length; j++) {
-			if(level.fillArray[i][j] !== 2) {
-				level.terrainArray[i][j] = 1;
+			if(level.fillArray[i][j] !== 2) {							//	...if tile does not connect to player start...
+				level.terrainArray[i][j] = 1;							//	...turn the tile into solid in terrainArray...
+				level.overlayArray[i][j] = {y:-1, x:-1};				//	...and remove any existing overlay
 			}
 		}
 	}
@@ -580,7 +669,7 @@ function reduceDeadEnds() {
 				var exits = getExits(i, j);
 				if(exits.length === 1) {
 					var fillIn = 0;					
-					// var fillIn = Math.floor(level.seed.nextFloat() * level.vars.deadEndFactor);
+					// var fillIn = Math.floor(level.seed.nextFloat() * levelGen.vars.deadEndFactor);
 					if(fillIn < 1) {
 						fillTunnel(i, j);
 					}
@@ -647,20 +736,17 @@ function fill(arr, startY, startX, fillValue, fillWith) {
 	}
 };
 
-function arrayClone(arr) {
-    var i, copy;
-    if( Array.isArray( arr ) ) {
-        copy = arr.slice( 0 );
-        for( i = 0; i < copy.length; i++ ) {
-            copy[ i ] = arrayClone( copy[ i ] );
-        }
-        return copy;
-    } else if( typeof arr === 'object' ) {
-        throw 'Cannot clone array containing an object!';
-    } else {
-        return arr;
-    }
-
+function cloneArray (existingArray) {
+   var newObj = (existingArray instanceof Array) ? [] : {};
+   for (i in existingArray) {
+      if (i == 'clone') continue;
+      if (existingArray[i] && typeof existingArray[i] == "object") {
+         newObj[i] = cloneArray(existingArray[i]);
+      } else {
+         newObj[i] = existingArray[i]
+      }
+   }
+   return newObj;
 }
 
 function checkForCorridorStart(y, x) {
@@ -774,7 +860,7 @@ Corridor.prototype.chooseDigDirection = function() {
 		this.digging = false;
 	} else {
 		if(this.validDirections.includes(this.digDirection)) {
-			var turn = Math.floor(level.seed.nextFloat() * level.vars.corridorStraightness);						//	Probability weighting of continuing to dig in straight line if possible
+			var turn = Math.floor(level.seed.nextFloat() * levelGen.vars.corridorStraightness);						//	Probability weighting of continuing to dig in straight line if possible
 			if(turn < 1) {
 				var digDir = Math.floor(level.seed.nextFloat() * this.validDirections.length);
 				this.digDirection = this.validDirections[digDir];
@@ -861,16 +947,22 @@ Corridor.prototype.checkDirection = function(direction) {
 }
 
 //	Room constructor
-Room = function(origin_y, origin_x, height, width, type) {
+Room = function(origin_y, origin_x, height, width, type, addContents) {
 	if(type) {
 		this.type = type;
 	} else {
-		var rand = Math.floor(level.seed.nextFloat() * level.vars.basicRoomScarcity);
+		var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.basicRoomScarcity);
 		if(rand < 1) {
 			this.type = "basic"
 		} else {
 			this.type = level.roomTypes[Math.floor(level.seed.nextFloat() * level.roomTypes.length)];
 		}
+	}
+	if(addContents) {
+		this.addContents = addContents.bind(this);
+	} else {
+		this.addContents = function() {};
+		this.addContents = this.generateRoomContents();
 	}
 	switch(this.type) {
 		case EnumRoomtype.MUD_PATCH: {
@@ -1056,6 +1148,78 @@ Room.prototype.checkIfFits = function() {
 	}
 	return true;
 }
+Room.prototype.generateRoomContents = function() {
+	var addContents = function() {
+		console.log("Adding contents!");
+		var rand = Math.floor(level.seed.nextFloat() * level.randomRoomFactor) + level.randomRoomIncrease;
+		console.log(rand);
+
+		switch(rand) {
+			case 0: case 1: case 2: case 3: {
+				//	Empty room
+				break; 
+			} case 4: case 5: {
+				//	Add 1 common creature
+				var rand = Math.floor(level.seed.nextFloat() * level.commonCreatures.length);
+				this.addCreature(level.commonCreatures[rand]);
+				break;
+			} case 6: {
+				//	Add 1-2 of a common creature
+				var rand = Math.floor(level.seed.nextFloat() * level.commonCreatures.length);
+				var rand2 = Math.floor(level.seed.nextFloat() * 2) + 1;
+				for(var i = 0; i < rand2; i++) {
+					this.addCreature(level.commonCreatures[rand]);
+				}
+				break;
+			} case 7: {
+				//	Add 1 uncommon creature
+				var rand = Math.floor(level.seed.nextFloat() * level.uncommonCreatures.length);
+				this.addCreature(level.uncommonCreatures[rand]);
+				break;
+			} case 8: {
+				//	Add 2-3 of one common creature and 1 common creature of another type
+				var rand = Math.floor(level.seed.nextFloat() * level.commonCreatures.length);
+				var rand2 = Math.floor(level.seed.nextFloat() * 2) + 2;
+				for(var i = 0; i < rand2; i++) {
+					this.addCreature(level.commonCreatures[rand]);
+				}
+				var rand3 = Math.floor(level.seed.nextFloat() * level.commonCreatures.length);
+				this.addCreature(level.commonCreatures[rand3]);
+				break;
+			} case 9: {
+				//	Add 1 uncommon creature and 1-3 different common creatures
+				var rand = Math.floor(level.seed.nextFloat() * level.uncommonCreatures.length);
+				this.addCreature(level.uncommonCreatures[rand]);
+				var rand2 = Math.floor(level.seed.nextFloat() * 3) + 1;
+				for(var i = 0; i < rand2; i++) {
+					var rand3 = Math.floor(level.seed.nextFloat() * level.commonCreatures.length);
+					this.addCreature(level.commonCreatures[rand3]);
+				}
+				break;
+			} default: {
+				break;
+			}
+		}
+	}
+	return addContents;
+}
+Room.prototype.addCreature = function(creature) {
+	var tries = levelGen.vars.addCreatureAttempts;
+	var retry = true;
+	while(tries && retry) {
+		var randY = this.origin.y + Math.floor(level.seed.nextFloat() * (this.height - 2)) + 1;
+		var randX = this.origin.x + Math.floor(level.seed.nextFloat() * (this.width - 2)) + 1; 
+		if(			//	Check that creatureArray is empty for this and all surrounding tiles
+			level.creatureArray[randY-1][randX-1] === 0 && level.creatureArray[randY-1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
+			level.creatureArray[randY][randX-1] === 0 && level.creatureArray[randY][randX] === 0 && level.creatureArray[randY][randX+1] === 0 &&
+			level.creatureArray[randY+1][randX-1] === 0 && level.creatureArray[randY+1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0
+		) {			//	If so, add creature to level.creatureArray
+			level.creatureArray[randY][randX] = creature;
+			retry = false;
+		}
+		tries--;
+	}
+}
 
 Obstacle = function(y, x, size_y, size_x, type) {
 	this.y = y;
@@ -1065,8 +1229,9 @@ Obstacle = function(y, x, size_y, size_x, type) {
 		x: size_x
 	}
 	this.type = type;
+	// this.interact = function() {};
 	switch(this.type) {
-		case 'door': {
+		case EnumObstacleType.DOOR: {
 			this.closed = true;
 			this.sprite = level.tiles.door[0];
 			level.obstacleArray[this.y+1][this.x] = 1;
@@ -1085,6 +1250,18 @@ Obstacle = function(y, x, size_y, size_x, type) {
 				this.ctx = bgCtx;
 				this.sprite = level.tiles.door[2];
 			}
+			break;
+		}
+		case EnumObstacleType.COMMON_FLOATING_DECOR: {
+			var rand = Math.floor(level.seed.nextFloat() * level.tiles.commonForegroundDecor.length);
+			this.sprite = level.tiles.commonForegroundDecor[rand];
+			this.ctx = bgCtx;
+			break;
+		}
+		case EnumObstacleType.RARE_FLOATING_DECOR: {
+			var rand = Math.floor(level.seed.nextFloat() * level.tiles.rareForegroundDecor.length);
+			this.sprite = level.tiles.rareForegroundDecor[rand];
+			this.ctx = bgCtx;
 			break;
 		}
 		default: {
