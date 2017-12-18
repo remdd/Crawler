@@ -17,7 +17,7 @@ setAiAction = function(creature) {
 	// console.log("Setting AI action...");
 	switch(creature.ai.type) {
 
-		case EnumCreature.GREEN_GOBLIN: {
+		case EnumAi.GREEN_GOBLIN: {
 			switch(creature.ai.nextAction) {
 				case 0: {
 					//	Next action not specified
@@ -53,7 +53,7 @@ setAiAction = function(creature) {
 			break;
 		}
 
-		case EnumCreature.MINI_GHOST: {
+		case EnumAi.MINI_GHOST: {
 			switch(creature.ai.nextAction) {
 				case 0: {
 					var action = Math.floor(Math.random() * 1);
@@ -69,7 +69,7 @@ setAiAction = function(creature) {
 			break;
 		}
 
-		case EnumCreature.SKELTON: {
+		case EnumAi.SKELTON: {
 			creature.movement.bounceOff = true;
 			switch(creature.ai.nextAction) {
 				case 0: {
@@ -115,7 +115,7 @@ setAiAction = function(creature) {
 			break;
 		}
 
-		case EnumCreature.SKELTON_ARCHER: {
+		case EnumAi.SKELTON_ARCHER: {
 			creature.movement.bounceOff = true;
 			switch(creature.ai.nextAction) {
 				case 0: {
@@ -140,8 +140,8 @@ setAiAction = function(creature) {
 				}
 				case 1: {
 					var direction = getPlayerCompassDirection(creature);
-					ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);					//	...attack in player's compass direction...
-					creature.ai.nextAction = 2;
+					ai.aim(creature, 0, 200, direction, Math.PI / 8);											//	...attack in player's compass direction...
+					creature.ai.nextAction = 4;
 					break;
 				}
 				case 2: {
@@ -150,7 +150,12 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 3: {
-					ai.moveAwayFromPlayer(creature, 500, 500, 2);											//	...move away from player for 0.5 - 1s, at 2x speed
+					ai.moveAwayFromPlayer(creature, 500, 500, 2);												//	...move away from player for 0.5 - 1s, at 2x speed
+					creature.ai.nextAction = 0;
+					break;
+				}
+				case 4: {
+					ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);		//	...move away from player for 0.5 - 1s, at 2x speed
 					creature.ai.nextAction = 0;
 					break;
 				}
@@ -161,7 +166,7 @@ setAiAction = function(creature) {
 			break;
 		}
 
-		case EnumCreature.GREEN_SLUDGIE: {
+		case EnumAi.GREEN_SLUDGIE: {
 			creature.vars.touchDamage = false;								//	Reset to stop touch damage
 			switch(creature.ai.nextAction) {
 				case 0: {
@@ -191,7 +196,7 @@ setAiAction = function(creature) {
 			break;
 		}
 
-		case EnumCreature.CAMP_VAMP: {
+		case EnumAi.CAMP_VAMP: {
 			creature.movement.bounceOff = true;
 			switch(creature.ai.nextAction) {
 				case 0: {
@@ -274,7 +279,7 @@ setAiAction = function(creature) {
 			}
 			break;
 		}
-		case EnumCreature.URK: {
+		case EnumAi.URK: {
 			switch(creature.ai.nextAction) {
 				case 0: {
 					//	Next action not specified
@@ -320,6 +325,87 @@ setAiAction = function(creature) {
 				}
 			}
 		}
+		case EnumAi.HULKING_URK: {
+			switch(creature.ai.nextAction) {
+				case 0: {
+					//	Next action not specified
+					creature.weapon.vars.attackRate = 1200;														//	Reset to normal attack rate if resetting from bezerk
+					creature.weapon.vars.animTime = 800;
+					if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3) {						//	If player is within 3x attack reach...
+						var action = Math.floor(Math.random() * 2);
+						var direction = getPlayerDirection(creature);
+						if(action < 1) {
+							ai.moveTowardsPlayer(creature, 250, 250, 1.5);
+							creature.ai.nextAction = 3;
+						} else {
+							ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);	//	...attack in player's general direction...
+							creature.ai.nextAction = 1;															//	...and set next action to 1.
+						}
+					} else {
+						var action = Math.floor(Math.random() * 4);												//	Otherwise, randomly choose to...
+						if(action < 3) {
+							ai.rest(creature, 500, 250);														//	...rest...
+						} else {
+							ai.moveRandomVector(creature, 1500, 100, 1);										//	...or move in a random direction.
+						}
+						creature.ai.nextAction = 0;
+					}
+					break;
+				}
+				case 1: {
+					ai.rest(creature, 500, 250);																//	...rest for 250 - 750ms
+					creature.ai.nextAction = 0;
+					break;
+				}
+				case 2: {
+					ai.moveAwayFromPlayer(creature, 250, 250, 1.5);												//	...move away from player for 250-500ms, at 1.5x speed
+					creature.ai.nextAction = 0;
+					break;
+				}
+				case 3: {
+					var direction = getPlayerDirection(creature);
+					ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
+					creature.ai.nextAction = 1;
+					break;
+				}
+				case 4: {																//	Bezerk!
+					creature.vars.bezerkAttacks = Math.floor(Math.random() * 5) + 5;
+					creature.weapon.vars.attackRate = 200;
+					creature.weapon.vars.animTime = 150;
+					ai.rest(creature, 0, 600, 1);
+					var direction = getPlayerDirection(creature);
+					creature.setFacing(direction);
+					if(creature.vars.facingRight) {
+						creature.vars.animation = 6;
+					} else {
+						creature.vars.animation = 7;
+					}
+					creature.ai.nextAction = 5;
+					break;
+				}
+				case 5: {																//	Bezerk!
+					if(creature.vars.bezerkAttacks) {
+						ai.moveTowardsPlayer(creature, 0, 200, 3);
+						creature.ai.nextAction = 6;
+					} else {
+						ai.rest(creature, 1000, 1000, 1);
+						creature.ai.nextAction = 0;
+					}
+					break;
+				}
+				case 6: {																//	Bezerk!
+					var direction = getPlayerDirection(creature);
+					ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
+					creature.vars.bezerkAttacks--;
+					creature.ai.nextAction = 5;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+		}
+
 		default: {
 			break;
 		}
@@ -366,6 +452,25 @@ var ai = {
 				creature.vars.animation = EnumState.MOVING_R;
 			} else {
 				creature.vars.animation = EnumState.MOVING_L;
+			}
+		}
+	},
+	aim: function(creature, duration_factor, duration_min, direction, accuracy, animation) {
+		// console.log("AI: attacking");
+		var duration = Math.random() * duration_factor + duration_min;
+		setAiTiming(creature, duration);
+		creature.movement.speed = 0;
+		direction += Math.random() * accuracy;
+		direction -= Math.random() * accuracy;
+		creature.aim(direction);
+		creature.vars.aimDirection = direction;
+		if(animation) {
+			creature.vars.animation;
+		} else {
+			if(creature.vars.facingRight) {
+				creature.vars.animation = EnumState.RESTING_R;
+			} else {
+				creature.vars.animation = EnumState.RESTING_L;
 			}
 		}
 	},

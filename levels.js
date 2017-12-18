@@ -118,7 +118,7 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					// this.addCreature(EnumCreature.SKELTON);
+					this.addCreature(EnumCreature.CAMP_VAMP);
 				};
 				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {

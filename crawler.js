@@ -192,9 +192,6 @@ $(function() {
 	function drawOnCanvas(entity, ctx) {
 		if(inViewport(entity.position.x, entity.position.y)) {
 			if(entity.vars.hasOwnProperty('rotation')) {
-				if(entity.name === 'Bone Arrow') {
-					console.log(entity);
-				}
 				ctx.save();
 				ctx.translate(entity.position.x - viewport_offset_x, entity.position.y - viewport_offset_y);
 				ctx.rotate(entity.vars.rotation);
@@ -304,6 +301,7 @@ $(function() {
 
 	function Weapon(weaponTemplate, holder) {
 		Entity.apply(this, arguments);
+		// Object.assign(this, weaponTemplate);
 		this.use = weaponTemplate.use;
 		this.reset = weaponTemplate.reset;
 		this.attack = weaponTemplate.attack;
@@ -327,13 +325,15 @@ $(function() {
 		this.vars.endAttackAnimationTime = performance.now() + this.vars.animTime;
 		this.vars.lastAttackDirection = direction;
 		if(this.holder.vars.facingRight) {
-			this.vars.rotation = direction + 3 * this.attack.arc / 2;
+			this.vars.rotation = direction + Math.PI/2 + this.attack.arc / 2;
 		} else {
-			this.vars.rotation = direction + 1 * this.attack.arc / 2;
+			this.vars.rotation = direction + Math.PI/2 - this.attack.arc / 2;
 		}
 	}
 	Weapon.prototype.shoot = function(direction, projectile) {
-		this.holder.setFacing(direction);
+		this.vars.lastAttackTime = performance.now();
+		this.vars.endAttackAnimationTime = performance.now() + this.vars.animTime;
+		this.vars.lastAttackDirection = direction;
 		if(this.holder.vars.facingRight) {
 			this.currentSprite = this.sprite.frames[0];
 			this.vars.rotation = direction;
@@ -341,7 +341,6 @@ $(function() {
 			this.currentSprite = this.sprite.frames[1];
 			this.vars.rotation = direction + Math.PI;
 		}
-		console.log("Shooting! " + direction + " " + projectile);
 		new Projectile(creatureProjectiles[projectile], this.holder, direction);
 	}
 
@@ -349,8 +348,6 @@ $(function() {
 	Projectile.prototype.constructor = Projectile;
 
 	function Projectile(projectileTemplate, shooter, direction) {
-		console.log("New projectile! " + direction + " " + shooter.name);
-		console.log(projectileTemplate);
 		Entity.apply(this, arguments);
 		this.vars = { 
 			shooter: shooter, 
@@ -360,6 +357,7 @@ $(function() {
 			damagePlayer: projectileTemplate.vars.damagePlayer,
 			damageCreatures: projectileTemplate.vars.damageCreatures
 		};
+		this.damage = projectileTemplate.damage;
 		this.currentSprite = projectileTemplate.currentSprite;
 		this.sprite = {};
 		Object.assign(this.sprite, projectileTemplate.sprite);
@@ -368,7 +366,6 @@ $(function() {
 		Object.assign(this.movement, projectileTemplate.movement);
 		this.movement.direction = direction;
 		projectiles.push(this);
-		console.log(projectiles);
 	}
 
 	function updateProjectiles() {
@@ -385,16 +382,28 @@ $(function() {
 						projectile.collidedWith.stuckProjectiles = [];
 					}
 					projectile.stuckTo = projectile.collidedWith;
-					projectile.stuckOffset = {
-						x: projectile.position.x - projectile.stuckTo.position.x,
-						y: projectile.position.y - projectile.stuckTo.position.y
+					projectile.damage(projectile.stuckTo);
+					projectile.stuckOffset = {};
+					if(projectile.position.x > projectile.stuckTo.position.x) {
+						projectile.stuckOffset.x = projectile.position.x - projectile.stuckTo.position.x - 2;
+					} else {
+						projectile.stuckOffset.x = projectile.position.x - projectile.stuckTo.position.x + 2;
+					}
+					if(projectile.position.y > projectile.stuckTo.position.y) {
+						projectile.stuckOffset.y = projectile.position.y - projectile.stuckTo.position.y - 2;
+					} else {
+						projectile.stuckOffset.y = projectile.position.y - projectile.stuckTo.position.y + 2;
 					}
 					projectile.collidedWith.stuckProjectiles.push(projectile);
+				} else if(!projectile.stuckTo && projectile.collidedWith && projectile.collidedWith === 1) {
+					projectile.missed = true;
 				}
 				if(projectile.stuckTo) {
 					projectile.movement.speed = 0;
 					projectile.position.x = projectile.stuckTo.position.x + projectile.stuckOffset.x;
 					projectile.position.y = projectile.stuckTo.position.y + projectile.stuckOffset.y;
+				} else if(projectile.missed) {
+					projectile.movement.speed = 0;
 				}
 			}
 		});
@@ -428,7 +437,8 @@ $(function() {
 			var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
 			this.weapon = weapon;
 		}
-		if(this.setAiType) {
+		if(creatureTemplate.setAiType) {
+			this.setAiType = creatureTemplate.setAiType;
 			this.setAiType();
 		}
 		if(creatureTemplate.touchDamage) {
@@ -462,6 +472,18 @@ $(function() {
 				this.weapon.use(direction);
 			}
 		}
+	}
+	Creature.prototype.aim = function(direction) {
+		if(this.weapon) {
+			this.setFacing(direction);
+			if(this.vars.facingRight) {
+				this.weapon.currentSprite = this.sprite.frames[0];
+				this.weapon.vars.rotation = direction;
+			} else {
+				this.weapon.currentSprite = this.sprite.frames[1];
+				this.weapon.vars.rotation = direction + Math.PI;
+			}
+		}			
 	}
 	Creature.prototype.setFacing = function(direction) {
 		if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
@@ -796,12 +818,6 @@ $(function() {
 				if(attack.damagePlayer) {																					//	...and if attacker was not player...
 					if(contactPoint.x >= player.box.topLeft.x - 1 && contactPoint.x <= player.box.bottomRight.x + 1 				//	...check if attack falls within player's box...
 					&& contactPoint.y >= player.box.topLeft.y - 1 && contactPoint.y <= player.box.bottomRight.y + 1) {
-						if(player.vars.facingRight) {
-							player.vars.animation = EnumState.HITFLASH_R;
-						} else {
-							player.vars.animation = EnumState.HITFLASH_L;
-						}
-						player.vars.lastDamageTime = performance.now();
 						hits++;
 						resolveHit(attack, player);				//	If so, resolve hit
 					}
@@ -1073,6 +1089,11 @@ $(function() {
 		drawOverlays();
 		// drawObstacles();
 		setUpCreatures();
+		creatures.forEach(function(creature) {
+			if(creature.weapon) {
+				creature.weapon.reset();
+			}
+		});
 		$('canvas').css('width', CANVAS_WIDTH * SCALE_FACTOR);
 		$('canvas').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
 		MainLoop.setUpdate(update).setDraw(draw).start();

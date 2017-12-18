@@ -31,7 +31,19 @@ var EnumCreature = {
 	CAMP_VAMP: 5,
 	URK: 6,
 	URK_SHAMAN: 7,
-	SKELTON_ARCHER: 8
+	HULKING_URK: 8
+}
+
+var EnumAi = {
+	GREEN_GOBLIN: 1,
+	MINI_GHOST: 2,
+	SKELTON: 3,
+	GREEN_SLUDGIE: 4,
+	CAMP_VAMP: 5,
+	URK: 6,
+	URK_SHAMAN: 7,
+	SKELTON_ARCHER: 8,
+	HULKING_URK: 9
 }
 
 var EnumCreatureWeapon = {
@@ -40,7 +52,8 @@ var EnumCreatureWeapon = {
 	BONE_AXE: 3,
 	VAMP_DAGGER: 4,
 	URK_SWORD: 5,
-	BONE_CROSSBOW: 6 
+	BONE_CROSSBOW: 6,
+	HULKING_URK_HAMMA: 7 
 }
 
 var EnumCreatureProjectile = {

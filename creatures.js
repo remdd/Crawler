@@ -64,6 +64,12 @@ var playerTemplates = [
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
+			if(this.vars.facingRight) {
+				this.vars.animation = EnumState.HITFLASH_R;
+			} else {
+				this.vars.animation = EnumState.HITFLASH_L;
+			}
+			this.vars.lastDamageTime = performance.now();
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			}
@@ -124,7 +130,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.GREEN_GOBLIN,
+			type: EnumAi.GREEN_GOBLIN,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -139,6 +145,7 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
+			// return EnumCreatureWeapon.URK_SWORD;
 			return EnumCreatureWeapon.GREEN_GOBLIN_CLAW;
 		}	
 	},
@@ -192,7 +199,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.MINI_GHOST,
+			type: EnumAi.MINI_GHOST,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -253,7 +260,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.SKELTON_ARCHER,
+			type: EnumAi.SKELTON,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -268,17 +275,19 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			this.setAiType = function() {
-				debugger;
+			var rand = Math.floor(level.seed.nextFloat() * 4);
+			if(rand < 1) {
+				return EnumCreatureWeapon.BONE_AXE;
+			} else if(rand < 2) {
+				return EnumCreatureWeapon.BONE_CROSSBOW;
+			} else {
+				return EnumCreatureWeapon.BONE_SWORD;
+			}
+		},
+		setAiType: function() {
+			if(this.weapon.name === "Bone Crossbow") {
 				this.ai.type = EnumCreature.SKELTON_ARCHER;
 			}
-			return EnumCreatureWeapon.BONE_CROSSBOW;
-			// var rand = Math.floor(Math.random() * 3);
-			// if(rand < 1) {
-			// 	return EnumCreatureWeapon.BONE_AXE;
-			// } else {
-			// 	return EnumCreatureWeapon.BONE_SWORD;
-			// }
 		}
 	},
 	{
@@ -286,9 +295,9 @@ var creatureTemplates = [
 		currentSprite: { x: 3, y: 4 },
 		vars: {
 			speed: 2,
-			maxHP: 5,
-			currentHP: 5,
-			minFacingChangeTime: 20
+			maxHP: 3,
+			currentHP: 3,
+			minFacingChangeTime: 50
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -320,7 +329,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.GREEN_SLUDGIE,
+			type: EnumAi.GREEN_SLUDGIE,
 		},
 		touchDamage: function() {
 			return 1;
@@ -405,7 +414,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.CAMP_VAMP,
+			type: EnumAi.CAMP_VAMP,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -477,7 +486,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.URK,
+			type: EnumAi.URK,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -546,7 +555,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.URK,
+			type: EnumAi.URK,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -564,25 +573,114 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.URK_SWORD;
 		}	
 	},
+	{
+		name: 'Hulking Urk',
+		currentSprite: { x: 0, y: 16},
+		vars: {
+			speed: 0.4,
+			maxHP: 12,
+			currentHP: 12
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 2, y: 2 },
+			y_padding: 5,
+			frames: [
+				{ x: 0, y: 16 },	//	Resting facing R 1
+				{ x: 2, y: 16 },	//	Resting facing R 2
+				{ x: 4, y: 16 },	//	Moving facing R 1
+				{ x: 6, y: 16 },	//	Moving facing R 2
+				{ x: 8, y: 16 },	//	Moving facing R 3
+				{ x: 10, y: 16 },	//	Moving facing R 4
+				{ x: 12, y: 16 },	//	Death facing R 1
+				{ x: 14, y: 16 },	//	Death facing R 2
+				{ x: 16, y: 16 },	//	Death facing R 3
+				{ x: 18, y: 16 },	//	Death facing R 3
+				{ x: 0, y: 18 },	//	Resting facing L 1
+				{ x: 2, y: 18 },	//	Resting facing L 2
+				{ x: 4, y: 18 },	//	Moving facing L 1
+				{ x: 6, y: 18 },	//	Moving facing L 2
+				{ x: 8, y: 18 },	//	Moving facing L 3
+				{ x: 10, y: 18 },	//	Moving facing L 4
+				{ x: 12, y: 18 },	//	Death facing L 1
+				{ x: 14, y: 18 },	//	Death facing L 2
+				{ x: 16, y: 18 },	//	Death facing L 3
+				{ x: 18, y: 18 },	//	Death facing L 3
+				{ x: 20, y: 16 },	//	Bezerk facing R 1
+				{ x: 22, y: 16 },	//	Bezerk facing R 2
+				{ x: 20, y: 18 },	//	Bezerk facing L 1
+				{ x: 22, y: 18 }	//	Bezerk facing L 2
+			],
+			animations: [
+				[ 1000, [600, 800], [ 0, 1] ],									//	Resting, facing R
+				[ 1000, [600, 800], [ 10, 11] ],								//	Resting, facing L
+				[ 1000, [200, 400, 600, 800, 1000], [ 2, 3, 4, 0, 5 ] ],		//	Moving, facing R
+				[ 1000, [200, 400, 600, 800, 1000], [ 12,13,14,10,15 ] ],		//	Moving, facing L
+				[ 2000, [600, 1100, 1500, 2000], [6, 7, 8, 9 ] ],				//	Death, facing R
+				[ 2000, [600, 1100, 1500, 2000], [16,17,18,19] ],				//	Death, facing L
+				[ 200, [100, 200], [20, 21] ],							//	Bezerk, facing R
+				[ 200, [100, 200], [22, 23] ],							//	Bezerk, facing L
+			]
+		},
+		box: {
+			width: 18, 
+			height: 24,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.HULKING_URK,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				var action = Math.floor(Math.random() * 3);
+				if(action < 1) {
+					this.ai.nextAction = 4;
+				} else {
+					this.ai.nextAction = 2;
+				}
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.HULKING_URK_HAMMA;
+		}	
+	}
 ];
 
 var creatureWeapons = [
 	{},				//	0 is blank - not a weapon!
 	{
 		name: 'Green Goblin Claw',
-		currentSprite: { x: 2, y: 6},
+		currentSprite: { x: -1, y: -1},
 		use: function(direction) {
+			if(this.holder.vars.facingRight) {
+				this.currentSprite = this.sprite.frames[2];
+			} else {
+				this.currentSprite = this.sprite.frames[3];
+			}
 			this.swipe(direction);
-			this.vars.hidden = false;
+			// this.vars.hidden = false;
 			return this.attack;
 		},
 		reset: function() {
 			delete this.vars.rotation;
-			this.vars.hidden = true;
+			// this.vars.hidden = true;
 			this.vars.attacking = false;
 		},
 		vars: {
-			hidden: true,
+			// hidden: true,
 			animTime: 100,								//	Length of time the weapon stays animated after attack
 			attackRate: 800,
 			drawOffset: { x: 0, y: 0 },
@@ -596,9 +694,15 @@ var creatureWeapons = [
 				y: 1
 			},
 			frames: [
-				{ x: 2, y: 6 },							//	Right facing
-				{ x: 2.5, y: 6 }						//	Left facing
+				{ x: -1, y: -1},							//	Resting - no sprite
+				{ x: -1, y: -1},							//	Resting - no sprite
+				{ x: 2, y: 6 },								//	Right facing
+				{ x: 2.5, y: 6 }							//	Left facing
 			],
+			restingDrawOffset: {
+				x: 0,
+				y: 0
+			},
 			attackDrawOffset: {
 				x: 0,
 				y: TILE_SIZE * -0.6
@@ -750,7 +854,7 @@ var creatureWeapons = [
 			],
 			restingDrawOffset: {
 				x: TILE_SIZE * -0.25,
-				y: TILE_SIZE * -0.125
+				y: TILE_SIZE * -3/16
 			},
 			attackDrawOffset: {
 				x: 0,
@@ -833,10 +937,11 @@ var creatureWeapons = [
 			this.vars.attacking = false;
 		},
 		vars: {
-			animTime: 1000,								//	Length of time the weapon stays animated after attack
+			animTime: 200,								//	Length of time the weapon stays animated after attack
 			attackRate: 1000,							//	Time to rest after attack
 			drawOffset: { x: 0, y: 0 },
 			foreground: true,
+			displayTime: 1000,
 			aimTime: 700
 		},
 		position: {},
@@ -855,7 +960,7 @@ var creatureWeapons = [
 				y: TILE_SIZE * 1/16
 			},
 			attackDrawOffset: {
-				x: TILE_SIZE * 2/16,
+				x: TILE_SIZE * 1/16,
 				y: TILE_SIZE * 1/16
 			}
 		},
@@ -863,20 +968,70 @@ var creatureWeapons = [
 			type: EnumAttack.ARROW
 		},
 		projectile: EnumCreatureProjectile.BONE_ARROW
-	}
-];
+	},
+	{
+		name: 'Hulking Urk Hamma',
+		currentSprite: { x: 5, y: 6},
+		use: function(direction) {
+			this.chop(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 800,								//	Length of time the weapon stays animated after attack
+			attackRate: 1200,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 1,
+				y: 2
+			},
+			frames: [
+				{ x: 5, y: 6 },							//	Right facing
+				{ x: 6, y: 6 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 3/16,
+				y: TILE_SIZE * -12/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 24/16,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 200,
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 3* Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},];
 
 var creatureProjectiles = [
 	{},
 	{
 		name: 'Bone Arrow',
-		instance: "NO THIS IS THE PROTOTYPE!",
 		currentSprite: { x: 4, y: 7 },
 		vars: { 
 			drawOffset: { x: 0, y: 0},
 			displayTime: 800,
 			damagePlayer: true,
 			damageCreatures: false,
+			damage: 1
 		},
 		sprite: { 
 			size: { x:1, y:0.5 },
@@ -891,16 +1046,20 @@ var creatureProjectiles = [
 				{ x: 4, y: 7.5 }
 			]
 		},
+		position: { x: 0, y: 0 },
 		box: {
 			width: 1,
 			height: 1,
 			type: EnumBoxtype.PROJECTILE
 		},
 		movement: {
-			speed: 4,
+			speed: 5,
 			bounceOff: false
 		},
-		position: { x: 0, y: 0 },
+		damage: function(target) {
+			console.log("Damage to " + target.name);
+			target.inflictDamage(this.vars.damage);
+		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 	}
