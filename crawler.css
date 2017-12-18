@@ -19,17 +19,11 @@ canvas {
 #bgCanvas {
 	z-index: 1;
 }
-#creatureCanvas {
+#drawableCanvas {
 	z-index: 2;
-}
-#playerCanvas {
-	z-index: 3;
 }
 #attackCanvas {
 	z-index: 4;
-}
-#fgCanvas {
-	z-index: 5;
 }
 #debugCanvas {
 	z-index: 10;

@@ -19,7 +19,8 @@ var EnumState = {
 
 var EnumAttack = { 
 	SWIPE: 0,
-	STAB: 1 
+	STAB: 1,
+	ARROW: 2
 }
 
 var EnumCreature = {
@@ -28,7 +29,9 @@ var EnumCreature = {
 	SKELTON: 3,
 	GREEN_SLUDGIE: 4,
 	CAMP_VAMP: 5,
-	URK: 6
+	URK: 6,
+	URK_SHAMAN: 7,
+	SKELTON_ARCHER: 8
 }
 
 var EnumCreatureWeapon = {
@@ -36,13 +39,18 @@ var EnumCreatureWeapon = {
 	BONE_SWORD: 2,
 	BONE_AXE: 3,
 	VAMP_DAGGER: 4,
-	URK_SWORD: 5
+	URK_SWORD: 5,
+	BONE_CROSSBOW: 6 
+}
+
+var EnumCreatureProjectile = {
+	BONE_ARROW: 1
 }
 
 var EnumBoxtype = {
 	PLAYER: 0,
 	CREATURE: 1,
-	CREATURE_TOXIC_TO_PLAYER: 2,
+	PROJECTILE: 2,
 	POWERUP: 3,
 	ITEM: 4
 }
@@ -66,25 +74,15 @@ var bgCanvas = $('<canvas id="bgCanvas" width="' + CANVAS_WIDTH + '" height="' +
 var bgCtx = bgCanvas.get(0).getContext('2d');
 bgCanvas.appendTo('body');
 
-var creatureCanvas = $('<canvas id="creatureCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
-var creatureCtx = creatureCanvas.get(0).getContext('2d');
-creatureCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
-creatureCanvas.appendTo('body');
-
-var playerCanvas = $('<canvas id="playerCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
-var playerCtx = playerCanvas.get(0).getContext('2d');
-playerCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
-playerCanvas.appendTo('body');
-
-var fgCanvas = $('<canvas id="fgCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
-var fgCtx = fgCanvas.get(0).getContext('2d');
-fgCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
-fgCanvas.appendTo('body');
-
 var attackCanvas = $('<canvas id="attackCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
 var attackCtx = attackCanvas.get(0).getContext('2d');
 attackCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
 attackCanvas.appendTo('body');
+
+var drawableCanvas = $('<canvas id="drawableCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
+var drawableCtx = drawableCanvas.get(0).getContext('2d');
+drawableCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
+drawableCanvas.appendTo('body');
 
 var debugCanvas = $('<canvas id="debugCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
 var debugCtx = debugCanvas.get(0).getContext('2d');

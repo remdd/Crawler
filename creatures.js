@@ -1,12 +1,12 @@
 var playerTemplates = [
 	{
 		name: 'Hero',
+		currentSprite: { x: 0, y: 0 },
 		vars: {
 			speed: 1.2,
 			maxHP: 10,
 			currentHP: 10,
 			attackRate: 1,
-			sprite: { x: 0, y: 0 },								//	Holds current sprite to be rendered
 			moving: false
 		},
 		sprite: { 
@@ -52,7 +52,7 @@ var playerTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 14,
+			height: 12,
 			y_padding: 2,
 			type: EnumBoxtype.PLAYER
 		},
@@ -79,11 +79,11 @@ var creatureTemplates = [
 	{},			//	Template 0 is not used - indicates no creature!
 	{
 		name: 'Green Goblin',
+		currentSprite: { x: 0, y: 0},
 		vars: {
 			speed: 0.6,
 			maxHP: 5,
-			currentHP: 5,
-			sprite: { x: 0, y: 0}
+			currentHP: 5
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -144,12 +144,13 @@ var creatureTemplates = [
 	},
 	{
 		name: 'Mini Ghost',
+		currentSprite: { x: 0, y: 2},
 		vars: {
 			speed: 0.2,
 			maxHP: 5,
 			currentHP: 5,
-			sprite: { x: 0, y: 2},
-			moveThroughColliders: true
+			moveThroughColliders: true,
+			foreground: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -205,11 +206,12 @@ var creatureTemplates = [
 	},
 	{
 		name: 'Skelton',
+		currentSprite: { x: 3, y: 4 },
 		vars: {
-			speed: 0.5,
+			// speed: 0.5,
+			speed: 0,
 			maxHP: 5,
-			currentHP: 5,
-			sprite: { x: 3, y: 4 }
+			currentHP: 5
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -252,7 +254,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumCreature.SKELTON,
+			type: EnumCreature.SKELTON_ARCHER,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -267,21 +269,26 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			var rand = Math.floor(Math.random() * 3);
-			if(rand < 1) {
-				return EnumCreatureWeapon.BONE_AXE;
-			} else {
-				return EnumCreatureWeapon.BONE_SWORD;
+			this.setAiType = function() {
+				debugger;
+				this.ai.type = EnumCreature.SKELTON_ARCHER;
 			}
+			return EnumCreatureWeapon.BONE_CROSSBOW;
+			// var rand = Math.floor(Math.random() * 3);
+			// if(rand < 1) {
+			// 	return EnumCreatureWeapon.BONE_AXE;
+			// } else {
+			// 	return EnumCreatureWeapon.BONE_SWORD;
+			// }
 		}
 	},
 	{
 		name: 'Green Sludgie',
+		currentSprite: { x: 3, y: 4 },
 		vars: {
 			speed: 2,
 			maxHP: 5,
 			currentHP: 5,
-			sprite: { x: 3, y: 4 },
 			minFacingChangeTime: 20
 		},
 		sprite: {
@@ -331,11 +338,11 @@ var creatureTemplates = [
 	},
 	{
 		name: 'Camp Vamp',
+		currentSprite: { x: 0, y: 10 },
 		vars: {
 			speed: 0.7,
 			maxHP: 5,
 			currentHP: 5,
-			sprite: { x: 0, y: 10 },
 			minFacingChangeTime: 50,
 			transformStartTime: 0,
 			transformEndTime: 0,
@@ -422,12 +429,11 @@ var creatureTemplates = [
 	},
 	{
 		name: 'Urk',
+		currentSprite: { x: 0, y: 12},
 		vars: {
 			speed: 0.5,
 			maxHP: 7,
-			currentHP: 7,
-			sprite: { x: 0, y: 12},
-			minFacingChangeTime: 20
+			currentHP: 7
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -490,22 +496,94 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.URK_SWORD;
 		}	
 	},
+	{
+		name: 'Urk Shaman',
+		currentSprite: { x: 0, y: 14},
+		vars: {
+			speed: 0.5,
+			maxHP: 7,
+			currentHP: 7
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 14 },	//	Resting facing R 1
+				{ x: 1, y: 14 },	//	Resting facing R 2
+				{ x: 2, y: 14 },	//	Moving facing R 1
+				{ x: 3, y: 14 },	//	Moving facing R 2
+				{ x: 4, y: 14 },	//	Moving facing R 3
+				{ x: 5, y: 14 },	//	Death facing R 1
+				{ x: 6, y: 14 },	//	Death facing R 2
+				{ x: 7, y: 14 },	//	Death facing R 3
+				{ x: 0, y: 15 },	//	Resting facing L 1
+				{ x: 1, y: 15 },	//	Resting facing L 2
+				{ x: 2, y: 15 },	//	Moving facing L 1
+				{ x: 3, y: 15 },	//	Moving facing L 2
+				{ x: 4, y: 15 },	//	Moving facing L 3
+				{ x: 5, y: 15 },	//	Death facing L 1
+				{ x: 6, y: 15 },	//	Death facing L 2
+				{ x: 7, y: 15 }		//	Death facing L 3
+			],
+			animations: [
+				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
+				[ 800, [500, 800], [ 8, 9] ],											//	Resting, facing L
+				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [ 10,11,12,9 ] ],							//	Moving, facing L
+				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
+				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 15,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumCreature.URK,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.URK_SWORD;
+		}	
+	},
 ];
 
 var creatureWeapons = [
 	{},				//	0 is blank - not a weapon!
 	{
 		name: 'Green Goblin Claw',
+		currentSprite: { x: 2, y: 6},
 		use: function(direction) {
 			this.swipe(direction);
+			this.vars.hidden = false;
 			return this.attack;
 		},
 		reset: function() {
 			delete this.vars.rotation;
+			this.vars.hidden = true;
 			this.vars.attacking = false;
 		},
 		vars: {
-			sprite: { x: 2, y: 6},
+			hidden: true,
 			animTime: 100,								//	Length of time the weapon stays animated after attack
 			attackRate: 800,
 			drawOffset: { x: 0, y: 0 },
@@ -514,7 +592,6 @@ var creatureWeapons = [
 		position: {},
 		sprite: {
 			spriteSheet: monsterSprites,
-			displayWhileResting: false,
 			size: {
 				x: 0.5,
 				y: 1
@@ -534,8 +611,8 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			swipeColor1: 'rgba(255,102,0,0)',
-			swipeColor2: '#ff944d',
+			color1: 'rgba(255,102,0,0)',
+			color2: '#ff944d',
 			swipeThickness: 0.85,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 4,							//	90 degree swipe
@@ -544,6 +621,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Bone Sword',
+		currentSprite: { x: 0, y: 6},
 		use: function(direction) {
 			this.swipe(direction);
 			return this.attack;
@@ -553,7 +631,6 @@ var creatureWeapons = [
 			this.vars.attacking = false;
 		},
 		vars: {
-			sprite: { x: 0, y: 6},
 			animTime: 250,								//	Length of time the weapon stays animated after attack
 			attackRate: 500,
 			drawOffset: { x: 0, y: 0 },
@@ -562,7 +639,6 @@ var creatureWeapons = [
 		position: {},
 		sprite: {
 			spriteSheet: monsterSprites,
-			displayWhileResting: true,
 			size: {
 				x: 0.5,
 				y: 1
@@ -586,8 +662,8 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
-			swipeColor1: 'rgba(255,255,255,0)',
-			swipeColor2: 'rgb(70,0,160)',
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -596,6 +672,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Bone Axe',
+		currentSprite: { x: 1, y: 6},
 		use: function(direction) {
 			this.chop(direction);
 			return this.attack;
@@ -605,7 +682,6 @@ var creatureWeapons = [
 			this.vars.attacking = false;
 		},
 		vars: {
-			sprite: { x: 1, y: 6},
 			animTime: 800,								//	Length of time the weapon stays animated after attack
 			attackRate: 1000,
 			drawOffset: { x: 0, y: 0 },
@@ -614,7 +690,6 @@ var creatureWeapons = [
 		position: {},
 		sprite: {
 			spriteSheet: monsterSprites,
-			displayWhileResting: true,
 			size: {
 				x: 0.5,
 				y: 1
@@ -638,8 +713,8 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
-			swipeColor1: 'rgba(255,255,255,0)',
-			swipeColor2: 'rgb(70,0,160)',
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -648,6 +723,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Vamp Dagger',
+		currentSprite: { x: 4, y: 6},
 		use: function(direction) {
 			this.swipe(direction);
 			return this.attack;
@@ -657,7 +733,6 @@ var creatureWeapons = [
 			this.vars.attacking = false;
 		},
 		vars: {
-			sprite: { x: 4, y: 6},
 			animTime: 200,								//	Length of time the weapon stays animated after attack
 			attackRate: 100,
 			drawOffset: { x: 0, y: 0 },
@@ -666,7 +741,6 @@ var creatureWeapons = [
 		position: {},
 		sprite: {
 			spriteSheet: monsterSprites,
-			displayWhileResting: true,
 			size: {
 				x: 0.5,
 				y: 1
@@ -690,8 +764,8 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 200,
-			swipeColor1: 'rgba(255,255,255,0)',
-			swipeColor2: 'rgb(70,0,160)',
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -700,6 +774,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Urk Sword',
+		currentSprite: { x: 2, y: 7},
 		use: function(direction) {
 			this.swipe(direction);
 			return this.attack;
@@ -709,7 +784,6 @@ var creatureWeapons = [
 			this.vars.attacking = false;
 		},
 		vars: {
-			sprite: { x: 2, y: 7},
 			animTime: 500,								//	Length of time the weapon stays animated after attack
 			attackRate: 1000,							//	Time to rest after attack
 			drawOffset: { x: 0, y: 0 },
@@ -718,7 +792,6 @@ var creatureWeapons = [
 		position: {},
 		sprite: {
 			spriteSheet: monsterSprites,
-			displayWhileResting: true,
 			size: {
 				x: 0.5,
 				y: 1
@@ -742,15 +815,95 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 150,
-			swipeColor1: 'rgba(255,255,255,0)',
-			swipeColor2: 'rgb(70,0,160)',
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
+	},
+	{
+		name: 'Bone Crossbow',
+		currentSprite: { x: 2, y: 7},
+		use: function(direction) {
+			this.shoot(direction, this.projectile);
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 1000,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true,
+			aimTime: 700
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 1,
+				y: 0.5
+			},
+			frames: [
+				{ x: 3, y: 7 },							//	Right facing
+				{ x: 3, y: 7.5 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * 2/16,
+				y: TILE_SIZE * 1/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 2/16,
+				y: TILE_SIZE * 1/16
+			}
+		},
+		attack: {
+			type: EnumAttack.ARROW
+		},
+		projectile: EnumCreatureProjectile.BONE_ARROW
 	}
 ];
 
-
+var creatureProjectiles = [
+	{},
+	{
+		name: 'Bone Arrow',
+		instance: "NO THIS IS THE PROTOTYPE!",
+		currentSprite: { x: 4, y: 7 },
+		vars: { 
+			drawOffset: { x: 0, y: 0}
+		},
+		sprite: { 
+			size: { x:1, y:0.5 },
+			spriteSheet: monsterSprites,
+			y_padding: 1,
+			// pointOffset: {
+			// 	x: TILE_SIZE * -6/16,
+			// 	y: 0
+			// },
+			frames: [
+				{ x: 4, y: 7 },
+				{ x: 4, y: 7.5 }
+			]
+		},
+		box: {
+			width: 1,
+			height: 1,
+			type: EnumBoxtype.PROJECTILE
+		},
+		movement: {
+			speed: 1,
+			bounceOff: false
+		},
+		position: { x: 0, y: 0 },
+		damagePlayer: true,
+		damageCreatures: false,
+		type: EnumAttack.ARROW,
+		displayTime: 2000,
+		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+	}
+];
 

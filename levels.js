@@ -10,6 +10,7 @@ var level = {
 	obstacles: [],
 	rooms: [],
 	obstacles: [],
+	decor: [],
 	corridors: [],
 	playerStart: {
 		x: 0,
@@ -117,7 +118,7 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					// this.addCreature(EnumCreature.GREEN_GOBLIN);
+					// this.addCreature(EnumCreature.SKELTON);
 				};
 				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {
@@ -190,7 +191,9 @@ var levelGen = {
 		this.addDoors();
 		//	Run each room's 'addContents' function
 		level.rooms.forEach(function(room) {
-			room.addContents();
+			// if(room.type === 'start') {
+				room.addContents();
+			// }
 		});
 		//	Add a smattering of extra random creatures
 		this.addRandomCreatures();
@@ -539,11 +542,11 @@ var levelGen = {
 				if(level.terrainArray[i][j] === 0 && (level.terrainArray[i][j-1] === 0 || level.terrainArray[i][j+1] === 0)) {
 					var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.commonFloatingDecorScarcity);
 					if(rand < 1) {
-						var decor = new Obstacle(i, j, 1, 1, EnumObstacleType.COMMON_FLOATING_DECOR);
+						var decor = new Decor(i, j, 1, 1, EnumObstacleType.COMMON_FLOATING_DECOR);
 					} else {
 						var rand2 = Math.floor(level.seed.nextFloat() * levelGen.vars.rareFloatingDecorScarcity);
 						if(rand2 < 1) {
-							var decor = new Obstacle(i, j, 1, 1, EnumObstacleType.RARE_FLOATING_DECOR);
+							var decor = new Decor(i, j, 1, 1, EnumObstacleType.RARE_FLOATING_DECOR);
 						}
 					}
 				} 
@@ -662,7 +665,6 @@ function fillInUnreaachableAreas() {
 
 
 function reduceDeadEnds() {
-	console.log(level.terrainArray);
 	for(var i = 1; i < level.terrainArray.length -1; i++) {
 		for(var j = 1; j < level.terrainArray[0].length -1; j++) {
 			if(level.terrainArray[i][j] === 0) {
@@ -1152,8 +1154,6 @@ Room.prototype.generateRoomContents = function() {
 	var addContents = function() {
 		console.log("Adding contents!");
 		var rand = Math.floor(level.seed.nextFloat() * level.randomRoomFactor) + level.randomRoomIncrease;
-		console.log(rand);
-
 		switch(rand) {
 			case 0: case 1: case 2: case 3: {
 				//	Empty room
@@ -1221,19 +1221,62 @@ Room.prototype.addCreature = function(creature) {
 	}
 }
 
-Obstacle = function(y, x, size_y, size_x, type) {
+Decor = function(y, x, size_y, size_x, type) {
 	this.y = y;
 	this.x = x;
-	this.size = {
+	this.sprite = {};
+	this.sprite.size = {
 		y: size_y,
 		x: size_x
 	}
+	this.sprite.spriteSheet = level.img;
+	this.position = {
+		y: (y * TILE_SIZE) + (TILE_SIZE * size_y / 2),
+		x: (x * TILE_SIZE) + (TILE_SIZE * size_x / 2)
+	}
+	this.vars = {};
+	this.vars.drawOffset = {y:0,x:0};
+	this.type = type;
+	switch(this.type) {
+		case EnumObstacleType.COMMON_FLOATING_DECOR: {
+			var rand = Math.floor(level.seed.nextFloat() * level.tiles.commonForegroundDecor.length);
+			this.currentSprite = level.tiles.commonForegroundDecor[rand];
+			break;
+		}
+		case EnumObstacleType.RARE_FLOATING_DECOR: {
+			var rand = Math.floor(level.seed.nextFloat() * level.tiles.rareForegroundDecor.length);
+			this.currentSprite = level.tiles.rareForegroundDecor[rand];
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+	level.decor.push(this);
+}
+
+Obstacle = function(y, x, size_y, size_x, type) {
+	this.y = y;
+	this.x = x;
+	this.sprite = {};
+	this.sprite.size = {
+		y: size_y,
+		x: size_x
+	}
+	this.sprite.spriteSheet = level.img;
+	this.position = {
+		y: (y * TILE_SIZE) + (TILE_SIZE * size_y / 2),
+		x: (x * TILE_SIZE) + (TILE_SIZE * size_x / 2)
+	}
+	this.vars = {};
+	this.vars.drawOffset = {y:0,x:0};
 	this.type = type;
 	// this.interact = function() {};
 	switch(this.type) {
 		case EnumObstacleType.DOOR: {
 			this.closed = true;
-			this.sprite = level.tiles.door[0];
+			this.currentSprite = level.tiles.door[0];
+			this.foreground = true;
 			level.obstacleArray[this.y+1][this.x] = 1;
 			level.terrainArray[this.y+1][this.x] = 2;
 			this.interact = function() {
@@ -1241,27 +1284,15 @@ Obstacle = function(y, x, size_y, size_x, type) {
 				this.animated = true;
 				this.animTime = 100;
 				this.animStart = performance.now();
-				this.sprite = level.tiles.door[1];
+				this.vars.sprite = level.tiles.door[1];
 				level.terrainArray[this.y+1][this.x] = 0;
 				return this.animTime;
 			}
 			this.interactionEnd = function() {
 				this.animated = false;
 				this.ctx = bgCtx;
-				this.sprite = level.tiles.door[2];
+				this.currentSprite = level.tiles.door[2];
 			}
-			break;
-		}
-		case EnumObstacleType.COMMON_FLOATING_DECOR: {
-			var rand = Math.floor(level.seed.nextFloat() * level.tiles.commonForegroundDecor.length);
-			this.sprite = level.tiles.commonForegroundDecor[rand];
-			this.ctx = bgCtx;
-			break;
-		}
-		case EnumObstacleType.RARE_FLOATING_DECOR: {
-			var rand = Math.floor(level.seed.nextFloat() * level.tiles.rareForegroundDecor.length);
-			this.sprite = level.tiles.rareForegroundDecor[rand];
-			this.ctx = bgCtx;
 			break;
 		}
 		default: {

@@ -115,6 +115,52 @@ setAiAction = function(creature) {
 			break;
 		}
 
+		case EnumCreature.SKELTON_ARCHER: {
+			creature.movement.bounceOff = true;
+			switch(creature.ai.nextAction) {
+				case 0: {
+					if(getPlayerDistance(creature) < TILE_SIZE * 6) {
+						var action = Math.floor(Math.random() * 4)
+						if(action < 3) {
+							ai.moveAwayFromPlayer(creature, 300, 350, 1);
+							creature.movement.bounceOff = false;
+							creature.ai.nextAction = 1;
+						} else {
+							ai.moveRandomVector(creature, 300, 350, 2);
+						}
+					} else {
+						var action = Math.floor(Math.random() * 2);
+						if(action < 1) {
+							ai.moveRandomVector(creature, 1000, 500, 1);
+						} else {
+							ai.rest(creature, 1000, 500);
+						}
+					}
+					break;				
+				}
+				case 1: {
+					var direction = getPlayerCompassDirection(creature);
+					ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);					//	...attack in player's compass direction...
+					creature.ai.nextAction = 2;
+					break;
+				}
+				case 2: {
+					ai.rest(creature, 1000, 500);
+					creature.ai.nextAction = 0;
+					break;
+				}
+				case 3: {
+					ai.moveAwayFromPlayer(creature, 500, 500, 2);											//	...move away from player for 0.5 - 1s, at 2x speed
+					creature.ai.nextAction = 0;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+			break;
+		}
+
 		case EnumCreature.GREEN_SLUDGIE: {
 			creature.vars.touchDamage = false;								//	Reset to stop touch damage
 			switch(creature.ai.nextAction) {
@@ -149,7 +195,7 @@ setAiAction = function(creature) {
 			creature.movement.bounceOff = true;
 			switch(creature.ai.nextAction) {
 				case 0: {
-					creature.vars.hideWeapon = false;											//	Redisplay dagger if hidden while flying
+					creature.weapon.vars.hidden = false;											//	Redisplay dagger if hidden while flying
 					if(getPlayerDistance(creature) < TILE_SIZE * 4) {
 						ai.moveTowardsPlayer(creature, 300, 350, 2);
 						creature.movement.bounceOff = false;
@@ -182,7 +228,7 @@ setAiAction = function(creature) {
 					creature.vars.animation = 6;														//	Transform to bat
 					creature.ai.nextAction = 4;															//	Fly as bat
 					creature.vars.isBat = true;
-					creature.vars.hideWeapon = true;
+					creature.weapon.vars.hidden = true;
 					creature.vars.moveThroughColliders = true;
 					break;
 				}
@@ -325,7 +371,6 @@ var ai = {
 	},
 	attack: function(creature, duration_factor, duration_min, direction, accuracy, animation) {
 		// console.log("AI: attacking");
-		console.log(creature);
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.speed = 0;
