@@ -192,6 +192,9 @@ $(function() {
 	function drawOnCanvas(entity, ctx) {
 		if(inViewport(entity.position.x, entity.position.y)) {
 			if(entity.vars.hasOwnProperty('rotation')) {
+				if(entity.name === 'Bone Arrow') {
+					console.log(entity);
+				}
 				ctx.save();
 				ctx.translate(entity.position.x - viewport_offset_x, entity.position.y - viewport_offset_y);
 				ctx.rotate(entity.vars.rotation);
@@ -329,82 +332,73 @@ $(function() {
 			this.vars.rotation = direction + 1 * this.attack.arc / 2;
 		}
 	}
-	Weapon.prototype.shoot = function(direction, projectileTemplate) {
-		this.vars.lastAttackTime = performance.now();
-		this.vars.endAttackAnimationTime = performance.now() + this.vars.animTime;
-		this.vars.lastAttackDirection = direction;
+	Weapon.prototype.shoot = function(direction, projectile) {
 		this.holder.setFacing(direction);
 		if(this.holder.vars.facingRight) {
-			this.vars.rotation = direction;
 			this.currentSprite = this.sprite.frames[0];
+			this.vars.rotation = direction;
 		} else {
-			this.vars.rotation = direction + Math.PI;
 			this.currentSprite = this.sprite.frames[1];
+			this.vars.rotation = direction + Math.PI;
 		}
-		new Arrow(direction, creatureProjectiles[projectileTemplate], this)
+		console.log("Shooting! " + direction + " " + projectile);
+		new Projectile(creatureProjectiles[projectile], this.holder, direction);
 	}
 
-	function Arrow(direction, projectileTemplate, weapon) {
-		Object.assign(this, projectileTemplate);
-		Object.assign(this.position, weapon.position);
+	Projectile.prototype = Object.create(Entity.prototype);
+	Projectile.prototype.constructor = Projectile;
+
+	function Projectile(projectileTemplate, shooter, direction) {
+		console.log("New projectile! " + direction + " " + shooter.name);
+		console.log(projectileTemplate);
+		Entity.apply(this, arguments);
+		this.vars = { 
+			shooter: shooter, 
+			drawOffset: { x: projectileTemplate.vars.drawOffset.x, y: projectileTemplate.vars.drawOffset.y }, 
+			rotation: direction,
+			displayTime: projectileTemplate.vars.displayTime,
+			damagePlayer: projectileTemplate.vars.damagePlayer,
+			damageCreatures: projectileTemplate.vars.damageCreatures
+		};
+		this.currentSprite = projectileTemplate.currentSprite;
+		this.sprite = {};
+		Object.assign(this.sprite, projectileTemplate.sprite);
+		this.position = { x: shooter.weapon.position.x, y: shooter.weapon.position.y };
+		this.movement = {};
+		Object.assign(this.movement, projectileTemplate.movement);
 		this.movement.direction = direction;
-		this.movement.speed = projectileTemplate.movement.speed;
-		this.removeTime = performance.now() + this.displayTime;
-		this.instance = "Yes, this is an instance! " + performance.now();
-		this.vars.shooter = weapon.holder;
-		if(this.vars.shooter.vars.facingRight) {
-			this.currentSprite = this.sprite.frames[0];
-			this.vars.rotation = direction;
-		} else {
-			this.currentSprite = this.sprite.frames[1];
-			this.vars.rotation = direction + Math.PI;
-		}
 		projectiles.push(this);
 		console.log(projectiles);
-		// Object.assign(this, creatureProjectiles[weapon.projectile.template]);
-		// Object.assign(this.vars, creatureProjectiles[weapon.projectile.template].vars);
-		// Object.assign(this.sprite, creatureProjectiles[weapon.projectile.template].sprite);
-		// this.instance = "YES THIS IS AN INSTANCE!";
-		// if(weapon.holder.vars.facingRight) {
-		// 	this.currentSprite = this.sprite.frames[0];
-		// 	this.vars.rotation = direction;
-		// } else {
-		// 	this.currentSprite = this.sprite.frames[1];
-		// 	this.vars.rotation = direction + Math.PI;
-		// }
-		// this.position.x = weapon.position.x;
-		// this.position.y = weapon.position.y;
-		// this.movement = {};
-		// this.movement.direction = direction;
-		// this.movement.speed = creatureProjectiles[weapon.projectile.template].movement.speed;
-		// this.removeTime = performance.now() + this.displayTime;
-		// this.vars.shooter = weapon.holder;
 	}
-	Arrow.prototype.hit = function(target) {
-		console.log(this);
-		console.log(creatureProjectiles[1]);
-		this.movement.speed = 0;
-		console.log(this);
-		console.log(creatureProjectiles[1]);
-		if(!this.hasHit) {
-			console.log(this);
-			// this.movement.speed = 0;
-			console.log(creatureProjectiles[1]);
-			this.hasHit = target;
-			if(this.hasHit !== 1) {
-				if(!target.stuckProjectiles) {
-					target.stuckProjectiles = [];
+
+	function updateProjectiles() {
+		projectiles.forEach(function(projectile) {
+			if(performance.now() > projectile.deleteTime) {
+				projectiles.splice(projectiles.indexOf(projectile), 1);
+			} else {
+				Creature.prototype.move.call(projectile, projectile.movement.direction, projectile.movement.speed);
+				if(projectile.collidedWith && !projectile.deleteTime) {
+					projectile.deleteTime = performance.now() + projectile.vars.displayTime;
 				}
-				this.stuckOffset = {
-					x: this.position.x - target.position.x,
-					y: this.position.y - target.position.y
+				if(!projectile.stuckTo && projectile.collidedWith && projectile.collidedWith !== 1) {
+					if(projectile.collidedWith.stuckProjectiles === undefined) {
+						projectile.collidedWith.stuckProjectiles = [];
+					}
+					projectile.stuckTo = projectile.collidedWith;
+					projectile.stuckOffset = {
+						x: projectile.position.x - projectile.stuckTo.position.x,
+						y: projectile.position.y - projectile.stuckTo.position.y
+					}
+					projectile.collidedWith.stuckProjectiles.push(projectile);
 				}
-				var stuckArrow = {};
-				Object.assign(stuckArrow, this);
-				target.stuckProjectiles.push(stuckArrow);
-				projectiles.splice(projectiles.indexOf(this), 1);
+				if(projectile.stuckTo) {
+					projectile.movement.speed = 0;
+					projectile.position.x = projectile.stuckTo.position.x + projectile.stuckOffset.x;
+					projectile.position.y = projectile.stuckTo.position.y + projectile.stuckOffset.y;
+				}
 			}
-		}
+		});
+
 	}
 
 	//	Assign Entity prototype
@@ -764,13 +758,6 @@ $(function() {
 				}
 			}
 		}
-		if(this.stuckProjectiles) {
-			var that = this;
-			this.stuckProjectiles.forEach(function(stuckProjectile) {
-				stuckProjectile.position.x = that.position.x + stuckProjectile.stuckOffset.x;
-				stuckProjectile.position.y = that.position.y + stuckProjectile.stuckOffset.y;
-			});
-		}
 	}
 
 	function updateCreatures() {
@@ -1001,6 +988,9 @@ $(function() {
 				drawOnCanvas(drawable.weapon, drawableCtx);
 			}
 		});
+		projectiles.forEach(function(projectile) {
+			drawOnCanvas(projectile, drawableCtx);
+		});
 	}
 
 	function drawDecor() {
@@ -1019,32 +1009,6 @@ $(function() {
 			}
 		});
 	}
-
-	function updateProjectiles() {
-		projectiles.forEach(function(projectile) {
-			if(performance.now() > projectile.removeTime) {
-				projectiles.splice(projectiles.indexOf(projectile), 1);
-				if(player.stuckProjectiles && player.stuckProjectiles.includes(projectile)) {
-					player.stuckProjectiles.splice(player.stuckProjectiles.indexOf(projectile), 1);
-				};
-				creatures.forEach(function(creature) {
-					if(creature.stuckProjectiles && creature.stuckProjectiles.includes(projectile)) {
-						creature.stuckProjectiles.splice(creature.stuckProjectiles.indexOf(projectile), 1);
-					};
-				});
-			} else {
-				Creature.prototype.move.call(projectile, projectile.movement.direction, projectile.movement.speed);
-				if(!projectile.hasHit) {
-					if(projectile.collidedWith && projectile.collidedWith !== projectile.shooter) {
-						projectile.hit(projectile.collidedWith);
-					}
-				} else if(projectile.hasHit && projectile.hasHit === 1) {
-					// projectile.movement.speed = 0;
-				}
-			}
-		});
-	}
-
 
 	function drawDebugCanvas() {
 		projectiles.forEach(function(projectile) {
@@ -1075,8 +1039,8 @@ $(function() {
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
-		updateProjectiles();
 		updateObstacles();
+		updateProjectiles();
 		updateDrawables();
 		// collisionFixer();
 		// console.log(colliders);
@@ -1093,7 +1057,7 @@ $(function() {
 		drawDrawables();
 		attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 		drawAttacks();
-		debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+		// debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 		// drawDebugCanvas();
 		$('#fps').text(MainLoop.getFPS());
 	}

@@ -208,8 +208,7 @@ var creatureTemplates = [
 		name: 'Skelton',
 		currentSprite: { x: 3, y: 4 },
 		vars: {
-			// speed: 0.5,
-			speed: 0,
+			speed: 0.5,
 			maxHP: 5,
 			currentHP: 5
 		},
@@ -874,7 +873,10 @@ var creatureProjectiles = [
 		instance: "NO THIS IS THE PROTOTYPE!",
 		currentSprite: { x: 4, y: 7 },
 		vars: { 
-			drawOffset: { x: 0, y: 0}
+			drawOffset: { x: 0, y: 0},
+			displayTime: 800,
+			damagePlayer: true,
+			damageCreatures: false,
 		},
 		sprite: { 
 			size: { x:1, y:0.5 },
@@ -895,14 +897,11 @@ var creatureProjectiles = [
 			type: EnumBoxtype.PROJECTILE
 		},
 		movement: {
-			speed: 1,
+			speed: 4,
 			bounceOff: false
 		},
 		position: { x: 0, y: 0 },
-		damagePlayer: true,
-		damageCreatures: false,
 		type: EnumAttack.ARROW,
-		displayTime: 2000,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 	}
 ];
