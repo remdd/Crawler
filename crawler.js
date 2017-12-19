@@ -23,7 +23,7 @@ $(function() {
 	var interactDistance = 15;					//	Distance at which player can interact with interactables
 
 	// var seed = Math.floor(Math.random() * 1000000);
-	var seed = 3;
+	var seed = 5;
 	var prng = new Random(seed);
 
 	setViewportOffset = function() {
@@ -117,8 +117,16 @@ $(function() {
 		background.appendTo('body');
 	}
 
-	function drawOverlays() {											//	Draw inert overlay tile decorators
-		for(var i = 0; i < level.terrainArray.length; i++) {
+	function setUpLevel() {
+		level.obstacles.forEach(function(obstacle) {
+			if(obstacle.boxCollider) {
+				colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
+			}
+		});
+	}
+
+	function drawOverlays() {											
+		for(var i = 0; i < level.terrainArray.length; i++) {			//	Draw inert overlay tile decorators
 			for(var j = 0; j < level.terrainArray[i].length; j++) {
 				if(inViewport(TILE_SIZE * j + (TILE_SIZE / 2), TILE_SIZE * i + (TILE_SIZE / 2))) {
 					if(level.overlayArray[i][j] !== undefined && level.overlayArray[i][j] !== 0) {
@@ -137,31 +145,6 @@ $(function() {
 				}
 			}
 		}
-	}
-
-	function drawObstacles() {
-		for(var i = 0; i < level.obstacles.length; i++) {
-			// debugger;
-			if(inViewport(TILE_SIZE * level.obstacles[i].x + (TILE_SIZE / 2), TILE_SIZE * level.obstacles[i].y + (TILE_SIZE / 2))) {
-				var ctx;
-				var obstacle = level.obstacles[i];
-				if(obstacle.ctx) {
-					ctx = obstacle.ctx;
-				} else {
-					ctx = bgCtx;
-				}
-				ctx.drawImage(level.img, 						//	Image to load
-					obstacle.sprite.x * TILE_SIZE, 						//	x-coord to start clipping
-					obstacle.sprite.y * TILE_SIZE, 						//	y-coord to start clipping
-					obstacle.size.x * TILE_SIZE, 						//	width of clipped image
-					obstacle.size.y * TILE_SIZE, 						//	height of clipped image
-					TILE_SIZE * obstacle.x - viewport_offset_x, 		//	x-coord of canvas placement
-					TILE_SIZE * obstacle.y - viewport_offset_y, 		//	y-coord of canvas placement
-					obstacle.size.x * TILE_SIZE, 						//	width of image on canvas
-					obstacle.size.y * TILE_SIZE							//	height of image on canvas
-				);
-			}
-		}	
 	}
 
 	//	Set up player
@@ -187,6 +170,7 @@ $(function() {
 				}
 			}
 		}
+		console.log(creatures);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -210,8 +194,6 @@ $(function() {
 				);
 				ctx.restore();
 			} else {
-				// entity.position.x += entity.vars.drawOffset.x; 
-				// entity.position.y += entity.vars.drawOffset.y;
 				ctx.drawImage(entity.sprite.spriteSheet,
 					entity.currentSprite.x * TILE_SIZE, 												//	x-coord to start clipping
 					entity.currentSprite.y * TILE_SIZE, 												//	y-coord to start clipping
@@ -535,20 +517,25 @@ $(function() {
 				var left = this.box.topLeft.x;
 				var right = this.box.bottomRight.x;
 
+				var objTop = colliders[i].box.topLeft.y - 1;
+				var objBtm = colliders[i].box.bottomRight.y + 1;
+				var objL = colliders[i].box.topLeft.x - 1;
+				var objR = colliders[i].box.bottomRight.x + 1;
+
 				if(
-				//	Check if this overlaps any corner of the collider...
-				(top < colliders[i].box.topLeft.y +1 && btm > colliders[i].box.topLeft.y -1 && left < colliders[i].box.topLeft.x +1 && right > colliders[i].box.topLeft.x -1) ||
-				(top < colliders[i].box.bottomRight.y +1 && btm > colliders[i].box.bottomRight.y -1 && left < colliders[i].box.topLeft.x +1 && right > colliders[i].box.topLeft.x -1) ||
-				(top < colliders[i].box.topLeft.y +1 && btm > colliders[i].box.topLeft.y -1 && left < colliders[i].box.bottomRight.x +1 && right > colliders[i].box.bottomRight.x -1) ||
-				(top < colliders[i].box.bottomRight.y +1 && btm > colliders[i].box.bottomRight.y -1 && left < colliders[i].box.bottomRight.x +1 && right > colliders[i].box.bottomRight.x -1) ||
-				//	...or if this overlaps the top or bottom side of the collider...
-				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left < colliders[i].box.topLeft.x +1 && right > colliders[i].box.topLeft.x -1) ||
-				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left < colliders[i].box.bottomRight.x +1 && right > colliders[i].box.bottomRight.x -1) ||
-				//	...or if this overlaps the left or right side of the collider...
-				(top < colliders[i].box.topLeft.y +1 && btm > colliders[i].box.topLeft.y -1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.bottomRight.x +1) ||
-				(top < colliders[i].box.bottomRight.y +1 && btm > colliders[i].box.bottomRight.y -1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.topLeft.x +1) ||
-				//	...or dalls fully inside the collider
-				(top > colliders[i].box.topLeft.y -1 && btm < colliders[i].box.bottomRight.y +1 && left > colliders[i].box.topLeft.x -1 && right < colliders[i].box.bottomRight.x +1)
+				//	Check if obj overlaps any corner of the collider...
+				(top <= objTop && btm >= objTop && left <= objL && right >= objL) ||
+				(top <= objTop && btm >= objTop && left <= objR && right >= objR) ||
+				(top <= objBtm && btm >= objBtm && left <= objL && right >= objL) ||
+				(top <= objBtm && btm >= objBtm && left <= objR && right >= objR) ||
+				//	...or if obj overlaps the top or bottom side of the collider...
+				(top <= objTop && btm >= objTop && left >= objL && right <= objR) ||
+				(top <= objBtm && btm >= objBtm && left >= objL && right <= objR) ||
+				//	...or if obj overlaps the left or right side of the collider...
+				(top >= objTop && btm <= objBtm && left <= objL && right >= objL) ||
+				(top >= objTop && btm <= objBtm && left <= objR && right >= objR) ||
+				//	...or falls fully inside the collider
+				(top >= objTop && btm <= objBtm && left >= objL && right <= objR)
 				) {
 					collides = true;
 				}
@@ -852,7 +839,7 @@ $(function() {
 		//	DAMAGE CALC GOES HERE
 		var damage = 1;
 		target.inflictDamage(damage);
-		// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
+		console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 	}
 
 	function checkCollision(obj, tryX, tryY) {
@@ -929,20 +916,25 @@ $(function() {
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 
+				var objTop = colliders[i].box.topLeft.y;
+				var objBtm = colliders[i].box.bottomRight.y;
+				var objL = colliders[i].box.topLeft.x;
+				var objR = colliders[i].box.bottomRight.x;
+
 				if(
 				//	Check if obj overlaps any corner of the collider...
-				(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
-				(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
-				(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
-				(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
+				(newTop <= objTop && newBtm >= objTop && newL <= objL && newR >= objL) ||
+				(newTop <= objTop && newBtm >= objTop && newL <= objR && newR >= objR) ||
+				(newTop <= objBtm && newBtm >= objBtm && newL <= objL && newR >= objL) ||
+				(newTop <= objBtm && newBtm >= objBtm && newL <= objR && newR >= objR) ||
 				//	...or if obj overlaps the top or bottom side of the collider...
-				(newTop > colliders[i].box.topLeft.y -1 && newBtm < colliders[i].box.bottomRight.y +1 && newL < colliders[i].box.topLeft.x +1 && newR > colliders[i].box.topLeft.x -1) ||
-				(newTop > colliders[i].box.topLeft.y -1 && newBtm < colliders[i].box.bottomRight.y +1 && newL < colliders[i].box.bottomRight.x +1 && newR > colliders[i].box.bottomRight.x -1) ||
+				(newTop <= objTop && newBtm >= objTop && newL >= objL && newR <= objR) ||
+				(newTop <= objBtm && newBtm >= objBtm && newL >= objL && newR <= objR) ||
 				//	...or if obj overlaps the left or right side of the collider...
-				(newTop < colliders[i].box.topLeft.y +1 && newBtm > colliders[i].box.topLeft.y -1 && newL > colliders[i].box.topLeft.x -1 && newR < colliders[i].box.bottomRight.x +1) ||
-				(newTop < colliders[i].box.bottomRight.y +1 && newBtm > colliders[i].box.bottomRight.y -1 && newL > colliders[i].box.topLeft.x -1 && newR < colliders[i].box.topLeft.x +1) ||
-				//	...or dalls fully inside the collider
-				(newTop > colliders[i].box.topLeft.y -1 && newBtm < colliders[i].box.bottomRight.y +1 && newL > colliders[i].box.topLeft.x -1 && newR < colliders[i].box.bottomRight.x +1)
+				(newTop >= objTop && newBtm <= objBtm && newL <= objL && newR >= objL) ||
+				(newTop >= objTop && newBtm <= objBtm && newL <= objR && newR >= objR) ||
+				//	...or falls fully inside the collider
+				(newTop >= objTop && newBtm <= objBtm && newL >= objL && newR <= objR)
 				) {
 					if(obj.vars.touchDamage && colliders[i] === player) {
 						obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
@@ -1031,10 +1023,12 @@ $(function() {
 			var debug = { x: projectile.position.x, y: projectile.position.y, color: 'orange'};
 			debugs.push(debug);
 		});
-		// colliders.forEach(function(collider) {
-		// 	var debug = { x: collider.position.x, y: collider.position.y, color: 'blue'};
-		// 	debugs.push(debug);
-		// });
+		colliders.forEach(function(collider) {
+			var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
+			debugs.push(debug);
+			var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
+			debugs.push(debug2);
+		});
 		// attacks.forEach(function(attack) {
 		// 	attack.contactPoints.forEach(function(contactPoint) {
 		// 		var debug = { x: contactPoint.x, y: contactPoint.y, color: 'green'};
@@ -1086,8 +1080,8 @@ $(function() {
 		setUpPlayer();
 		setViewportOffset();
 		addBackground();
+		setUpLevel();
 		drawOverlays();
-		// drawObstacles();
 		setUpCreatures();
 		creatures.forEach(function(creature) {
 			if(creature.weapon) {

@@ -50,88 +50,39 @@ var levelGen = {
 				level.height = 70;
 				level.width = 70;
 				level.img = document.getElementById('tilesetImg');
-				level.tiles = {
-					tileset: 'Dungeon1',
-					floor: { y:0,x:0 },
-					solid: { y:1,x:0 },
-					solidColor: '#1c1117',
-					wallFace: [{ y:1,x:2 }, { y:1,x:1 }, { y:1,x:3 }, { y:1,x:4 }],					//	Wall arrays in order of no ends, left end, right end, both ends
-					wallTop: [{ y:0,x:2 }, { y:0,x:1 }, { y:0,x:3 }, { y:0,x:4 }],
-					//	Wall bottoms in order of wall-above *3, wall-left *3, wall-right *3, wall-above&left, wall-above&right, wall-l&r, wall-above&l&r
-					wallBtm: [{ y:2,x:1 }, { y:2,x:2 }, { y:2,x:3 }, { y:0,x:12}, { y:1,x:12}, { y:2,x:12}, { y:0,x:13}, { y:1,x:13}, { y:2,x:13}, 
-						{ y:0,x:14}, { y:1,x:14}, { y:3,x:14}, { y:2,x:14} ],
-					wallDecorSmall: [
-						{y: 1, x: 5},					//	Pipe end 1
-						{y: 1, x: 6},					//	Pipe end 2
-						{y: 1, x: 7},					//	Grille 1
-						{y: 1, x: 8},					//	Grille 2
-						{y: 2, x: 5},					//	Dark block
-						{y: 2, x: 6},					//	Pipe end 3
-						{y: 2, x: 7},					//	Hole 1
-						{y: 2, x: 8},					//	Hole 2
-						{y: 3, x: 4},					//	Faceplate
-						{y: 3, x: 5},					//	Banner 1
-						{y: 3, x: 6},					//	Banner 2
-						{y: 3, x: 7},					//	Banner 3
-						{y: 3, x: 8},					//	Banner 4
-						{y: 2, x: 4},					//	Crack
-						{y: 4, x: 4}					//	Chains
-					],
-					wallDecorTall: [
-						{y: 1, x: 9, height: 2, offset_y: 0},			//	Green goo
-						{y: 0, x: 10, height: 3, offset_y: -1},			//	Column
-						{y: 0, x: 11, height: 3, offset_y: -1}			//	Red fountain face
-					],
-					commonForegroundDecor: [
-						{y:6,x:8}, {y:6,x:9}, {y:6,x:10}, {y:6,x:11}, {y:7,x:8}, {y:7,x:9}, {y:7,x:10}, {y:8,x:9} 
-					],
-					rareForegroundDecor: [
-						{y:5,x:8}, {y:5,x:9}, {y:5,x:10}, {y:5,x:11}, {y:7,x:11}, {y:8,x:8}, {y:8,x:10}, {y:6,x:11}, {y:5,x:12}, {y:6,x:12}
-					],
-					lightMudFloor: [
-						{y:2,x:0}, {y:3,x:0}, {y:3,x:1}, {y:3,x:2}, {y:3,x:3}, {y:4,x:0}, {y:4,x:1}, {y:4,x:2}, {y:4,x:3}, {y:5,x:0}, {y:5,x:1}, {y:5,x:2}, {y:5,x:3}
-					],
-					cobbleFloor: [
-						{y:6,x:0}, {y:6,x:1}, {y:7,x:0}, {y:7,x:1}, {y:6,x:2}, {y:6,x:3}, {y:7,x:2}, {y:7,x:3}
-					],
-					greyCobbleFloor: [
-						{y:8,x:4}, {y:8,x:5}, {y:9,x:4}, {y:9,x:5}, {y:8,x:6}, {y:8,x:7}, {y:9,x:6}, {y:9,x:7}
-					],
-					greyWallFace: [
-						{y:6,x:5}, {y:6,x:4}, {y:6,x:6}, {y:6,x:7}
-					],
-					greyWallTop: [
-						{y:5,x:5}, {y:5,x:4}, {y:5,x:6}, {y:5,x:7}
-					],
-					greyWallDecor: [
-						{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}
-					],
-					door: [
-						{y:8,x:1}, {y:8,x:2}, {y:8,x:3}
-					],
-					tiledFloor: [
-						{y:9,x:8}
-					]
-				};
+				level.tiles = levelTilesets[0];
 				level.roomTypes = [
 					EnumRoomtype.MUD_PATCH, EnumRoomtype.COBBLES, EnumRoomtype.GREY_STONE
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					this.addCreature(EnumCreature.CAMP_VAMP);
+					this.addCreature(EnumCreature.HULKING_URK);
+					var barrel = new Obstacle(level.playerStart.y-1, level.playerStart.x-1, 1, 1, EnumObstacleType.BARREL)
 				};
 				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {
 					console.log("Adding boss room contents");
-					//	Remove any existing obstacles
+					//	Remove any existing obstacles apart from doors
 					var that = this;
-					level.obstacles.forEach(function(obstacle) {
-						if(obstacle.y >= that.origin.y && obstacle.y <= that.origin.y + that.height && obstacle.x >= that.origin.x && obstacle.x <= that.origin.x + that.width) {
+					for(var i = level.obstacles.length - 1; i >= 0; i--) {
+						if(	level.obstacles[i].y >= that.origin.y && level.obstacles[i].y <= that.origin.y + that.height && 
+							level.obstacles[i].x >= that.origin.x && level.obstacles[i].x <= that.origin.x + that.width
+							&& level.obstacles[i].type !== EnumObstacleType.DOOR
+						) {
 							console.log("Deleting obstacle...");
-							obstacle.sprite = {y:-1, x:-1};				//	Placeholder! Need to actually delete the obstacle, but couldn't get .splice to work for some reason... revisit
+							level.obstacles.splice(i, 1);
 						}
-					});
-					//	Add tiled floor
+					}
+					//	Remove any existing decor
+					for(var i = level.decor.length - 1; i >= 0; i--) {
+						if(	level.decor[i].y >= that.origin.y && level.decor[i].y <= that.origin.y + that.height && 
+							level.decor[i].x >= that.origin.x && level.decor[i].x <= that.origin.x + that.width
+						) {
+							console.log("Deleting decor...");
+							level.decor.splice(i, 1);
+						}
+					}
+					// Add tiled floor
 					for(var i = this.origin.y; i < this.origin.y + this.height + 1; i++) {
 						for(var j = this.origin.x; j < this.origin.x + this.width; j++) {
 							if(level.terrainArray[i][j] === 0) {
@@ -139,6 +90,16 @@ var levelGen = {
 							}
 						}
 					}
+					for(var i = this.origin.x; i < this.origin.x + this.width; i++) {
+						if(level.terrainArray[this.origin.y-2][i] === 1 && level.overlayArray[this.origin.y-2][i-1] !== level.tiles.wallDecorTall[1] &&
+							level.obstacleArray[this.origin.y-2][i] === undefined && level.obstacleArray[this.origin.y-1][i] === undefined
+						) {
+							level.overlayArray[this.origin.y-2][i] = level.tiles.wallDecorTall[1];
+							level.overlayArray[this.origin.y-1][i] = level.tiles.tiledFloor[1];
+							level.overlayArray[this.origin.y][i] = level.tiles.tiledFloor[2];
+						}
+					}
+					// level.playerStart = {y: this.origin.y, x: this.origin.x};
 					//	Add boss and other creatures
 					this.addCreature(level.boss);
 					var rand = Math.floor(level.seed.nextFloat() * 3) + 3		//	From 3 - 5
@@ -148,12 +109,12 @@ var levelGen = {
 				};
 				level.commonCreatures = [
 					EnumCreature.GREEN_GOBLIN,
-					EnumCreature.GREEN_SLUDGIE,
-					EnumCreature.SKELTON,
+					EnumCreature.URK,
+					EnumCreature.SKELTON
 				];
 				level.uncommonCreatures = [
 					EnumCreature.MINI_GHOST,
-					EnumCreature.URK
+					EnumCreature.GREEN_SLUDGIE
 				];
 				level.rareCreatures = [
 					EnumCreature.MINI_GHOST
@@ -168,6 +129,7 @@ var levelGen = {
 		}
 		//	Generate level and return it to game
 		this.generateLevel();
+		console.log(level.obstacleArray);
 		return level;
 	},
 
@@ -1212,7 +1174,8 @@ Room.prototype.addCreature = function(creature) {
 		if(			//	Check that creatureArray is empty for this and all surrounding tiles
 			level.creatureArray[randY-1][randX-1] === 0 && level.creatureArray[randY-1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
 			level.creatureArray[randY][randX-1] === 0 && level.creatureArray[randY][randX] === 0 && level.creatureArray[randY][randX+1] === 0 &&
-			level.creatureArray[randY+1][randX-1] === 0 && level.creatureArray[randY+1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0
+			level.creatureArray[randY+1][randX-1] === 0 && level.creatureArray[randY+1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
+			randX !== level.playerStart.x && randY !== level.playerStart.y
 		) {			//	If so, add creature to level.creatureArray
 			level.creatureArray[randY][randX] = creature;
 			retry = false;
@@ -1284,7 +1247,7 @@ Obstacle = function(y, x, size_y, size_x, type) {
 				this.animated = true;
 				this.animTime = 100;
 				this.animStart = performance.now();
-				this.vars.sprite = level.tiles.door[1];
+				this.currentSprite = level.tiles.door[1];
 				level.terrainArray[this.y+1][this.x] = 0;
 				return this.animTime;
 			}
@@ -1292,6 +1255,21 @@ Obstacle = function(y, x, size_y, size_x, type) {
 				this.animated = false;
 				this.ctx = bgCtx;
 				this.currentSprite = level.tiles.door[2];
+			}
+			break;
+		}
+		case EnumObstacleType.BARREL: {
+			this.foreground = true;
+			this.boxCollider = EnumBoxtype.OBSTACLE;
+			this.currentSprite = level.tiles.obstacles[0];
+			this.box = {};
+			this.box.topLeft = {
+				y: y * TILE_SIZE + TILE_SIZE * 1/16,
+				x: x * TILE_SIZE + TILE_SIZE * 3/16
+			}
+			this.box.bottomRight = {
+				y: y * TILE_SIZE + TILE_SIZE * 1,
+				x: x * TILE_SIZE + TILE_SIZE * 13/16
 			}
 			break;
 		}

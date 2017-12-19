@@ -64,7 +64,7 @@ var EnumBoxtype = {
 	PLAYER: 0,
 	CREATURE: 1,
 	PROJECTILE: 2,
-	POWERUP: 3,
+	OBSTACLE: 3,
 	ITEM: 4
 }
 
@@ -77,7 +77,8 @@ var EnumRoomtype = {
 var EnumObstacleType = {
 	DOOR: 0,
 	COMMON_FLOATING_DECOR: 1,
-	RARE_FLOATING_DECOR: 2
+	RARE_FLOATING_DECOR: 2,
+	BARREL: 3
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

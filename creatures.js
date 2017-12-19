@@ -88,8 +88,8 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 0},
 		vars: {
 			speed: 0.6,
-			maxHP: 5,
-			currentHP: 5
+			maxHP: 3,
+			currentHP: 3
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -286,7 +286,7 @@ var creatureTemplates = [
 		},
 		setAiType: function() {
 			if(this.weapon.name === "Bone Crossbow") {
-				this.ai.type = EnumCreature.SKELTON_ARCHER;
+				this.ai.type = EnumAi.SKELTON_ARCHER;
 			}
 		}
 	},
@@ -641,13 +641,15 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				var action = Math.floor(Math.random() * 3);
-				if(action < 1) {
-					this.ai.nextAction = 4;
-				} else {
-					this.ai.nextAction = 2;
+				if(!this.vars.bezerkAttacks) {
+					var action = Math.floor(Math.random() * 3);
+					if(action < 1) {
+						this.ai.nextAction = 4;
+					} else {
+						this.ai.nextAction = 2;
+					}
+					clearAiAction(this);
 				}
-				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
@@ -1007,7 +1009,7 @@ var creatureWeapons = [
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 24/16,					//	Reach of attack from centre of player object position
+			reach: TILE_SIZE * 28/16,					//	Reach of attack from centre of player object position
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
@@ -1057,8 +1059,7 @@ var creatureProjectiles = [
 			bounceOff: false
 		},
 		damage: function(target) {
-			console.log("Damage to " + target.name);
-			target.inflictDamage(this.vars.damage);
+			target.inflictDamage(1);
 		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
