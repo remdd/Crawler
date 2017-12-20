@@ -56,8 +56,8 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					this.addCreature(EnumCreature.HULKING_URK);
-					var barrel = new Obstacle(level.playerStart.y-1, level.playerStart.x-1, 1, 1, EnumObstacleType.BARREL)
+					this.addCreature(EnumCreature.DENZIN);
+					var barrel = new Obstacle(level.playerStart.y-1, level.playerStart.x-1, EnumObstacleType.BARREL)
 				};
 				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {
@@ -73,7 +73,7 @@ var levelGen = {
 							level.obstacles.splice(i, 1);
 						}
 					}
-					//	Remove any existing decor
+					//	Remove any existing decor **********************************Need to remove existing tall decor too********************************
 					for(var i = level.decor.length - 1; i >= 0; i--) {
 						if(	level.decor[i].y >= that.origin.y && level.decor[i].y <= that.origin.y + that.height && 
 							level.decor[i].x >= that.origin.x && level.decor[i].x <= that.origin.x + that.width
@@ -90,6 +90,21 @@ var levelGen = {
 							}
 						}
 					}
+					//	Add special obstacles - dining table & chairs - ***** needs a min room height of 8 and width of 6
+					var rand = Math.floor(level.seed.nextFloat() * (this.height - 6 - 2));			//	6: total height of table & chairs, 2: to ensure a space either side
+					var diningRoom_y = this.origin.y + 1 + rand;
+					var rand2 = Math.floor(level.seed.nextFloat() * (this.width - 4 - 2));			//	4: total width of table & chairs, 2: to ensure a space either side
+					var diningRoom_x = this.origin.x + 1 + rand2;
+
+
+					new Obstacle(diningRoom_y + 1, diningRoom_x + 1, EnumObstacleType.DINING_TABLE);
+					new Obstacle(diningRoom_y + 0, diningRoom_x + 2, EnumObstacleType.DINING_CHAIR, 'Facing');
+					new Obstacle(diningRoom_y + 1, diningRoom_x + 0, EnumObstacleType.DINING_CHAIR, 'Right');
+					new Obstacle(diningRoom_y + 3, diningRoom_x + 0, EnumObstacleType.DINING_CHAIR, 'Right');
+					new Obstacle(diningRoom_y + 4, diningRoom_x + 0, EnumObstacleType.DINING_CHAIR, 'Right');
+					new Obstacle(diningRoom_y + 2, diningRoom_x + 3, EnumObstacleType.DINING_CHAIR, 'Left');
+					new Obstacle(diningRoom_y + 4, diningRoom_x + 3, EnumObstacleType.DINING_CHAIR, 'Left');
+					//	Add columns on facing wall spaces
 					for(var i = this.origin.x; i < this.origin.x + this.width; i++) {
 						if(level.terrainArray[this.origin.y-2][i] === 1 && level.overlayArray[this.origin.y-2][i-1] !== level.tiles.wallDecorTall[1] &&
 							level.obstacleArray[this.origin.y-2][i] === undefined && level.obstacleArray[this.origin.y-1][i] === undefined
@@ -99,8 +114,10 @@ var levelGen = {
 							level.overlayArray[this.origin.y][i] = level.tiles.tiledFloor[2];
 						}
 					}
-					// level.playerStart = {y: this.origin.y, x: this.origin.x};
-					//	Add boss and other creatures
+
+					level.playerStart = {y: this.origin.y, x: this.origin.x};
+
+					// Add boss and other creatures
 					this.addCreature(level.boss);
 					var rand = Math.floor(level.seed.nextFloat() * 3) + 3		//	From 3 - 5
 					for(var i = 0; i < rand; i++) {
@@ -114,7 +131,9 @@ var levelGen = {
 				];
 				level.uncommonCreatures = [
 					EnumCreature.MINI_GHOST,
-					EnumCreature.GREEN_SLUDGIE
+					EnumCreature.GREEN_SLUDGIE,
+					EnumCreature.HULKING_URK,
+					EnumCreature.DENZIN
 				];
 				level.rareCreatures = [
 					EnumCreature.MINI_GHOST
@@ -347,14 +366,32 @@ var levelGen = {
 		var bossSizeX = 8 + bossRand;
 		var bossSizeY = 12 - bossRand; 
 		var startPosX, startPosY, bossPosX, bossPosY;
-		// var startCorner = Math.floor(level.seed.nextFloat() * 4);
-		var startCorner = 0;
+		var startCorner = Math.floor(level.seed.nextFloat() * 4);
+		var startCorner = 1;
 		switch(startCorner) {
 			case 0: {
 				startPosY = Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3 +2);
 				startPosX = Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3 +2);
 				bossPosY = level.terrainArray.length - (Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3)) - bossSizeY -2;
 				bossPosX = level.terrainArray[0].length - (Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3)) - bossSizeX -2;
+			}
+			case 1: {
+				startPosY = level.terrainArray.length - (Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3)) - startSizeY -2;
+				startPosX = level.terrainArray[0].length - (Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3)) - startSizeX -2;
+				bossPosY = Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3 +2);
+				bossPosX = Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3 +2);
+			}
+			case 2: {
+				startPosY = level.terrainArray.length - (Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3)) - startSizeY -2;
+				startPosX = Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3 +2);
+				bossPosY = Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3 +2);
+				bossPosX = level.terrainArray[0].length - (Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3)) - bossSizeX -2;
+			}
+			case 4: {
+				startPosY = Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3 +2);
+				startPosX = level.terrainArray[0].length - (Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3)) - startSizeX -2;
+				bossPosY = level.terrainArray.length - (Math.floor(level.seed.nextFloat() * level.terrainArray.length * 0.3)) - bossSizeY -2;
+				bossPosX = Math.floor(level.seed.nextFloat() * level.terrainArray[0].length * 0.3 +2);
 			}
 			default: {
 				break;
@@ -593,7 +630,7 @@ var levelGen = {
 						}
 					});
 					if(addDoor) {
-						var door = new Obstacle(room.origin.y-2, i, 2, 1, EnumObstacleType.DOOR);
+						var door = new Obstacle(room.origin.y-2, i, EnumObstacleType.DOOR);
 					}
 				}
 			}
@@ -608,13 +645,13 @@ var levelGen = {
 
 function fillInUnreaachableAreas() {
 	//	Iterate through rooms and check that when filled they connect to player start - if not, delete them
-	level.rooms.forEach(function(room) {
+	for(var i = level.rooms.length - 1; i >= 0; i--) {
 		var roomFill = cloneArray(level.terrainArray);
-		fill(roomFill, room.origin.y + 1, room.origin.x + 1, 0, 2);
+		fill(roomFill, level.rooms[i].origin.y + 1, level.rooms[i].origin.x + 1, 0, 2);
 		if(roomFill[level.playerStart.y][level.playerStart.x] !== 2) {
-			level.rooms.splice(level.rooms.indexOf(room), 1);
+			level.rooms.splice(i, 1);
 		}
-	});
+	}
 	for(var i = 0; i < level.fillArray.length; i++) {
 		for(var j = 0; j < level.fillArray[0].length; j++) {
 			if(level.fillArray[i][j] !== 2) {							//	...if tile does not connect to player start...
@@ -624,6 +661,7 @@ function fillInUnreaachableAreas() {
 		}
 	}
 }
+
 
 
 function reduceDeadEnds() {
@@ -1171,10 +1209,14 @@ Room.prototype.addCreature = function(creature) {
 	while(tries && retry) {
 		var randY = this.origin.y + Math.floor(level.seed.nextFloat() * (this.height - 2)) + 1;
 		var randX = this.origin.x + Math.floor(level.seed.nextFloat() * (this.width - 2)) + 1; 
-		if(			//	Check that creatureArray is empty for this and all surrounding tiles
+		if(			
+			//	Check that creatureArray is empty for this and all surrounding tiles...
 			level.creatureArray[randY-1][randX-1] === 0 && level.creatureArray[randY-1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
 			level.creatureArray[randY][randX-1] === 0 && level.creatureArray[randY][randX] === 0 && level.creatureArray[randY][randX+1] === 0 &&
 			level.creatureArray[randY+1][randX-1] === 0 && level.creatureArray[randY+1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
+			//	...and that obstacle array is clear...
+			level.obstacleArray[randY][randX] === undefined &&
+			//	...and that this is not the player's location...
 			randX !== level.playerStart.x && randY !== level.playerStart.y
 		) {			//	If so, add creature to level.creatureArray
 			level.creatureArray[randY][randX] = creature;
@@ -1218,19 +1260,16 @@ Decor = function(y, x, size_y, size_x, type) {
 	level.decor.push(this);
 }
 
-Obstacle = function(y, x, size_y, size_x, type) {
+Obstacle = function(y, x, type, modifier) {
 	this.y = y;
 	this.x = x;
 	this.sprite = {};
 	this.sprite.size = {
-		y: size_y,
-		x: size_x
+		y: 1,
+		x: 1
 	}
 	this.sprite.spriteSheet = level.img;
-	this.position = {
-		y: (y * TILE_SIZE) + (TILE_SIZE * size_y / 2),
-		x: (x * TILE_SIZE) + (TILE_SIZE * size_x / 2)
-	}
+	console.log(this.sprite);
 	this.vars = {};
 	this.vars.drawOffset = {y:0,x:0};
 	this.type = type;
@@ -1242,6 +1281,7 @@ Obstacle = function(y, x, size_y, size_x, type) {
 			this.foreground = true;
 			level.obstacleArray[this.y+1][this.x] = 1;
 			level.terrainArray[this.y+1][this.x] = 2;
+			this.sprite.size.y = 2;
 			this.interact = function() {
 				this.open = true;
 				this.animated = true;
@@ -1256,13 +1296,19 @@ Obstacle = function(y, x, size_y, size_x, type) {
 				this.ctx = bgCtx;
 				this.currentSprite = level.tiles.door[2];
 			}
+			this.position = {
+				y: (y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+				x: (x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			}
 			break;
 		}
 		case EnumObstacleType.BARREL: {
+			level.obstacleArray[this.y][this.x] = 1;
 			this.foreground = true;
-			this.boxCollider = EnumBoxtype.OBSTACLE;
 			this.currentSprite = level.tiles.obstacles[0];
+			this.sprite.size.y = 1;
 			this.box = {};
+			this.box.type = EnumBoxtype.OBSTACLE;
 			this.box.topLeft = {
 				y: y * TILE_SIZE + TILE_SIZE * 1/16,
 				x: x * TILE_SIZE + TILE_SIZE * 3/16
@@ -1270,6 +1316,78 @@ Obstacle = function(y, x, size_y, size_x, type) {
 			this.box.bottomRight = {
 				y: y * TILE_SIZE + TILE_SIZE * 1,
 				x: x * TILE_SIZE + TILE_SIZE * 13/16
+			}
+			this.position = {
+				y: (y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+				x: (x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			}
+			break;
+		}
+		case EnumObstacleType.DINING_TABLE: {		//	Occupy 2 tiles on x axis * 4 on y in obstacleArray
+			for(var i = 0; i < 4; i++) {
+				for(var j = 0; j < 2; j++) {
+					level.obstacleArray[this.y+i][this.x+j] = 1;
+				}
+			}
+			this.foreground = true;
+			this.currentSprite = level.tiles.obstacles[1];
+			this.sprite.size.x = 3;		
+			this.sprite.size.y = 4;
+			this.box = {};
+			this.box.type = EnumBoxtype.OBSTACLE;
+			this.box.topLeft = {
+				y: y * TILE_SIZE + TILE_SIZE * 8/16,
+				x: x * TILE_SIZE + TILE_SIZE * 0
+			}
+			this.box.bottomRight = {
+				y: y * TILE_SIZE + TILE_SIZE * 4,
+				x: x * TILE_SIZE + TILE_SIZE * 2
+			}
+			this.vars.drawOffset = {y: TILE_SIZE * this.sprite.size.y / 2, x:0};
+			this.position = {
+				y: (y * TILE_SIZE),
+				x: (x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			}
+			break;
+		}
+		case EnumObstacleType.DINING_CHAIR: {
+			level.obstacleArray[this.y][this.x] = 1;
+			this.foreground = true;
+			var offset_y = Math.floor(level.seed.nextFloat() * 2);
+			var offset_x = Math.floor(level.seed.nextFloat() * 4);
+			this.box = {};
+			this.box.type = EnumBoxtype.OBSTACLE;
+			this.box.topLeft = {
+				y: y * TILE_SIZE + 1 - offset_y,
+				x: x * TILE_SIZE + 2 + offset_x
+			}
+			this.box.bottomRight = {
+				y: y * TILE_SIZE + TILE_SIZE - offset_y,
+				x: x * TILE_SIZE + TILE_SIZE - 4 + offset_x
+			}
+			this.position = {
+				y: (y * TILE_SIZE + TILE_SIZE / 2 - offset_y),
+				x: (x * TILE_SIZE + TILE_SIZE / 2 + offset_x)
+			}
+			if(modifier === 'Right') {
+				this.currentSprite = level.tiles.obstacles[2];
+			} else if(modifier === 'Left') {
+				this.currentSprite = level.tiles.obstacles[3];
+			} else if(modifier === 'Facing') {
+				this.currentSprite = level.tiles.obstacles[4];
+				this.sprite.size.y = 2;
+				this.box.topLeft = {
+					y: y * TILE_SIZE - TILE_SIZE / 2 + 6,
+					x: x * TILE_SIZE - TILE_SIZE / 2 -2
+				}
+				this.box.bottomRight = {
+					y: y * TILE_SIZE + TILE_SIZE + 6,
+					x: x * TILE_SIZE + TILE_SIZE / 2 - 2
+				}
+				this.position = {
+					y: (y * TILE_SIZE + 6),
+					x: (x * TILE_SIZE)
+				}
 			}
 			break;
 		}

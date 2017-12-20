@@ -23,7 +23,7 @@ $(function() {
 	var interactDistance = 15;					//	Distance at which player can interact with interactables
 
 	// var seed = Math.floor(Math.random() * 1000000);
-	var seed = 5;
+	var seed = 6;
 	var prng = new Random(seed);
 
 	setViewportOffset = function() {
@@ -55,10 +55,10 @@ $(function() {
 		}
 	}
 
-	//	***NEED TO IMPROVE ON THIS IF SPRITES ARE EVER USED GREATER THAN 2x2 TILES***
+	//	***NEED TO IMPROVE ON IF LARGER SPRITES ARE EVER USED***
 	inViewport = function(x, y) {
-		if(	x > viewport_offset_x - TILE_SIZE && x < viewport_offset_x + CANVAS_WIDTH + TILE_SIZE && 
-			y > viewport_offset_y - TILE_SIZE && y < viewport_offset_y + CANVAS_HEIGHT + TILE_SIZE) {
+		if(	x > viewport_offset_x - TILE_SIZE * 3 && x < viewport_offset_x + CANVAS_WIDTH + TILE_SIZE * 3 && 
+			y > viewport_offset_y - TILE_SIZE * 3 && y < viewport_offset_y + CANVAS_HEIGHT + TILE_SIZE * 3) {
 			return true;
 		} else {
 			return false;
@@ -119,7 +119,7 @@ $(function() {
 
 	function setUpLevel() {
 		level.obstacles.forEach(function(obstacle) {
-			if(obstacle.boxCollider) {
+			if(obstacle.box) {
 				colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
 			}
 		});
@@ -284,6 +284,7 @@ $(function() {
 	function Weapon(weaponTemplate, holder) {
 		Entity.apply(this, arguments);
 		// Object.assign(this, weaponTemplate);
+		this.currentSprite = weaponTemplate.currentSprite;
 		this.use = weaponTemplate.use;
 		this.reset = weaponTemplate.reset;
 		this.attack = weaponTemplate.attack;
@@ -858,7 +859,7 @@ $(function() {
 		var tryTerY;
 
 		if(obj.position.y === tryY) {																						//	If movement has no Y component...
-			tryTerY = Math.floor(((obj.position.y - obj.sprite.y_padding) / TILE_SIZE) + 0.5);								//	...set tryTerY to current grid row...
+			tryTerY = Math.floor(((obj.position.y - obj.sprite.y_padding) / TILE_SIZE) + (obj.sprite.size.y * 0.5));		//	...set tryTerY to current grid row...
 			returnCoords.y = obj.position.y;																				//	...and set return Y coord to current position.
 		} else {
 			if(tryY > obj.position.y) {																						//	Else if obj is trying to move down...
@@ -866,10 +867,10 @@ $(function() {
 					if(obj.position.y > obj.vars.shooter.position.y + obj.vars.shooter.sprite.size.y * TILE_SIZE / 2) {		//	...and has a y position lower than the base of its shooter...
 						tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE) - 8/16);									//	...set tryTerY to be 1/2 row lower...
 					} else {
-						tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE));											//	...else set tryTerY as per norrmal.
+						tryTerY = Math.floor(((tryY + TILE_SIZE * obj.sprite.size.y / 2) / TILE_SIZE));						//	...else set tryTerY as per norrmal.
 					}
 				} else {
-					tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE));												//	...else set tryTerY...
+					tryTerY = Math.floor(((tryY + TILE_SIZE* obj.sprite.size.y / 2) / TILE_SIZE));							//	...else set tryTerY...
 				}
 			} else {																										//	...or if trying to move up...
 				tryTerY = Math.floor(((tryY - obj.sprite.y_padding) / TILE_SIZE) + 8/16);									//	...set tryTerY.
@@ -911,6 +912,10 @@ $(function() {
 		var returnCoords = { x: tryX, y: tryY, collidedWith: collidedWith };
 		for(var i = 0; i < colliders.length; i++) {
 			if(colliders[i] !== obj && !colliders[i].vars.moveThroughColliders && !obj.vars.moveThroughColliders && colliders[i] !== obj.vars.shooter) {
+				//	Projectile colliders can pass through obstacle colliders
+				if(colliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
+					return returnCoords;
+				}
 				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
 				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2);
 				var newL = returnCoords.x - (obj.box.width / 2 );

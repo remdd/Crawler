@@ -31,7 +31,8 @@ var EnumCreature = {
 	CAMP_VAMP: 5,
 	URK: 6,
 	URK_SHAMAN: 7,
-	HULKING_URK: 8
+	HULKING_URK: 8,
+	DENZIN: 9
 }
 
 var EnumAi = {
@@ -53,7 +54,8 @@ var EnumCreatureWeapon = {
 	VAMP_DAGGER: 4,
 	URK_SWORD: 5,
 	BONE_CROSSBOW: 6,
-	HULKING_URK_HAMMA: 7 
+	HULKING_URK_HAMMA: 7,
+	DENZIN_MACE: 8 
 }
 
 var EnumCreatureProjectile = {
@@ -78,7 +80,10 @@ var EnumObstacleType = {
 	DOOR: 0,
 	COMMON_FLOATING_DECOR: 1,
 	RARE_FLOATING_DECOR: 2,
-	BARREL: 3
+	BARREL: 3,
+	DINING_TABLE: 4,
+	DINING_CHAIR_R: 5,
+	DINING_CHAIR_L: 6
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

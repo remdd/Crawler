@@ -140,7 +140,7 @@ setAiAction = function(creature) {
 				}
 				case 1: {
 					var direction = getPlayerCompassDirection(creature);
-					ai.aim(creature, 0, 200, direction, Math.PI / 8);											//	...attack in player's compass direction...
+					ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, Math.PI / 8);					//	...attack in player's compass direction...
 					creature.ai.nextAction = 4;
 					break;
 				}
@@ -155,7 +155,7 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 4: {
-					ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);		//	...move away from player for 0.5 - 1s, at 2x speed
+					ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);
 					creature.ai.nextAction = 0;
 					break;
 				}
