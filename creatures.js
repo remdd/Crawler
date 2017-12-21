@@ -806,6 +806,79 @@ var creatureTemplates = [
 		addWeapon: function() {
 			return EnumCreatureWeapon.BONE_SWORD;
 		}
+	},
+	{
+		name: 'Ambush Skelton',
+		currentSprite: { x: 6, y: 4 },
+		vars: {
+			speed: 0.5,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: true
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 4 },
+				{ x: 1, y: 4 },
+				{ x: 2, y: 4 },
+				{ x: 3, y: 4 },
+				{ x: 4, y: 4 },
+				{ x: 5, y: 4 },
+				{ x: 6, y: 4 },
+				{ x: 0, y: 5 },
+				{ x: 1, y: 5 },
+				{ x: 2, y: 5 },
+				{ x: 3, y: 5 },
+				{ x: 4, y: 5 },
+				{ x: 5, y: 5 },
+				{ x: 6, y: 5 }
+			],
+			animations: [
+				[ 1000, [1000], [0] ],									//	Resting, facing R
+				[ 1000, [1000], [7] ],									//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [1, 3, 2, 0] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [8, 10, 9, 7] ],			//	Moving, facing L
+				[ 2000, [500, 1000, 2000], [4, 5, 6]],					//	Death, facing R
+				[ 2000, [500, 1000, 2000], [11, 12, 13]],				//	Death, facing L
+				[ 1000, [200, 400, 1000], [6, 5, 4]],						//	Ambush, facing R
+				[ 1000, [200, 400, 1000], [13, 12, 11]],					//	Ambush, facing L
+				[ 250, [250], [6]],										//	Lying in wait, facing R
+				[ 250, [250], [13]]										//	Lying in wait, facing L
+			]
+		},
+		box: {
+			width: 8, 
+			height: 16,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.AMBUSH_SKELTON,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 3;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BONE_SWORD;
+		}
+
 	}
 ];
 

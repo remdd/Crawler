@@ -35,7 +35,8 @@ var EnumCreature = {
 	URK_SHAMAN: 7,
 	HULKING_URK: 8,
 	DENZIN: 9,
-	MUMI: 10
+	MUMI: 10,
+	AMBUSH_SKELTON: 11
 }
 
 var EnumAi = {
@@ -48,7 +49,8 @@ var EnumAi = {
 	URK_SHAMAN: 7,
 	SKELTON_ARCHER: 8,
 	HULKING_URK: 9,
-	MUMI: 10
+	MUMI: 10,
+	AMBUSH_SKELTON: 11
 }
 
 var EnumCreatureWeapon = {

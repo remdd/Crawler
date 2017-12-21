@@ -71,6 +71,9 @@ setAiAction = function(creature) {
 
 		case EnumAi.SKELTON: {
 			creature.movement.bounceOff = true;
+			if(creature.weapon) {
+				creature.weapon.vars.hidden = false;													//	Show weapon for Ambush Skeltons once they have animated
+			}
 			switch(creature.ai.nextAction) {
 				case 0: {
 					if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
@@ -167,6 +170,32 @@ setAiAction = function(creature) {
 				case 4: {
 					ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);
 					creature.ai.nextAction = 0;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+			break;
+		}
+
+		case EnumAi.AMBUSH_SKELTON: {
+			switch(creature.ai.nextAction) {
+				case 0: {
+					creature.weapon.vars.hidden = true;
+					creature.vars.animation = 6;
+					if(getPlayerDistance(creature) < TILE_SIZE * 2.5) {
+						ai.rest(creature, 0, 100, 6);
+						creature.ai.nextAction = 1;
+					} else {
+						ai.rest(creature, 0, 200, 6);
+					}
+					break;
+				}
+				case 1: {
+					ai.rest(creature, 0, 600, 4);
+					creature.ai.type = EnumAi.SKELTON;
+					creature.ai.nextAction = 1;
 					break;
 				}
 				default: {

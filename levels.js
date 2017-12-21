@@ -58,7 +58,7 @@ var levelGen = {
 					console.log("Adding start room contents");
 					level.playerStart = {y: this.origin.y, x: this.origin.x};
 					new Obstacle(level.playerStart.y + 1, level.playerStart.x + 1, EnumObstacle.TORTURE_TABLE);
-					this.addCreature(EnumCreature.MUMI);
+					this.addCreature(EnumCreature.AMBUSH_SKELTON);
 				};
 				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {
@@ -135,7 +135,8 @@ var levelGen = {
 					EnumCreature.DENZIN
 				];
 				level.rareCreatures = [
-					EnumCreature.MINI_GHOST
+					EnumCreature.MINI_GHOST,
+					EnumCreature.AMBUSH_SKELTON
 				];
 				level.commonObstacles = [
 					EnumObstacle.BARREL,
