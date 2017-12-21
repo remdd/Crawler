@@ -1,3 +1,5 @@
+// var CANVAS_WIDTH = 272;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
+// var CANVAS_HEIGHT = 200;
 var CANVAS_WIDTH = 240;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
 var CANVAS_HEIGHT = 168;
 var SCALE_FACTOR = 3;								//	Factor by which pixels are scaled up for display
@@ -32,7 +34,8 @@ var EnumCreature = {
 	URK: 6,
 	URK_SHAMAN: 7,
 	HULKING_URK: 8,
-	DENZIN: 9
+	DENZIN: 9,
+	MUMI: 10
 }
 
 var EnumAi = {
@@ -44,7 +47,8 @@ var EnumAi = {
 	URK: 6,
 	URK_SHAMAN: 7,
 	SKELTON_ARCHER: 8,
-	HULKING_URK: 9
+	HULKING_URK: 9,
+	MUMI: 10
 }
 
 var EnumCreatureWeapon = {
@@ -62,6 +66,14 @@ var EnumCreatureProjectile = {
 	BONE_ARROW: 1
 }
 
+var	EnumLodetype = {
+	IRON: 1,
+	BONE: 2,
+	ACID: 3,
+	CRYSTAL: 4,
+	SHADOW: 5
+}
+
 var EnumBoxtype = {
 	PLAYER: 0,
 	CREATURE: 1,
@@ -76,14 +88,18 @@ var EnumRoomtype = {
 	GREY_STONE: 2
 }
 
-var EnumObstacleType = {
+var EnumObstacle = {
 	DOOR: 0,
 	COMMON_FLOATING_DECOR: 1,
 	RARE_FLOATING_DECOR: 2,
 	BARREL: 3,
 	DINING_TABLE: 4,
 	DINING_CHAIR_R: 5,
-	DINING_CHAIR_L: 6
+	DINING_CHAIR_L: 6,
+	BUCKET: 7,
+	WELL: 8,
+	COFFIN: 9,
+	TORTURE_TABLE: 10
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

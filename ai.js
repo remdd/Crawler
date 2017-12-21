@@ -104,7 +104,12 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 3: {
-					ai.moveAwayFromPlayer(creature, 500, 500, 2);											//	...move away from player for 0.5 - 1s, at 2x speed
+					var rand = Math.floor(Math.random() * 3);
+					if(rand < 2) {
+						ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+					} else {
+						ai.moveRandomVector(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+					}
 					creature.ai.nextAction = 0;
 					break;
 				}
@@ -150,13 +155,78 @@ setAiAction = function(creature) {
 					break;
 				}
 				case 3: {
-					ai.moveAwayFromPlayer(creature, 500, 500, 2);												//	...move away from player for 0.5 - 1s, at 2x speed
+					var rand = Math.floor(Math.random() * 3);
+					if(rand < 2) {
+						ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+					} else {
+						ai.moveRandomVector(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+					}
 					creature.ai.nextAction = 0;
 					break;
 				}
 				case 4: {
 					ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);
 					creature.ai.nextAction = 0;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+			break;
+		}
+
+		case EnumAi.MUMI: {
+			creature.movement.bounceOff = true;
+			switch(creature.ai.nextAction) {
+				case 0: {
+					if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
+						var action = Math.floor(Math.random() * 4)
+						if(action < 3) {
+							ai.moveTowardsPlayer(creature, 300, 350, 1.5);
+							creature.movement.bounceOff = false;
+							creature.ai.nextAction = 1;
+						} else {
+							ai.moveRandomVector(creature, 300, 350, 1.5);
+						}
+					} else {
+						var action = Math.floor(Math.random() * 2);
+						if(action < 1) {
+							ai.moveRandomVector(creature, 1000, 500, 1);
+						} else {
+							ai.rest(creature, 1000, 500);
+						}
+					}
+					break;				
+				}
+				case 1: {
+					var direction = getPlayerCompassDirection(creature);
+					ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, 0);					//	...attack in player's compass direction...
+					var rand = Math.floor(Math.random() * 3);
+					if(rand < 2) {
+						creature.ai.nextAction = 1;
+					} else {
+						creature.ai.nextAction = 2;
+					}
+					break;
+				}
+				case 2: {
+					ai.rest(creature, 1000, 500);
+					creature.ai.nextAction = 0;
+					break;
+				}
+				case 3: {
+					var rand = Math.floor(Math.random() * 4);
+					if(rand < 2) {
+						ai.moveAwayFromPlayer(creature, 500, 500, 1.5);									//	...move away from player for 0.5 - 1s, at 2x speed
+						creature.ai.nextAction = 0;
+					} else if(rand < 3) {
+						ai.rest(creature, 250, 250);
+						creature.ai.nextAction = 1;
+					} else {
+						ai.moveRandomVector(creature, 500, 500, 1.5);										//	...move away from player for 0.5 - 1s, at 2x speed
+						creature.ai.nextAction = 0;
+					}
 					break;
 				}
 				default: {

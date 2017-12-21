@@ -6,6 +6,7 @@ var playerTemplates = [
 			speed: 1.2,
 			maxHP: 10,
 			currentHP: 10,
+			restingWeaponAnimation: true,
 			attackRate: 1,
 			moving: false
 		},
@@ -217,7 +218,8 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.5,
 			maxHP: 5,
-			currentHP: 5
+			currentHP: 5,
+			restingWeaponAnimation: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -351,6 +353,7 @@ var creatureTemplates = [
 			speed: 0.7,
 			maxHP: 5,
 			currentHP: 5,
+			restingWeaponAnimation: true,
 			minFacingChangeTime: 50,
 			transformStartTime: 0,
 			transformEndTime: 0,
@@ -441,7 +444,8 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.5,
 			maxHP: 7,
-			currentHP: 7
+			currentHP: 7,
+			restingWeaponAnimation: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -510,7 +514,8 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.5,
 			maxHP: 7,
-			currentHP: 7
+			currentHP: 7,
+			restingWeaponAnimation: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -579,7 +584,8 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.4,
 			maxHP: 12,
-			currentHP: 12
+			currentHP: 12,
+			restingWeaponAnimation: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -665,7 +671,8 @@ var creatureTemplates = [
 		vars: {
 			speed: 1,
 			maxHP: 6,
-			currentHP: 6
+			currentHP: 6,
+			restingWeaponAnimation: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -727,6 +734,78 @@ var creatureTemplates = [
 		addWeapon: function() {
 			return EnumCreatureWeapon.DENZIN_MACE;
 		}	
+	},
+	{
+		name: 'Mumi',
+		currentSprite: { x: 7, y: 4 },
+		vars: {
+			speed: 0.8,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: false
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 7, y: 4 },
+				{ x: 8, y: 4 },
+				{ x: 9, y: 4 },
+				{ x: 10, y: 4 },
+				{ x: 11, y: 4 },
+				{ x: 12, y: 4 },
+				{ x: 13, y: 4 },
+				{ x: 14, y: 4 },
+				{ x: 15, y: 4 },
+				{ x: 7, y: 5 },
+				{ x: 8, y: 5 },
+				{ x: 9, y: 5 },
+				{ x: 10, y: 5 },
+				{ x: 11, y: 5 },
+				{ x: 12, y: 5 },
+				{ x: 13, y: 5 },
+				{ x: 14, y: 5 },
+				{ x: 15, y: 5 }
+			],
+			animations: [
+				[ 800, [400, 800], [0, 1] ],							//	Resting, facing R
+				[ 800, [400, 800], [9, 10] ],							//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 1] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [11,12,13,10] ],			//	Moving, facing L
+				[ 800, [200, 400, 600, 800], [5, 6, 7, 8]],				//	Death, facing R
+				[ 800, [200, 400, 600, 800], [14,15,16,17]]				//	Death, facing L
+			]
+		},
+		box: {
+			width: 8, 
+			height: 16,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.MUMI,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 3;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BONE_SWORD;
+		}
 	}
 ];
 

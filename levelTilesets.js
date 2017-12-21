@@ -61,13 +61,21 @@ var levelTilesets = [
 			{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}
 		],
 		door: [
-			{y:8,x:1}, {y:8,x:2}, {y:8,x:3}
+			{y:8,x:1}, {y:8,x:2}, {y:8,x:3}, {y:14,x:0}, {y:14,x:1}, {y:14,x:2}
 		],
 		tiledFloor: [
 			{y:9,x:8}, {y:1,x:10}, {y:9,x:9}
 		],
 		obstacles: [
-			{y:10,x:0}, {y:10,x:2}, {y:11,x:0}, {y:11,x:1}, {y:12,x:0}
+			{y:10,x:2}, //	Dining table
+			{y:11,x:0}, //	Dining chair - R facing
+			{y:11,x:1}, //	Dining chair - L facing
+			{y:12,x:0}, //	Dining chair - table head
+			{y:10,x:5},	//	Coffin
+			{y:10,x:0}, //	Barrel
+			{y:10,x:6},	//	Bucket
+			{y:12,x:5},	//	Well
+			{y:10,x:7}	//	Torture table
 		] 
 	}
 ]

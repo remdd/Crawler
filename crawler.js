@@ -3,8 +3,15 @@ $(function() {
 
 	var game = {
 		redrawBackground: false,
-		redrawObstaclesTo: 0
+		redrawObstaclesTo: 0,
+		viewport_offset_x: 0,
+		viewport_offset_y: 0,
+		focused: true,							//	Track whether browser tab is focused by user
+		seed: Math.floor(Math.random() * 1000000)
+		// seed: 6
 	}
+
+	var prng = new Random(game.seed);
 
 	var creatures = [];
 	var attacks = [];
@@ -15,50 +22,44 @@ $(function() {
 	var drawables = [];
 	var drawOnTop = [];
 
-	var focused = true;							//	Track whether browser tab is focused by user
 
-	var viewport_offset_x = 0;
-	var viewport_offset_y = 0;
 
 	var interactDistance = 15;					//	Distance at which player can interact with interactables
 
-	// var seed = Math.floor(Math.random() * 1000000);
-	var seed = 6;
-	var prng = new Random(seed);
 
 	setViewportOffset = function() {
 		game.redrawBackground = false;
-		if(viewport_offset_x < Math.floor(player.position.x - CANVAS_WIDTH * 0.65)) {
-			viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.65);
+		if(game.viewport_offset_x < Math.floor(player.position.x - CANVAS_WIDTH * 0.65)) {
+			game.viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.65);
 			game.redrawBackground = true;
-		} else if(viewport_offset_x > Math.floor(player.position.x - CANVAS_WIDTH * 0.35)) {
-			viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.35);
+		} else if(game.viewport_offset_x > Math.floor(player.position.x - CANVAS_WIDTH * 0.35)) {
+			game.viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.35);
 			game.redrawBackground = true;
 		}
-		if(viewport_offset_x < 0) {
-			viewport_offset_x = 0;
-		} else if(viewport_offset_x > (level.terrainArray[0].length * TILE_SIZE) - CANVAS_WIDTH) {
-			viewport_offset_x = (level.terrainArray[0].length * TILE_SIZE) - CANVAS_WIDTH;
+		if(game.viewport_offset_x < 0) {
+			game.viewport_offset_x = 0;
+		} else if(game.viewport_offset_x > (level.terrainArray[0].length * TILE_SIZE) - CANVAS_WIDTH) {
+			game.viewport_offset_x = (level.terrainArray[0].length * TILE_SIZE) - CANVAS_WIDTH;
 		}
 
-		if(viewport_offset_y < Math.floor(player.position.y - CANVAS_HEIGHT * 0.65)) {
-			viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.65);
+		if(game.viewport_offset_y < Math.floor(player.position.y - CANVAS_HEIGHT * 0.65)) {
+			game.viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.65);
 			game.redrawBackground = true;
-		} else if(viewport_offset_y > Math.floor(player.position.y - CANVAS_HEIGHT * 0.35)) {
-			viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.35);
+		} else if(game.viewport_offset_y > Math.floor(player.position.y - CANVAS_HEIGHT * 0.35)) {
+			game.viewport_offset_y = Math.floor(player.position.y - CANVAS_HEIGHT * 0.35);
 			game.redrawBackground = true;
 		}
-		if(viewport_offset_y < 0) {
-			viewport_offset_y = 0;
-		} else if(viewport_offset_y > (level.terrainArray.length * TILE_SIZE) - CANVAS_HEIGHT) {
-			viewport_offset_y = (level.terrainArray.length * TILE_SIZE) - CANVAS_HEIGHT;
+		if(game.viewport_offset_y < 0) {
+			game.viewport_offset_y = 0;
+		} else if(game.viewport_offset_y > (level.terrainArray.length * TILE_SIZE) - CANVAS_HEIGHT) {
+			game.viewport_offset_y = (level.terrainArray.length * TILE_SIZE) - CANVAS_HEIGHT;
 		}
 	}
 
 	//	***NEED TO IMPROVE ON IF LARGER SPRITES ARE EVER USED***
 	inViewport = function(x, y) {
-		if(	x > viewport_offset_x - TILE_SIZE * 3 && x < viewport_offset_x + CANVAS_WIDTH + TILE_SIZE * 3 && 
-			y > viewport_offset_y - TILE_SIZE * 3 && y < viewport_offset_y + CANVAS_HEIGHT + TILE_SIZE * 3) {
+		if(	x > game.viewport_offset_x - TILE_SIZE * 4 && x < game.viewport_offset_x + CANVAS_WIDTH + TILE_SIZE * 4 && 
+			y > game.viewport_offset_y - TILE_SIZE * 4 && y < game.viewport_offset_y + CANVAS_HEIGHT + TILE_SIZE * 4) {
 			return true;
 		} else {
 			return false;
@@ -136,8 +137,8 @@ $(function() {
 							overlay.y * TILE_SIZE, 						//	y-coord to start clipping
 							TILE_SIZE, 									//	width of clipped image
 							TILE_SIZE, 									//	height of clipped image
-							TILE_SIZE * j - viewport_offset_x, 			//	x-coord of canvas placement
-							TILE_SIZE * i - viewport_offset_y, 			//	y-coord of canvas placement
+							TILE_SIZE * j - game.viewport_offset_x, 			//	x-coord of canvas placement
+							TILE_SIZE * i - game.viewport_offset_y, 			//	y-coord of canvas placement
 							TILE_SIZE, 									//	width of image on canvas
 							TILE_SIZE									//	height of image on canvas
 						);
@@ -177,7 +178,7 @@ $(function() {
 		if(inViewport(entity.position.x, entity.position.y)) {
 			if(entity.vars.hasOwnProperty('rotation')) {
 				ctx.save();
-				ctx.translate(entity.position.x - viewport_offset_x, entity.position.y - viewport_offset_y);
+				ctx.translate(entity.position.x - game.viewport_offset_x, entity.position.y - game.viewport_offset_y);
 				ctx.rotate(entity.vars.rotation);
 				var drawPosition = {};
 				drawPosition.x = entity.vars.drawOffset.x - TILE_SIZE * entity.sprite.size.x / 2; 
@@ -199,8 +200,8 @@ $(function() {
 					entity.currentSprite.y * TILE_SIZE, 												//	y-coord to start clipping
 					entity.sprite.size.x * TILE_SIZE, 													//	width of clipped image
 					entity.sprite.size.y * TILE_SIZE, 													//	height of clipped image
-					Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - viewport_offset_x) + entity.vars.drawOffset.x, 	//	x-coord of canvas placement
-					Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - viewport_offset_y) + entity.vars.drawOffset.y, 	//	y-coord of canvas placement
+					Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - game.viewport_offset_x) + entity.vars.drawOffset.x, 	//	x-coord of canvas placement
+					Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - game.viewport_offset_y) + entity.vars.drawOffset.y, 	//	y-coord of canvas placement
 					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
 					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
 				);
@@ -210,9 +211,14 @@ $(function() {
 
 	function Entity(entityTemplate, x, y) {
 		this.name = entityTemplate.name;
-		this.position = {};
-		this.position.x = x * TILE_SIZE + TILE_SIZE / 2;
-		this.position.y = y * TILE_SIZE + TILE_SIZE / 2;
+		this.grid = {
+			x: x,
+			y: y
+		}
+		this.position = {
+			x: x * TILE_SIZE + TILE_SIZE / 2,
+			y: y * TILE_SIZE + TILE_SIZE / 2
+		}
 		this.sprite = entityTemplate.sprite;						//	Reference template sprite object (don't copy)
 		this.vars = {};
 		Object.assign(this.vars, entityTemplate.vars);				//	Copy vars object
@@ -443,7 +449,7 @@ $(function() {
 		}
 	}
 	Creature.prototype.attack = function(direction) {
-		if(this.weapon && performance.now() > this.vars.lastAttackTime + this.weapon.vars.attackRate) {
+		if(this.weapon && performance.now() > this.vars.lastAttackTime + this.weapon.vars.attackRate * this.vars.attackRate) {
 			this.setFacing(direction);
 			this.vars.lastAttackTime = performance.now();
 			this.weapon.vars.attacking = true;
@@ -551,7 +557,7 @@ $(function() {
 
 	interact = function() {
 		level.obstacles.forEach(function(obstacle) {
-			if(inViewport(obstacle.x * TILE_SIZE, obstacle.y * TILE_SIZE) && obstacle.interact) {
+			if(inViewport(obstacle.grid.x * TILE_SIZE, obstacle.grid.y * TILE_SIZE) && obstacle.interact) {
 				if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < interactDistance) {
 					game.redrawObstaclesTo = performance.now() + obstacle.interact();
 				}
@@ -623,8 +629,8 @@ $(function() {
 	function drawAttack(attack) {
 		switch(attack.type) {
 			case(EnumAttack.SWIPE): {
-				var origin_x = attack.attacker.position.x - viewport_offset_x;
-				var origin_y = attack.attacker.position.y - viewport_offset_y;
+				var origin_x = attack.attacker.position.x - game.viewport_offset_x;
+				var origin_y = attack.attacker.position.y - game.viewport_offset_y;
 				attackCtx.moveTo(origin.x,origin.y);
 				attackCtx.beginPath();
 				attackCtx.arc(origin_x, origin_y, attack.reach, attack.direction - attack.arc / 2, attack.direction + attack.arc / 2);
@@ -735,6 +741,10 @@ $(function() {
 			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
 			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
 		}
+
+		//	Assign player grid co-ords
+		// player.grid.x
+
 		player.animate();
 		player.updateGear();
 	}
@@ -763,7 +773,7 @@ $(function() {
 					this.weapon.currentSprite = this.weapon.sprite.frames[1];
 					this.weapon.vars.drawOffset.x = -this.weapon.sprite.restingDrawOffset.x;								//	If facing left, set -ve offset x
 				}
-				if(this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
+				if(this.vars.restingWeaponAnimation && this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
 					this.weapon.vars.drawOffset.y += 1;
 				}
 			}
@@ -1042,7 +1052,7 @@ $(function() {
 		// });
 		debugs.forEach(function(debug) {
 			debugCtx.strokeStyle = debug.color;
-			debugCtx.strokeRect(debug.x - viewport_offset_x, debug.y - viewport_offset_y, 1, 1);
+			debugCtx.strokeRect(debug.x - game.viewport_offset_x, debug.y - game.viewport_offset_y, 1, 1);
 		});
 		debugs.length = 0;
 	}
@@ -1102,11 +1112,11 @@ $(function() {
 
 	//	Pause & restart game when browser tab loses & regains focus
 	window.onfocus = function() {
-		focused = true;
+		game.focused = true;
 		MainLoop.start();
 	}
 	window.onblur = function() {
-		focused = false;
+		game.focused = false;
 		Key.clearPressed();
 		MainLoop.stop();
 	}

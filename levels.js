@@ -56,8 +56,9 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					this.addCreature(EnumCreature.DENZIN);
-					var barrel = new Obstacle(level.playerStart.y-1, level.playerStart.x-1, EnumObstacleType.BARREL)
+					level.playerStart = {y: this.origin.y, x: this.origin.x};
+					new Obstacle(level.playerStart.y + 1, level.playerStart.x + 1, EnumObstacle.TORTURE_TABLE);
+					this.addCreature(EnumCreature.MUMI);
 				};
 				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {
@@ -65,9 +66,9 @@ var levelGen = {
 					//	Remove any existing obstacles apart from doors
 					var that = this;
 					for(var i = level.obstacles.length - 1; i >= 0; i--) {
-						if(	level.obstacles[i].y >= that.origin.y && level.obstacles[i].y <= that.origin.y + that.height && 
-							level.obstacles[i].x >= that.origin.x && level.obstacles[i].x <= that.origin.x + that.width
-							&& level.obstacles[i].type !== EnumObstacleType.DOOR
+						if(	level.obstacles[i].grid.y >= that.origin.y && level.obstacles[i].grid.y <= that.origin.y + that.height && 
+							level.obstacles[i].grid.x >= that.origin.x && level.obstacles[i].grid.x <= that.origin.x + that.width
+							&& level.obstacles[i].type !== EnumObstacle.DOOR
 						) {
 							console.log("Deleting obstacle...");
 							level.obstacles.splice(i, 1);
@@ -75,8 +76,8 @@ var levelGen = {
 					}
 					//	Remove any existing decor **********************************Need to remove existing tall decor too********************************
 					for(var i = level.decor.length - 1; i >= 0; i--) {
-						if(	level.decor[i].y >= that.origin.y && level.decor[i].y <= that.origin.y + that.height && 
-							level.decor[i].x >= that.origin.x && level.decor[i].x <= that.origin.x + that.width
+						if(	level.decor[i].grid.y >= that.origin.y && level.decor[i].grid.y <= that.origin.y + that.height && 
+							level.decor[i].grid.x >= that.origin.x && level.decor[i].grid.x <= that.origin.x + that.width
 						) {
 							console.log("Deleting decor...");
 							level.decor.splice(i, 1);
@@ -97,13 +98,13 @@ var levelGen = {
 					var diningRoom_x = this.origin.x + 1 + rand2;
 
 
-					new Obstacle(diningRoom_y + 1, diningRoom_x + 1, EnumObstacleType.DINING_TABLE);
-					new Obstacle(diningRoom_y + 0, diningRoom_x + 2, EnumObstacleType.DINING_CHAIR, 'Facing');
-					new Obstacle(diningRoom_y + 1, diningRoom_x + 0, EnumObstacleType.DINING_CHAIR, 'Right');
-					new Obstacle(diningRoom_y + 3, diningRoom_x + 0, EnumObstacleType.DINING_CHAIR, 'Right');
-					new Obstacle(diningRoom_y + 4, diningRoom_x + 0, EnumObstacleType.DINING_CHAIR, 'Right');
-					new Obstacle(diningRoom_y + 2, diningRoom_x + 3, EnumObstacleType.DINING_CHAIR, 'Left');
-					new Obstacle(diningRoom_y + 4, diningRoom_x + 3, EnumObstacleType.DINING_CHAIR, 'Left');
+					new Obstacle(diningRoom_y + 1, diningRoom_x + 1, EnumObstacle.DINING_TABLE);
+					new Obstacle(diningRoom_y + 0, diningRoom_x + 2, EnumObstacle.DINING_CHAIR, 'Facing');
+					new Obstacle(diningRoom_y + 1, diningRoom_x + 0, EnumObstacle.DINING_CHAIR, 'Right');
+					new Obstacle(diningRoom_y + 3, diningRoom_x + 0, EnumObstacle.DINING_CHAIR, 'Right');
+					new Obstacle(diningRoom_y + 4, diningRoom_x + 0, EnumObstacle.DINING_CHAIR, 'Right');
+					new Obstacle(diningRoom_y + 2, diningRoom_x + 3, EnumObstacle.DINING_CHAIR, 'Left');
+					new Obstacle(diningRoom_y + 4, diningRoom_x + 3, EnumObstacle.DINING_CHAIR, 'Left');
 					//	Add columns on facing wall spaces
 					for(var i = this.origin.x; i < this.origin.x + this.width; i++) {
 						if(level.terrainArray[this.origin.y-2][i] === 1 && level.overlayArray[this.origin.y-2][i-1] !== level.tiles.wallDecorTall[1] &&
@@ -114,8 +115,6 @@ var levelGen = {
 							level.overlayArray[this.origin.y][i] = level.tiles.tiledFloor[2];
 						}
 					}
-
-					level.playerStart = {y: this.origin.y, x: this.origin.x};
 
 					// Add boss and other creatures
 					this.addCreature(level.boss);
@@ -138,6 +137,16 @@ var levelGen = {
 				level.rareCreatures = [
 					EnumCreature.MINI_GHOST
 				];
+				level.commonObstacles = [
+					EnumObstacle.BARREL,
+					EnumObstacle.BUCKET
+				];
+				level.uncommonObstacles = [
+					EnumObstacle.WELL
+				];
+				level.rareObstacles = [
+					EnumObstacle.COFFIN
+				];
 				level.randomRoomFactor = 10;			//	Sets range of possible random room contents for generator
 				level.randomRoomIncrease = 0;				//	Increment for higher levels, added to random level selector
 				break;
@@ -148,7 +157,6 @@ var levelGen = {
 		}
 		//	Generate level and return it to game
 		this.generateLevel();
-		console.log(level.obstacleArray);
 		return level;
 	},
 
@@ -198,7 +206,7 @@ var levelGen = {
 		//	Add corridors
 		for(var i = 0; i < level.terrainArray.length; i++) {
 			for(var j = 0; j < level.terrainArray[0].length; j++) {
-				checkForCorridorStart(i, j);
+				this.checkForCorridorStart(i, j);
 			}
 		}
 
@@ -314,7 +322,7 @@ var levelGen = {
 			level.fillArray[i] = [];
 		}
 		level.fillArray = cloneArray(level.terrainArray);
-		fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
+		this.fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
 
 		// 	If boss room does not connect to player start room, regenerate map
 		if(level.fillArray[level.bossStart.y][level.bossStart.x] !== 2) {
@@ -322,12 +330,12 @@ var levelGen = {
 			level.validLevel = false;
 		} else {
 			// Fill in any areas not connected to the main network
-			fillInUnreaachableAreas();
+			this.fillInUnreaachableAreas();
 			// Pick some dead ends and back-fill them
-			reduceDeadEnds();
+			this.reduceDeadEnds();
 			// Fill in any areas not connected to the main network again
 			// (not totally sure why this is required again but it seems to be to remove occasional overlays in inaccessible areas!)
-			fillInUnreaachableAreas();
+			this.fillInUnreaachableAreas();
 			level.validLevel = true;
 		}
 
@@ -541,11 +549,11 @@ var levelGen = {
 				if(level.terrainArray[i][j] === 0 && (level.terrainArray[i][j-1] === 0 || level.terrainArray[i][j+1] === 0)) {
 					var rand = Math.floor(level.seed.nextFloat() * levelGen.vars.commonFloatingDecorScarcity);
 					if(rand < 1) {
-						var decor = new Decor(i, j, 1, 1, EnumObstacleType.COMMON_FLOATING_DECOR);
+						var decor = new Decor(i, j, 1, 1, EnumObstacle.COMMON_FLOATING_DECOR);
 					} else {
 						var rand2 = Math.floor(level.seed.nextFloat() * levelGen.vars.rareFloatingDecorScarcity);
 						if(rand2 < 1) {
-							var decor = new Decor(i, j, 1, 1, EnumObstacleType.RARE_FLOATING_DECOR);
+							var decor = new Decor(i, j, 1, 1, EnumObstacle.RARE_FLOATING_DECOR);
 						}
 					}
 				} 
@@ -625,12 +633,12 @@ var levelGen = {
 				if(level.terrainArray[room.origin.y-1][i] === 0 && level.terrainArray[room.origin.y-1][i-1] === 1 && level.terrainArray[room.origin.y-1][i+1] === 1) {
 					var addDoor = true;
 					level.obstacles.forEach(function(obstacle) {
-						if(obstacle.y - room.origin.y-1 <= 2 && obstacle.y - room.origin.y-1 >= 2 && obstacle.x - i <= 2 && obstacle.x - i >= 2) {
+						if(obstacle.grid.y - room.origin.y-1 <= 2 && obstacle.grid.y - room.origin.y-1 >= 2 && obstacle.grid.x - i <= 2 && obstacle.grid.x - i >= 2) {
 							addDoor = false;
 						}
 					});
 					if(addDoor) {
-						var door = new Obstacle(room.origin.y-2, i, EnumObstacleType.DOOR);
+						var door = new Obstacle(room.origin.y-2, i, EnumObstacle.DOOR);
 					}
 				}
 			}
@@ -638,106 +646,141 @@ var levelGen = {
 
 	},
 
+	fillInUnreaachableAreas: function() {
+		//	Iterate through rooms and check that when filled they connect to player start - if not, delete them
+		for(var i = level.rooms.length - 1; i >= 0; i--) {
+			var roomFill = cloneArray(level.terrainArray);
+			this.fill(roomFill, level.rooms[i].origin.y + 1, level.rooms[i].origin.x + 1, 0, 2);
+			if(roomFill[level.playerStart.y][level.playerStart.x] !== 2) {
+				level.rooms.splice(i, 1);
+			}
+		}
+		for(var i = 0; i < level.fillArray.length; i++) {
+			for(var j = 0; j < level.fillArray[0].length; j++) {
+				if(level.fillArray[i][j] !== 2) {							//	...if tile does not connect to player start...
+					level.terrainArray[i][j] = 1;							//	...turn the tile into solid in terrainArray...
+					level.overlayArray[i][j] = {y:-1, x:-1};				//	...and remove any existing overlay
+				}
+			}
+		}
+	},
+
+	reduceDeadEnds: function() {
+		for(var i = 1; i < level.terrainArray.length -1; i++) {
+			for(var j = 1; j < level.terrainArray[0].length -1; j++) {
+				if(level.terrainArray[i][j] === 0) {
+					var exits = this.getExits(i, j);
+					if(exits.length === 1) {
+						var fillIn = 0;					
+						// var fillIn = Math.floor(level.seed.nextFloat() * levelGen.vars.deadEndFactor);
+						if(fillIn < 1) {
+							this.fillTunnel(i, j);
+						}
+					}
+				}
+			}
+		}
+	},
+
+	//	Returns array of open terrain grid squares directly adjacent to given co-ordinates (ie the squares above, below, left & right)
+	getExits: function(y, x) {
+		var exits = [];
+		exits.length = 0;
+		if(level.terrainArray[y-1][x] === 0) {
+			exits.push({y: y-1, x: x});
+		}
+		if(level.terrainArray[y+1][x] === 0) {
+			exits.push({y: y+1, x: x});
+		}
+		if(level.terrainArray[y][x-1] === 0) {
+			exits.push({y: y, x: x-1});
+		}
+		if(level.terrainArray[y][x+1] === 0) {
+			exits.push({y: y, x: x+1});
+		}
+		return exits;
+	},
+
+	//	If terrain grid square at passed co-ordinates has just a single exit (ie is a dead end square), fill it in & convert to solid terrain
+	fillTunnel: function(y, x) {
+		var exits = this.getExits(y, x);
+		if(exits.length === 1) {
+			level.terrainArray[y][x] = 1;
+			this.fillTunnel(exits[0].y, exits[0].x);
+		}
+	},
+
+	//	Pass an array to fill, starting co-ordinates, the value to be overwritten and the value to overwrite it with - will fill in the contiguous area from starting co-ords
+	fill: function(arr, startY, startX, fillValue, fillWith) {
+		arr[startY][startX] = fillWith;
+		var filling = true;
+		while(filling) {
+			filling = false;
+			for(var i = 1; i < arr.length -1; i++) {
+				for(var j = 1; j < arr[0].length -1; j++) {
+					if(arr[i][j] === fillWith) {
+						if(arr[i-1][j] === fillValue) { 
+							arr[i-1][j] = fillWith;
+							filling = true;
+						}
+						if(arr[i+1][j] === fillValue) { 
+							arr[i+1][j] = fillWith;
+							filling = true;
+						}
+						if(arr[i][j-1] === fillValue) { 
+							arr[i][j-1] = fillWith;
+							filling = true;
+						}
+						if(arr[i][j+1] === fillValue) { 
+							arr[i][j+1] = fillWith;
+							filling = true;
+						}
+					}
+				}
+			}
+		}
+	},
+
+	checkForCorridorStart: function(y, x) {
+		if(
+			level.terrainArray[y-2] === undefined ||
+			level.terrainArray[y-1] === undefined ||
+			level.terrainArray[y+1] === undefined ||
+			level.terrainArray[y+2] === undefined ||
+			level.terrainArray[y][x-2] === undefined ||
+			level.terrainArray[y][x-1] === undefined ||
+			level.terrainArray[y][x+2] === undefined ||
+			level.terrainArray[y][x+1] === undefined ||
+
+			level.terrainArray[y-2][x-1] === 0 ||
+			level.terrainArray[y-2][x] === 0 ||
+			level.terrainArray[y-2][x+1] === 0 ||
+			level.terrainArray[y-1][x-1] === 0 ||
+			level.terrainArray[y-1][x] === 0 ||
+			level.terrainArray[y-1][x+1] === 0 ||
+			level.terrainArray[y][x-1] === 0 ||
+			level.terrainArray[y][x] === 0 ||
+			level.terrainArray[y][x+1] === 0 ||
+			level.terrainArray[y+1][x-1] === 0 ||
+			level.terrainArray[y+1][x] === 0 ||
+			level.terrainArray[y+1][x+1] === 0 ||
+			level.terrainArray[y+2][x-1] === 0 ||
+			level.terrainArray[y+2][x] === 0 ||
+			level.terrainArray[y+2][x+1] === 0
+		) {
+			return false;
+		} else {
+			var corridor = new Corridor(y, x);
+		}
+	},
+
 	addRandomCreatures: function() {
 
 	}
 };
 
-function fillInUnreaachableAreas() {
-	//	Iterate through rooms and check that when filled they connect to player start - if not, delete them
-	for(var i = level.rooms.length - 1; i >= 0; i--) {
-		var roomFill = cloneArray(level.terrainArray);
-		fill(roomFill, level.rooms[i].origin.y + 1, level.rooms[i].origin.x + 1, 0, 2);
-		if(roomFill[level.playerStart.y][level.playerStart.x] !== 2) {
-			level.rooms.splice(i, 1);
-		}
-	}
-	for(var i = 0; i < level.fillArray.length; i++) {
-		for(var j = 0; j < level.fillArray[0].length; j++) {
-			if(level.fillArray[i][j] !== 2) {							//	...if tile does not connect to player start...
-				level.terrainArray[i][j] = 1;							//	...turn the tile into solid in terrainArray...
-				level.overlayArray[i][j] = {y:-1, x:-1};				//	...and remove any existing overlay
-			}
-		}
-	}
-}
 
-
-
-function reduceDeadEnds() {
-	for(var i = 1; i < level.terrainArray.length -1; i++) {
-		for(var j = 1; j < level.terrainArray[0].length -1; j++) {
-			if(level.terrainArray[i][j] === 0) {
-				var exits = getExits(i, j);
-				if(exits.length === 1) {
-					var fillIn = 0;					
-					// var fillIn = Math.floor(level.seed.nextFloat() * levelGen.vars.deadEndFactor);
-					if(fillIn < 1) {
-						fillTunnel(i, j);
-					}
-				}
-			}
-		}
-	}
-}
-
-function getExits(y, x) {
-	var exits = [];
-	exits.length = 0;
-	if(level.terrainArray[y-1][x] === 0) {
-		exits.push({y: y-1, x: x});
-	}
-	if(level.terrainArray[y+1][x] === 0) {
-		exits.push({y: y+1, x: x});
-	}
-	if(level.terrainArray[y][x-1] === 0) {
-		exits.push({y: y, x: x-1});
-	}
-	if(level.terrainArray[y][x+1] === 0) {
-		exits.push({y: y, x: x+1});
-	}
-	return exits;
-}
-
-function fillTunnel(y, x) {
-	// debugger;
-	var exits = getExits(y, x);
-	if(exits.length === 1) {
-		level.terrainArray[y][x] = 1;
-		fillTunnel(exits[0].y, exits[0].x);
-	}
-}
-
-function fill(arr, startY, startX, fillValue, fillWith) {
-	arr[startY][startX] = fillWith;
-	var filling = true;
-	while(filling) {
-		filling = false;
-		for(var i = 1; i < arr.length -1; i++) {
-			for(var j = 1; j < arr[0].length -1; j++) {
-				if(arr[i][j] === fillWith) {
-					if(arr[i-1][j] === fillValue) { 
-						arr[i-1][j] = fillWith;
-						filling = true;
-					}
-					if(arr[i+1][j] === fillValue) { 
-						arr[i+1][j] = fillWith;
-						filling = true;
-					}
-					if(arr[i][j-1] === fillValue) { 
-						arr[i][j-1] = fillWith;
-						filling = true;
-					}
-					if(arr[i][j+1] === fillValue) { 
-						arr[i][j+1] = fillWith;
-						filling = true;
-					}
-				}
-			}
-		}
-	}
-};
-
+//	Deep clone an array of objects
 function cloneArray (existingArray) {
    var newObj = (existingArray instanceof Array) ? [] : {};
    for (i in existingArray) {
@@ -749,39 +792,6 @@ function cloneArray (existingArray) {
       }
    }
    return newObj;
-}
-
-function checkForCorridorStart(y, x) {
-	if(
-		level.terrainArray[y-2] === undefined ||
-		level.terrainArray[y-1] === undefined ||
-		level.terrainArray[y+1] === undefined ||
-		level.terrainArray[y+2] === undefined ||
-		level.terrainArray[y][x-2] === undefined ||
-		level.terrainArray[y][x-1] === undefined ||
-		level.terrainArray[y][x+2] === undefined ||
-		level.terrainArray[y][x+1] === undefined ||
-
-		level.terrainArray[y-2][x-1] === 0 ||
-		level.terrainArray[y-2][x] === 0 ||
-		level.terrainArray[y-2][x+1] === 0 ||
-		level.terrainArray[y-1][x-1] === 0 ||
-		level.terrainArray[y-1][x] === 0 ||
-		level.terrainArray[y-1][x+1] === 0 ||
-		level.terrainArray[y][x-1] === 0 ||
-		level.terrainArray[y][x] === 0 ||
-		level.terrainArray[y][x+1] === 0 ||
-		level.terrainArray[y+1][x-1] === 0 ||
-		level.terrainArray[y+1][x] === 0 ||
-		level.terrainArray[y+1][x+1] === 0 ||
-		level.terrainArray[y+2][x-1] === 0 ||
-		level.terrainArray[y+2][x] === 0 ||
-		level.terrainArray[y+2][x+1] === 0
-	) {
-		return false;
-	} else {
-		var corridor = new Corridor(y, x);
-	}
 }
 
 Corridor = function(y, x) {
@@ -1227,8 +1237,10 @@ Room.prototype.addCreature = function(creature) {
 }
 
 Decor = function(y, x, size_y, size_x, type) {
-	this.y = y;
-	this.x = x;
+	this.grid = {
+		x: x,
+		y: y
+	}
 	this.sprite = {};
 	this.sprite.size = {
 		y: size_y,
@@ -1236,19 +1248,19 @@ Decor = function(y, x, size_y, size_x, type) {
 	}
 	this.sprite.spriteSheet = level.img;
 	this.position = {
-		y: (y * TILE_SIZE) + (TILE_SIZE * size_y / 2),
-		x: (x * TILE_SIZE) + (TILE_SIZE * size_x / 2)
+		y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * size_y / 2),
+		x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * size_x / 2)
 	}
 	this.vars = {};
 	this.vars.drawOffset = {y:0,x:0};
 	this.type = type;
 	switch(this.type) {
-		case EnumObstacleType.COMMON_FLOATING_DECOR: {
+		case EnumObstacle.COMMON_FLOATING_DECOR: {
 			var rand = Math.floor(level.seed.nextFloat() * level.tiles.commonForegroundDecor.length);
 			this.currentSprite = level.tiles.commonForegroundDecor[rand];
 			break;
 		}
-		case EnumObstacleType.RARE_FLOATING_DECOR: {
+		case EnumObstacle.RARE_FLOATING_DECOR: {
 			var rand = Math.floor(level.seed.nextFloat() * level.tiles.rareForegroundDecor.length);
 			this.currentSprite = level.tiles.rareForegroundDecor[rand];
 			break;
@@ -1261,134 +1273,254 @@ Decor = function(y, x, size_y, size_x, type) {
 }
 
 Obstacle = function(y, x, type, modifier) {
-	this.y = y;
-	this.x = x;
-	this.sprite = {};
-	this.sprite.size = {
-		y: 1,
-		x: 1
-	}
-	this.sprite.spriteSheet = level.img;
-	console.log(this.sprite);
-	this.vars = {};
-	this.vars.drawOffset = {y:0,x:0};
 	this.type = type;
+	this.grid = {
+		x: x,
+		y: y
+	}
+	this.sprite = {
+		spriteSheet: level.img,
+		size: {
+			y: 1,
+			x: 1
+		}
+	};
+	this.foreground = true;
+	this.vars = {
+		drawOffset: {y:0,x:0}
+	};
+	this.position = {
+		y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+		x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+	}
+	this.box = {
+		type: EnumBoxtype.OBSTACLE,
+		topLeft: {},
+		bottomRight: {}
+	}
+	this.offsetSpace = {
+		y: 0,
+		x: 0
+	}
 	// this.interact = function() {};
 	switch(this.type) {
-		case EnumObstacleType.DOOR: {
+		case EnumObstacle.DOOR: {
+			this.doorType = Math.floor(level.seed.nextFloat() * level.tiles.door.length / 3);
 			this.closed = true;
-			this.currentSprite = level.tiles.door[0];
-			this.foreground = true;
-			level.obstacleArray[this.y+1][this.x] = 1;
-			level.terrainArray[this.y+1][this.x] = 2;
+			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
+			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
+			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
 			this.sprite.size.y = 2;
 			this.interact = function() {
 				this.open = true;
 				this.animated = true;
 				this.animTime = 100;
 				this.animStart = performance.now();
-				this.currentSprite = level.tiles.door[1];
-				level.terrainArray[this.y+1][this.x] = 0;
+				this.currentSprite = level.tiles.door[1 + this.doorType * 3];
+				level.terrainArray[this.grid.y+1][this.grid.x] = 0;
 				return this.animTime;
 			}
 			this.interactionEnd = function() {
 				this.animated = false;
 				this.ctx = bgCtx;
-				this.currentSprite = level.tiles.door[2];
+				this.currentSprite = level.tiles.door[2 + this.doorType * 3];
 			}
-			this.position = {
-				y: (y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
-				x: (x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			this.position = {				//	Centre of sprite
+				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
 			}
 			break;
 		}
-		case EnumObstacleType.BARREL: {
-			level.obstacleArray[this.y][this.x] = 1;
-			this.foreground = true;
-			this.currentSprite = level.tiles.obstacles[0];
-			this.sprite.size.y = 1;
-			this.box = {};
-			this.box.type = EnumBoxtype.OBSTACLE;
+		case EnumObstacle.BARREL: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.tiles.obstacles[5];
 			this.box.topLeft = {
-				y: y * TILE_SIZE + TILE_SIZE * 1/16,
-				x: x * TILE_SIZE + TILE_SIZE * 3/16
+				y: this.grid.y * TILE_SIZE,
+				x: this.grid.x * TILE_SIZE
 			}
 			this.box.bottomRight = {
-				y: y * TILE_SIZE + TILE_SIZE * 1,
-				x: x * TILE_SIZE + TILE_SIZE * 13/16
+				y: this.grid.y * TILE_SIZE + TILE_SIZE,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 12/16
 			}
-			this.position = {
-				y: (y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
-				x: (x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			this.maxOffset = {
+				y: 0,
+				x: 3
 			}
+			this.offsetPosition();
 			break;
 		}
-		case EnumObstacleType.DINING_TABLE: {		//	Occupy 2 tiles on x axis * 4 on y in obstacleArray
+		case EnumObstacle.DINING_TABLE: {		//	Occupy 2 tiles on x axis * 4 on y in obstacleArray
 			for(var i = 0; i < 4; i++) {
 				for(var j = 0; j < 2; j++) {
-					level.obstacleArray[this.y+i][this.x+j] = 1;
+					level.obstacleArray[this.grid.y+i][this.grid.x+j] = 1;
 				}
 			}
-			this.foreground = true;
-			this.currentSprite = level.tiles.obstacles[1];
+			this.currentSprite = level.tiles.obstacles[0];
 			this.sprite.size.x = 3;		
 			this.sprite.size.y = 4;
-			this.box = {};
-			this.box.type = EnumBoxtype.OBSTACLE;
 			this.box.topLeft = {
-				y: y * TILE_SIZE + TILE_SIZE * 8/16,
-				x: x * TILE_SIZE + TILE_SIZE * 0
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 8/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 0
 			}
 			this.box.bottomRight = {
-				y: y * TILE_SIZE + TILE_SIZE * 4,
-				x: x * TILE_SIZE + TILE_SIZE * 2
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 4,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 2
 			}
 			this.vars.drawOffset = {y: TILE_SIZE * this.sprite.size.y / 2, x:0};
 			this.position = {
-				y: (y * TILE_SIZE),
-				x: (x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+				y: (this.grid.y * TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
 			}
 			break;
 		}
-		case EnumObstacleType.DINING_CHAIR: {
-			level.obstacleArray[this.y][this.x] = 1;
-			this.foreground = true;
-			var offset_y = Math.floor(level.seed.nextFloat() * 2);
-			var offset_x = Math.floor(level.seed.nextFloat() * 4);
-			this.box = {};
-			this.box.type = EnumBoxtype.OBSTACLE;
+		case EnumObstacle.DINING_CHAIR: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
 			this.box.topLeft = {
-				y: y * TILE_SIZE + 1 - offset_y,
-				x: x * TILE_SIZE + 2 + offset_x
+				y: this.grid.y * TILE_SIZE,
+				x: this.grid.x * TILE_SIZE + 2
 			}
 			this.box.bottomRight = {
-				y: y * TILE_SIZE + TILE_SIZE - offset_y,
-				x: x * TILE_SIZE + TILE_SIZE - 4 + offset_x
+				y: this.grid.y * TILE_SIZE + TILE_SIZE,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE - 5
 			}
 			this.position = {
-				y: (y * TILE_SIZE + TILE_SIZE / 2 - offset_y),
-				x: (x * TILE_SIZE + TILE_SIZE / 2 + offset_x)
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 0,
+				x: 3
 			}
 			if(modifier === 'Right') {
-				this.currentSprite = level.tiles.obstacles[2];
+				this.currentSprite = level.tiles.obstacles[1];
+				this.offsetPosition();
 			} else if(modifier === 'Left') {
-				this.currentSprite = level.tiles.obstacles[3];
+				this.currentSprite = level.tiles.obstacles[2];
+				this.offsetPosition();
 			} else if(modifier === 'Facing') {
-				this.currentSprite = level.tiles.obstacles[4];
+				this.currentSprite = level.tiles.obstacles[3];
 				this.sprite.size.y = 2;
 				this.box.topLeft = {
-					y: y * TILE_SIZE - TILE_SIZE / 2 + 6,
-					x: x * TILE_SIZE - TILE_SIZE / 2 -2
+					y: this.grid.y * TILE_SIZE - TILE_SIZE / 2 + 6,
+					x: this.grid.x * TILE_SIZE - TILE_SIZE / 2 -2
 				}
 				this.box.bottomRight = {
-					y: y * TILE_SIZE + TILE_SIZE + 6,
-					x: x * TILE_SIZE + TILE_SIZE / 2 - 2
+					y: this.grid.y * TILE_SIZE + TILE_SIZE + 6,
+					x: this.grid.x * TILE_SIZE + TILE_SIZE / 2 - 2
 				}
 				this.position = {
-					y: (y * TILE_SIZE + 6),
-					x: (x * TILE_SIZE)
+					y: (this.grid.y * TILE_SIZE + 6),
+					x: (this.grid.x * TILE_SIZE)
 				}
 			}
+			break;
+		}
+		case EnumObstacle.BUCKET: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.tiles.obstacles[6];
+			this.sprite.size.y = 1;
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 13/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 12/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 3,
+				x: 3
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.WELL: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y][this.grid.x+1] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x+1] = 1;
+			this.currentSprite = level.tiles.obstacles[7];
+			this.sprite.size = {
+				y: 2,
+				x: 2
+			}
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 8,
+				x: this.grid.x * TILE_SIZE + 1
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 30,
+				x: this.grid.x * TILE_SIZE + 15
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {
+				y: 2,
+				x: 8
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.COFFIN: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
+			this.currentSprite = level.tiles.obstacles[4];
+			this.sprite.size = {
+				y: 2,
+				x: 1
+			}
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 2,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 26,
+				x: this.grid.x * TILE_SIZE + 15
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 5,
+				x: 0
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.TORTURE_TABLE: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y][this.grid.x+1] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x+1] = 1;
+			this.currentSprite = level.tiles.obstacles[8];
+			this.sprite.size = {
+				y: 2,
+				x: 2
+			}
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + (TILE_SIZE * 2),
+				x: this.grid.x * TILE_SIZE + 28
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {
+				y: 0,
+				x: 2
+			}
+			this.offsetPosition();
 			break;
 		}
 		default: {
@@ -1396,4 +1528,15 @@ Obstacle = function(y, x, type, modifier) {
 		}
 	}
 	level.obstacles.push(this);
+}
+
+Obstacle.prototype.offsetPosition = function() {
+	var offset_y = Math.floor(level.seed.nextFloat() * this.maxOffset.y);
+	var offset_x = Math.floor(level.seed.nextFloat() * this.maxOffset.x);
+	this.box.topLeft.y += offset_y;
+	this.box.bottomRight.y += offset_y;
+	this.position.y += offset_y;
+	this.box.topLeft.x += offset_x;
+	this.box.bottomRight.x += offset_x;
+	this.position.x += offset_x;
 }
