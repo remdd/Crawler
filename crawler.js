@@ -1,4 +1,3 @@
-$(function() {
 	var level;											//	Current level object, loaded from levels.js
 
 	var game = {
@@ -7,13 +6,15 @@ $(function() {
 		viewport_offset_x: 0,
 		viewport_offset_y: 0,
 		focused: true,							//	Track whether browser tab is focused by user
-		seed: Math.floor(Math.random() * 1000000)
-		// seed: 6
+		seed: Math.floor(Math.random() * 1000000),
+		creatures: []
+		// seed: 9
 	}
+
+	console.log("Seed: " + game.seed);
 
 	var prng = new Random(game.seed);
 
-	var creatures = [];
 	var attacks = [];
 	var projectiles = [];
 	var colliders = [];							//	Store any active collision boxes - player, creatures, obstacles etc
@@ -166,12 +167,14 @@ $(function() {
 					var creature = new Creature(creatureTemplates[level.creatureArray[i][j]]);
 					creature.position.x = j * TILE_SIZE + TILE_SIZE / 2;
 					creature.position.y = i * TILE_SIZE + TILE_SIZE / 2;
+					creature.grid.x = j;
+					creature.grid.y = i;
 					creature.updateBox();
-					creatures.push(creature);
+					game.creatures.push(creature);
 				}
 			}
 		}
-		console.log(creatures);
+		console.log(game.creatures);
 	}
 
 	function drawOnCanvas(entity, ctx) {
@@ -181,15 +184,15 @@ $(function() {
 				ctx.translate(entity.position.x - game.viewport_offset_x, entity.position.y - game.viewport_offset_y);
 				ctx.rotate(entity.vars.rotation);
 				var drawPosition = {};
-				drawPosition.x = entity.vars.drawOffset.x - TILE_SIZE * entity.sprite.size.x / 2; 
-				drawPosition.y = entity.vars.drawOffset.y - TILE_SIZE * entity.sprite.size.y / 2;
+				drawPosition.x = Math.floor(entity.vars.drawOffset.x - TILE_SIZE * entity.sprite.size.x / 2); 
+				drawPosition.y = Math.floor(entity.vars.drawOffset.y - TILE_SIZE * entity.sprite.size.y / 2);
 				ctx.drawImage(entity.sprite.spriteSheet,
 					entity.currentSprite.x * TILE_SIZE, 											//	x-coord to start clipping
 					entity.currentSprite.y * TILE_SIZE, 											//	y-coord to start clipping
 					entity.sprite.size.x * TILE_SIZE, 												//	width of clipped image
 					entity.sprite.size.y * TILE_SIZE, 												//	height of clipped image
-					Math.floor(drawPosition.x), 													//	x-coord of canvas placement
-					Math.floor(drawPosition.y), 													//	y-coord of canvas placement
+					drawPosition.x, 																//	x-coord of canvas placement
+					drawPosition.y, 																//	y-coord of canvas placement
 					entity.sprite.size.x * TILE_SIZE, 												//	width of image on canvas
 					entity.sprite.size.y * TILE_SIZE												//	height of image on canvas
 				);
@@ -274,6 +277,7 @@ $(function() {
 		} else if(this.vars.pointInAnimLoop <= this.sprite.animations[this.vars.animation][1][19]) {
 			this.currentSprite = this.sprite.frames[this.sprite.animations[this.vars.animation][2][19]];
 		}
+
 	}
 	Entity.prototype.updateBox = function() {
 		this.box.topLeft.x = this.position.x - this.box.width / 2 + 1;
@@ -281,6 +285,15 @@ $(function() {
 		this.box.bottomRight.x = this.position.x + this.box.width / 2 - 1;
 		this.box.bottomRight.y = this.position.y + (this.sprite.size.y * TILE_SIZE / 2) - 1;
 		// debugs.push(this.box.topLeft, this.box.bottomRight);
+	}
+	Entity.prototype.getGridOffsetFromPlayer = function() {
+		var offset = {
+			x: this.grid.x - player.grid.x,
+			y: this.grid.y - player.grid.y
+		}
+		if(offset.x < 0) { offset.x *= -1 };
+		if(offset.y < 0) { offset.y *= -1 };
+		return offset;
 	}
 
 	//	Assign Entity prototype
@@ -414,6 +427,7 @@ $(function() {
 		if(!this.vars.minFacingChangeTime) {
 			this.vars.minFacingChangeTime = 200;					//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
 		}
+		this.vars.suspended = true;
 		this.ai = {};
 		Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
 		this.ai.startTime = 0;
@@ -443,6 +457,10 @@ $(function() {
 		var newCoords = checkCollision(this, tryX, tryY);
 		this.position.x = newCoords.x;
 		this.position.y = newCoords.y;
+		this.grid = {
+			x: Math.floor((this.position.x + (TILE_SIZE * this.sprite.size.x / 2)) / TILE_SIZE),
+			y: Math.floor((this.position.y + (TILE_SIZE * this.sprite.size.y / 2)) / TILE_SIZE),
+		}
 		this.collidedWith = newCoords.collidedWith;
 		if(this.updateBox) {
 			this.updateBox();
@@ -656,7 +674,7 @@ $(function() {
 	}
 
 	function drawWeapons() {
-		creatures.forEach(function(creature) {
+		game.creatures.forEach(function(creature) {
 			if(creature.weapon && !creature.vars.hideWeapon && creature.weapon.vars.foreground) {
 				if(creature.weapon.sprite.displayWhileResting || performance.now() < creature.vars.lastAttackTime + creature.weapon.vars.animTime) {
 					drawOnCanvas(creature.weapon, attackCtx);
@@ -682,7 +700,7 @@ $(function() {
 		drawables.length = 0;
 		drawOnTop.length = 0;
 		drawables.push(player);
-		creatures.forEach(function(creature) {
+		game.creatures.forEach(function(creature) {
 			if(inViewport(creature.position.x, creature.position.y)) {
 				if(creature.vars.foreground) {
 					drawOnTop.push(creature);
@@ -781,10 +799,10 @@ $(function() {
 	}
 
 	function updateCreatures() {
-		creatures.forEach(function(creature) {
+		game.creatures.forEach(function(creature) {
 			if(performance.now() > creature.vars.deathTime) {					//	If creature's deathTime has passed...
 				leaveCorpse(creature);
-				creatures.splice(creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
+				game.creatures.splice(game.creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
 			}
 			if(creature.vars.currentHP <= 0 && !creature.vars.deathTime) {		//	If creature has 0 or less HP and deathTime has not yet been set...
 				creature.deathResponse();										//	...trigger its death response.
@@ -826,7 +844,7 @@ $(function() {
 					// 	attack.contactPoints.splice(attack.contactPoints.indexOf(contactPoint), 1);
 					// }
 				}
-				creatures.forEach(function(creature) {
+				game.creatures.forEach(function(creature) {
 					if(attack.damageCreatures) {
 						//	Check whether contactPoint falls within bounding box of any creature
 						if(contactPoint.x >= creature.box.topLeft.x && contactPoint.x <= creature.box.bottomRight.x
@@ -920,10 +938,10 @@ $(function() {
 	//	Collider Collision Manager - check for contact with active box colliders
 	function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 		var returnCoords = { x: tryX, y: tryY, collidedWith: collidedWith };
-		for(var i = 0; i < colliders.length; i++) {
-			if(colliders[i] !== obj && !colliders[i].vars.moveThroughColliders && !obj.vars.moveThroughColliders && colliders[i] !== obj.vars.shooter) {
-				//	Projectile colliders can pass through obstacle colliders
-				if(colliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
+		for(var i = 0; i < nearbyColliders.length; i++) {
+			if(nearbyColliders[i] !== obj && !nearbyColliders[i].vars.moveThroughnearbyColliders && !obj.vars.moveThroughnearbyColliders && nearbyColliders[i] !== obj.vars.shooter) {
+				//	Projectile nearbyColliders can pass through obstacle nearbyColliders
+				if(nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
 					return returnCoords;
 				}
 				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
@@ -931,10 +949,10 @@ $(function() {
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 
-				var objTop = colliders[i].box.topLeft.y;
-				var objBtm = colliders[i].box.bottomRight.y;
-				var objL = colliders[i].box.topLeft.x;
-				var objR = colliders[i].box.bottomRight.x;
+				var objTop = nearbyColliders[i].box.topLeft.y;
+				var objBtm = nearbyColliders[i].box.bottomRight.y;
+				var objL = nearbyColliders[i].box.topLeft.x;
+				var objR = nearbyColliders[i].box.bottomRight.x;
 
 				if(
 				//	Check if obj overlaps any corner of the collider...
@@ -951,14 +969,14 @@ $(function() {
 				//	...or falls fully inside the collider
 				(newTop >= objTop && newBtm <= objBtm && newL >= objL && newR <= objR)
 				) {
-					if(obj.vars.touchDamage && colliders[i] === player) {
+					if(obj.vars.touchDamage && nearbyColliders[i] === player) {
 						obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
 						player.vars.lastDamageTime = performance.now();
 						player.inflictDamage(obj.touchDamage());
 					}
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
-					returnCoords.collidedWith = colliders[i];
+					returnCoords.collidedWith = nearbyColliders[i];
 					if(obj.movement.bounceOff) {
 						obj.movement.direction = obj.movement.direction + Math.PI;
 						obj.setFacing(obj.movement.direction);
@@ -1033,6 +1051,28 @@ $(function() {
 		});
 	}
 
+	function updateColliders() {
+		nearbyColliders.length = 0;
+		nearbyColliders.push(player);
+		game.creatures.forEach(function(creature) {
+			var offset = creature.getGridOffsetFromPlayer();
+			if(offset.x > CANVAS_WIDTH / TILE_SIZE || offset.y > CANVAS_HEIGHT / TILE_SIZE) {
+				creature.vars.suspended = true;
+				creature.movement.speed = 0;
+			} else {
+				creature.vars.suspended = false;
+				nearbyColliders.push(creature);
+			}
+		});
+		level.obstacles.forEach(function(obstacle) {
+			var offset = Creature.prototype.getGridOffsetFromPlayer.call(obstacle);
+			if(offset.x < CANVAS_WIDTH / TILE_SIZE && offset.y < CANVAS_HEIGHT / TILE_SIZE) {
+				nearbyColliders.push(obstacle);
+			}
+		});
+		// console.log(nearbyColliders);
+	}
+
 	function drawDebugCanvas() {
 		projectiles.forEach(function(projectile) {
 			var debug = { x: projectile.position.x, y: projectile.position.y, color: 'orange'};
@@ -1061,6 +1101,7 @@ $(function() {
 	//	Master game update function
 	function update(delta) {
 		setViewportOffset();
+		updateColliders();
 		updatePlayer();
 		updateCreatures();
 		updateAttacks();
@@ -1098,7 +1139,7 @@ $(function() {
 		setUpLevel();
 		drawOverlays();
 		setUpCreatures();
-		creatures.forEach(function(creature) {
+		game.creatures.forEach(function(creature) {
 			if(creature.weapon) {
 				creature.weapon.reset();
 			}
@@ -1141,5 +1182,3 @@ $(function() {
 			}
 		}
 	}
-
-});

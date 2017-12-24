@@ -36,7 +36,10 @@ var EnumCreature = {
 	HULKING_URK: 8,
 	DENZIN: 9,
 	MUMI: 10,
-	AMBUSH_SKELTON: 11
+	SNEAKY_SKELTON: 11,
+	BLUE_SQUARK: 12,
+	ZOMBI: 13,
+	ZOMBI_MASTER: 14
 }
 
 var EnumAi = {
@@ -50,7 +53,9 @@ var EnumAi = {
 	SKELTON_ARCHER: 8,
 	HULKING_URK: 9,
 	MUMI: 10,
-	AMBUSH_SKELTON: 11
+	SNEAKY_SKELTON: 11,
+	ZOMBI: 12,
+	ZOMBI_MASTER: 13
 }
 
 var EnumCreatureWeapon = {
@@ -61,7 +66,9 @@ var EnumCreatureWeapon = {
 	URK_SWORD: 5,
 	BONE_CROSSBOW: 6,
 	HULKING_URK_HAMMA: 7,
-	DENZIN_MACE: 8 
+	DENZIN_MACE: 8,
+	ZOMBI_BITE: 9,
+	ZOMBI_MASTER_STAFF: 10
 }
 
 var EnumCreatureProjectile = {
@@ -85,9 +92,15 @@ var EnumBoxtype = {
 }
 
 var EnumRoomtype = {
-	MUD_PATCH: 0,
+	LIGHT_FLOOR_PATCH: 0,
 	COBBLES: 1,
-	GREY_STONE: 2
+	GREY_STONE: 2,
+	GREY_TILE: 3
+}
+
+var EnumFloorpatch = {
+	LIGHT_PATCH: 0,
+	MUD_POOL: 1
 }
 
 var EnumObstacle = {
@@ -101,7 +114,10 @@ var EnumObstacle = {
 	BUCKET: 7,
 	WELL: 8,
 	COFFIN: 9,
-	TORTURE_TABLE: 10
+	TORTURE_TABLE: 10,
+	MEAT_RACK: 11,
+	STOOL: 12,
+	BARREL_2: 13
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

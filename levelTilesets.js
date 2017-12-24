@@ -42,8 +42,27 @@ var levelTilesets = [
 		rareForegroundDecor: [
 			{y:5,x:8}, {y:5,x:9}, {y:5,x:10}, {y:5,x:11}, {y:7,x:11}, {y:8,x:8}, {y:8,x:10}, {y:6,x:11}, {y:5,x:12}, {y:6,x:12}
 		],
-		lightMudFloor: [
-			{y:2,x:0}, {y:3,x:0}, {y:3,x:1}, {y:3,x:2}, {y:3,x:3}, {y:4,x:0}, {y:4,x:1}, {y:4,x:2}, {y:4,x:3}, {y:5,x:0}, {y:5,x:1}, {y:5,x:2}, {y:5,x:3}
+		lightFloor: [
+			[{y:2,x:0}, {y:4,x:1}, {y:4,x:2}],				//	Centre
+			[{y:3,x:0}],									//	Top-left
+			[{y:3,x:3}],									//	Top-right
+			[{y:5,x:0}],									//	Bottom-left
+			[{y:5,x:3}],									//	Bottom-right
+			[{y:3,x:1}, {y:3,x:2}],							//	Top
+			[{y:5,x:1}, {y:5,x:2}],							//	Bottom
+			[{y:4,x:0}],									//	Left
+			[{y:4,x:3}]										//	Right
+		],
+		mudPool: [
+			[{y:5,x:14}, {y:8,x:14}, {y:8,x:15}],	//	Centre
+			[{y:4,x:13}],	//	Top-left
+			[{y:4,x:15}],	//	Top-right
+			[{y:6,x:13}],	//	Bottom-left
+			[{y:6,x:15}],	//	Bottom-right
+			[{y:4,x:14}, {y:7,x:14}],	//	Top
+			[{y:6,x:14}, {y:8,x:13}],	//	Bottom
+			[{y:5,x:13}, {y:7,x:15}],	//	Left
+			[{y:5,x:15}, {y:7,x:13}]	//	Right
 		],
 		cobbleFloor: [
 			{y:6,x:0}, {y:6,x:1}, {y:7,x:0}, {y:7,x:1}, {y:6,x:2}, {y:6,x:3}, {y:7,x:2}, {y:7,x:3}
@@ -58,7 +77,10 @@ var levelTilesets = [
 			{y:5,x:5}, {y:5,x:4}, {y:5,x:6}, {y:5,x:7}
 		],
 		greyWallDecor: [
-			{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}
+			{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}, {y:4,x:7}, {y:4,x:8}, {y:4,x:9}, {y:4,x:10}
+		],
+		greyTileFloor: [
+			{y:9,x:10}
 		],
 		door: [
 			{y:8,x:1}, {y:8,x:2}, {y:8,x:3}, {y:14,x:0}, {y:14,x:1}, {y:14,x:2}
@@ -75,7 +97,10 @@ var levelTilesets = [
 			{y:10,x:0}, //	Barrel
 			{y:10,x:6},	//	Bucket
 			{y:12,x:5},	//	Well
-			{y:10,x:7}	//	Torture table
+			{y:10,x:7},	//	Torture table
+			{y:14,x:3},	//	Meat rack
+			{y:12,x:7},	//	Stool
+			{y:11,x:6}	//	Barrel 2
 		] 
 	}
 ]

@@ -184,8 +184,8 @@ var creatureTemplates = [
 				[ 400, [100, 200, 300, 400], [4, 5, 4, 3] ],						//	Resting, facing L
 				[ 400, [100, 200, 300, 400], [1, 2, 1, 0] ],						//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [4, 5, 4, 3] ],						//	Moving, facing L
-				[ 2000, [100, 200, 300, 400, 2000], [1, 6, 7, 8, 12] ],					//	Death, facing R
-				[ 2000, [100, 200, 300, 400, 2000], [4, 9, 10, 11, 12] ]					//	Death, facing L
+				[ 2000, [100, 200, 300, 400, 2000], [1, 6, 7, 8, 12] ],				//	Death, facing R
+				[ 2000, [100, 200, 300, 400, 2000], [4, 9, 10, 11, 12] ]			//	Death, facing L
 			]
 		},
 		box: {
@@ -808,7 +808,7 @@ var creatureTemplates = [
 		}
 	},
 	{
-		name: 'Ambush Skelton',
+		name: 'Sneaky Skelton',
 		currentSprite: { x: 6, y: 4 },
 		vars: {
 			speed: 0.5,
@@ -843,8 +843,8 @@ var creatureTemplates = [
 				[ 400, [100, 200, 300, 400], [8, 10, 9, 7] ],			//	Moving, facing L
 				[ 2000, [500, 1000, 2000], [4, 5, 6]],					//	Death, facing R
 				[ 2000, [500, 1000, 2000], [11, 12, 13]],				//	Death, facing L
-				[ 1000, [200, 400, 1000], [6, 5, 4]],						//	Ambush, facing R
-				[ 1000, [200, 400, 1000], [13, 12, 11]],					//	Ambush, facing L
+				[ 1000, [200, 400, 1000], [6, 5, 4]],					//	Ambush, facing R
+				[ 1000, [200, 400, 1000], [13, 12, 11]],				//	Ambush, facing L
 				[ 250, [250], [6]],										//	Lying in wait, facing R
 				[ 250, [250], [13]]										//	Lying in wait, facing L
 			]
@@ -861,7 +861,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumAi.AMBUSH_SKELTON,
+			type: EnumAi.SNEAKY_SKELTON,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -878,7 +878,243 @@ var creatureTemplates = [
 		addWeapon: function() {
 			return EnumCreatureWeapon.BONE_SWORD;
 		}
-
+	},
+	{
+		name: 'Blue Squark',
+		currentSprite: { x: 9, y: 2},
+		vars: {
+			speed: 1,
+			maxHP: 4,
+			currentHP: 4,
+			restingWeaponAnimation: true
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 9, y: 2 },		//	Resting facing R 1
+				{ x: 10, y: 2 },	//	Resting facing R 2
+				{ x: 11, y: 2 },	//	Moving facing R 1
+				{ x: 12, y: 2 },	//	Moving facing R 2
+				{ x: 13, y: 2 },	//	Moving facing R 3
+				{ x: 14, y: 2 },	//	Death facing R 1
+				{ x: 15, y: 2 },	//	Death facing R 2
+				{ x: 16, y: 2 },	//	Death facing R 3
+				{ x: 17, y: 2 },	//	Death facing R 4
+				{ x: 9, y: 3 },		//	Resting facing L 1
+				{ x: 10, y: 3 },	//	Resting facing L 2
+				{ x: 11, y: 3 },	//	Moving facing L 1
+				{ x: 12, y: 3 },	//	Moving facing L 2
+				{ x: 13, y: 3 },	//	Moving facing L 3
+				{ x: 14, y: 3 },	//	Death facing L 1
+				{ x: 15, y: 3 },	//	Death facing L 2
+				{ x: 16, y: 3 },	//	Death facing L 3
+				{ x: 17, y: 3 }		//	Death facing L 4
+			],
+			animations: [
+				[ 600, [400, 600], [ 0, 1] ],											//	Resting, facing R
+				[ 600, [400, 600], [ 9, 10] ],											//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 11,12,13,10 ] ],							//	Moving, facing L
+				[ 1400, [800, 1000, 1200, 1400], [5, 6, 7, 8 ] ],									//	Death, facing R
+				[ 1400, [800, 1000, 1200, 1400], [14,15,16,17] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 16, 
+			height: 14,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.URK,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.DENZIN_MACE;
+		}	
+	},
+	{
+		name: 'Zombi',
+		currentSprite: { x: 12, y: 0},
+		vars: {
+			speed: 0.4,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: true
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 12, y: 0 },	//	Moving facing R 1
+				{ x: 13, y: 0 },	//	Moving facing R 2
+				{ x: 14, y: 0 },	//	Moving facing R 3
+				{ x: 15, y: 0 },	//	Moving facing R 4
+				{ x: 16, y: 0 },	//	Death facing R 1
+				{ x: 17, y: 0 },	//	Death facing R 2
+				{ x: 18, y: 0 },	//	Death facing R 3
+				{ x: 12, y: 1 },	//	Moving facing L 1
+				{ x: 13, y: 1 },	//	Moving facing L 2
+				{ x: 14, y: 1 },	//	Moving facing L 3
+				{ x: 15, y: 1 },	//	Moving facing L 4
+				{ x: 16, y: 1 },	//	Death facing L 1
+				{ x: 17, y: 1 },	//	Death facing L 2
+				{ x: 18, y: 1 },	//	Death facing L 3
+				{ x: 19, y: 0 },	//	Biting facing R 1
+				{ x: 20, y: 0 },	//	Biting facing R 2
+				{ x: 19, y: 1 },	//	Biting facing L 1
+				{ x: 20, y: 1 }		//	Biting facing L 2
+			],
+			animations: [
+				[ 200, [200], [0] ],											//	Resting, facing R
+				[ 200, [200], [7] ],											//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 0, 1, 2, 3 ] ],					//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 7, 8, 9,10 ] ],					//	Moving, facing L
+				[ 600, [200, 400, 600], [4, 5, 6] ],							//	Death, facing R
+				[ 600, [200, 400, 600], [11,12,13] ],							//	Death, facing L
+				[ 400, [200, 300, 400], [14,15,0] ],							//	Biting, facing R
+				[ 400, [200, 300, 400], [16,17,7] ],							//	Biting, facing L
+				[ 200, [200], [6] ],											//	Dead, facing R
+				[ 600, [200], [13] ],											//	Dead, facing L
+				[ 600, [200, 400, 600], [6, 5, 4] ],							//	Reanimate, facing R
+				[ 600, [200, 400, 600], [13,12,11] ]							//	Reanimate, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 16,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.ZOMBI,
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.ZOMBI_BITE;
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathResponse: function() {
+			if(!this.vars.dead) {
+				this.vars.dead = true;
+				this.vars.moveThroughColliders = true;
+				// colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
+				this.ai.nextAction = 1;														//	Prevent further AI actions
+				this.movement.speed = 0;														//	Zero speed
+				this.movement.moving = false;													//	Stop moving
+				this.position.x = Math.floor(this.position.x);									//	Round co-ords down to prevent blurred drawing on canvas
+				this.position.y = Math.floor(this.position.y);
+				this.vars.animStart = performance.now();										//	Set animation start time to now...
+				if(this.vars.facingRight) {														//	...and set death animation
+					this.vars.animation = 4;
+				} else {
+					this.vars.animation = 5;
+				}
+				this.ai.nextAction = 1;
+				// this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
+			}
+		}
+	},
+	{
+		name: 'Zombi Master',
+		currentSprite: { x: 21, y: 0},
+		vars: {
+			speed: 1.2,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: true
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 21, y: 0 },	//	Resting facing R 1
+				{ x: 22, y: 0 },	//	Resting facing R 2
+				{ x: 23, y: 0 },	//	Moving facing R 1
+				{ x: 24, y: 0 },	//	Moving facing R 2
+				{ x: 25, y: 0 },	//	Moving facing R 3
+				{ x: 26, y: 0 },	//	Moving facing R 4
+				{ x: 27, y: 0 },	//	Death facing R 1
+				{ x: 28, y: 0 },	//	Death facing R 2
+				{ x: 29, y: 0 },	//	Death facing R 3
+				{ x: 30, y: 0 },	//	Death facing R 4
+				{ x: 31, y: 0 },	//	Death facing R 5
+				{ x: 21, y: 1 },	//	Resting facing L 1
+				{ x: 22, y: 1 },	//	Resting facing L 2
+				{ x: 23, y: 1 },	//	Moving facing L 1
+				{ x: 24, y: 1 },	//	Moving facing L 2
+				{ x: 25, y: 1 },	//	Moving facing L 3
+				{ x: 26, y: 1 },	//	Moving facing L 4
+				{ x: 27, y: 1 },	//	Death facing L 1
+				{ x: 28, y: 1 },	//	Death facing L 2
+				{ x: 29, y: 1 },	//	Death facing L 3
+				{ x: 30, y: 1 },	//	Death facing L 4
+				{ x: 31, y: 1 } 	//	Death facing L 5
+			],
+			animations: [
+				[ 800, [500, 800], [0, 1] ],									//	Resting, facing R
+				[ 800, [500, 800], [11,12] ],									//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 5 ] ],					//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 13,14,15,16 ] ],					//	Moving, facing L
+				[ 1500, [300, 600, 900, 1200, 1500], [6, 7, 8, 9, 10] ],		//	Death, facing R
+				[ 1500, [300, 600, 900, 1200, 1500], [17,18,19,20,21] ]			//	Death, facing L
+			]
+		},
+		box: {
+			width: 12, 
+			height: 16,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.ZOMBI_MASTER,
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.ZOMBI_MASTER_STAFF;
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		}
 	}
 ];
 
@@ -1279,6 +1515,116 @@ var creatureWeapons = [
 			frames: [
 				{ x: 7, y: 6 },							//	Right facing
 				{ x: 7.5, y: 6 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -3/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -8/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 14/16,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 1 * Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},
+	{
+		name: 'Zombi Bite',
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			if(this.holder.vars.facingRight) {
+				this.currentSprite = this.sprite.frames[0];
+			} else {
+				this.currentSprite = this.sprite.frames[0];
+			}
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			// this.vars.hidden = true;
+			this.vars.attacking = false;
+		},
+		vars: {
+			hidden: true,
+			animTime: 100,								//	Length of time the weapon stays animated after attack
+			attackRate: 800,
+			drawOffset: { x: 0, y: 0 },
+			foreground: false
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1},							//	Resting - no sprite
+				{ x: -1, y: -1}							//	Resting - no sprite
+			],
+			restingDrawOffset: {
+				x: 0,
+				y: 0
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: TILE_SIZE * -0.6
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 0.75,						//	Reach of attack from centre of creature position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			color1: 'rgba(255,102,0,0)',
+			color2: '#ff944d',
+			swipeThickness: 0.85,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},
+	{
+		name: "Zombi Master's Staff",
+		currentSprite: { x: 7, y: 7},
+		use: function(direction) {
+			this.chop(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+
+		vars: {
+			animTime: 1000,								//	Length of time the weapon stays animated after attack
+			attackRate: 2000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 7, y: 7 },							//	Right facing
+				{ x: 7.5, y: 7 }						//	Left facing
 			],
 			restingDrawOffset: {
 				x: TILE_SIZE * -3/16,

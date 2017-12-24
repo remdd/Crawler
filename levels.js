@@ -28,7 +28,7 @@ var level = {
 //	Level generator
 var levelGen = {
 	vars: {
-		roomAttempts: 300,
+		roomAttempts: 1000,
 		verticalConnectorSparseness: 10,
 		horizontalConnectorSparseness: 25,
 		corridorStraightness: 5,
@@ -40,7 +40,8 @@ var levelGen = {
 		maxSpecialRooms: 4,
 		deadEndFactor: 0.5,					//	Fraction of dead ends that get filled in is 1 divided by this number
 		basicRoomScarcity: 5,				//	1 = 100% basic rooms, 2 = 50% etc				
-		addCreatureAttempts: 20
+		addCreatureAttempts: 20,
+		addObstacleAttempts: 20
 	},
 
 	loadLevel: function(levelNumber, prng) {
@@ -52,76 +53,18 @@ var levelGen = {
 				level.img = document.getElementById('tilesetImg');
 				level.tiles = levelTilesets[0];
 				level.roomTypes = [
-					EnumRoomtype.MUD_PATCH, EnumRoomtype.COBBLES, EnumRoomtype.GREY_STONE
+					EnumRoomtype.LIGHT_FLOOR_PATCH, EnumRoomtype.COBBLES, EnumRoomtype.GREY_STONE, EnumRoomtype.GREY_TILE
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
 					level.playerStart = {y: this.origin.y, x: this.origin.x};
-					new Obstacle(level.playerStart.y + 1, level.playerStart.x + 1, EnumObstacle.TORTURE_TABLE);
-					this.addCreature(EnumCreature.AMBUSH_SKELTON);
+					new Obstacle(EnumObstacle.TORTURE_TABLE, null, level.playerStart.y + 1, level.playerStart.x + 1);
+					this.addCreature(EnumCreature.ZOMBI_MASTER);
+					this.addCreature(EnumCreature.ZOMBI);
+					this.addCreature(EnumCreature.ZOMBI);
 				};
-				level.boss = EnumCreature.CAMP_VAMP;
 				level.bossRoomContents = function() {
-					console.log("Adding boss room contents");
-					//	Remove any existing obstacles apart from doors
-					var that = this;
-					for(var i = level.obstacles.length - 1; i >= 0; i--) {
-						if(	level.obstacles[i].grid.y >= that.origin.y && level.obstacles[i].grid.y <= that.origin.y + that.height && 
-							level.obstacles[i].grid.x >= that.origin.x && level.obstacles[i].grid.x <= that.origin.x + that.width
-							&& level.obstacles[i].type !== EnumObstacle.DOOR
-						) {
-							console.log("Deleting obstacle...");
-							level.obstacles.splice(i, 1);
-						}
-					}
-					//	Remove any existing decor **********************************Need to remove existing tall decor too********************************
-					for(var i = level.decor.length - 1; i >= 0; i--) {
-						if(	level.decor[i].grid.y >= that.origin.y && level.decor[i].grid.y <= that.origin.y + that.height && 
-							level.decor[i].grid.x >= that.origin.x && level.decor[i].grid.x <= that.origin.x + that.width
-						) {
-							console.log("Deleting decor...");
-							level.decor.splice(i, 1);
-						}
-					}
-					// Add tiled floor
-					for(var i = this.origin.y; i < this.origin.y + this.height + 1; i++) {
-						for(var j = this.origin.x; j < this.origin.x + this.width; j++) {
-							if(level.terrainArray[i][j] === 0) {
-								level.overlayArray[i][j] = level.tiles.tiledFloor[0];
-							}
-						}
-					}
-					//	Add special obstacles - dining table & chairs - ***** needs a min room height of 8 and width of 6
-					var rand = Math.floor(level.seed.nextFloat() * (this.height - 6 - 2));			//	6: total height of table & chairs, 2: to ensure a space either side
-					var diningRoom_y = this.origin.y + 1 + rand;
-					var rand2 = Math.floor(level.seed.nextFloat() * (this.width - 4 - 2));			//	4: total width of table & chairs, 2: to ensure a space either side
-					var diningRoom_x = this.origin.x + 1 + rand2;
-
-
-					new Obstacle(diningRoom_y + 1, diningRoom_x + 1, EnumObstacle.DINING_TABLE);
-					new Obstacle(diningRoom_y + 0, diningRoom_x + 2, EnumObstacle.DINING_CHAIR, 'Facing');
-					new Obstacle(diningRoom_y + 1, diningRoom_x + 0, EnumObstacle.DINING_CHAIR, 'Right');
-					new Obstacle(diningRoom_y + 3, diningRoom_x + 0, EnumObstacle.DINING_CHAIR, 'Right');
-					new Obstacle(diningRoom_y + 4, diningRoom_x + 0, EnumObstacle.DINING_CHAIR, 'Right');
-					new Obstacle(diningRoom_y + 2, diningRoom_x + 3, EnumObstacle.DINING_CHAIR, 'Left');
-					new Obstacle(diningRoom_y + 4, diningRoom_x + 3, EnumObstacle.DINING_CHAIR, 'Left');
-					//	Add columns on facing wall spaces
-					for(var i = this.origin.x; i < this.origin.x + this.width; i++) {
-						if(level.terrainArray[this.origin.y-2][i] === 1 && level.overlayArray[this.origin.y-2][i-1] !== level.tiles.wallDecorTall[1] &&
-							level.obstacleArray[this.origin.y-2][i] === undefined && level.obstacleArray[this.origin.y-1][i] === undefined
-						) {
-							level.overlayArray[this.origin.y-2][i] = level.tiles.wallDecorTall[1];
-							level.overlayArray[this.origin.y-1][i] = level.tiles.tiledFloor[1];
-							level.overlayArray[this.origin.y][i] = level.tiles.tiledFloor[2];
-						}
-					}
-
-					// Add boss and other creatures
-					this.addCreature(level.boss);
-					var rand = Math.floor(level.seed.nextFloat() * 3) + 3		//	From 3 - 5
-					for(var i = 0; i < rand; i++) {
-						this.addCreature(EnumCreature.SKELTON);
-					}
+					levelGen.bossRooms[0](this);
 				};
 				level.commonCreatures = [
 					EnumCreature.GREEN_GOBLIN,
@@ -132,11 +75,12 @@ var levelGen = {
 					EnumCreature.MINI_GHOST,
 					EnumCreature.GREEN_SLUDGIE,
 					EnumCreature.HULKING_URK,
-					EnumCreature.DENZIN
+					EnumCreature.DENZIN,
+					EnumCreature.AMBUSH_SKELTON,
+					EnumCreature.MUMI
 				];
 				level.rareCreatures = [
-					EnumCreature.MINI_GHOST,
-					EnumCreature.AMBUSH_SKELTON
+					EnumCreature.MINI_GHOST
 				];
 				level.commonObstacles = [
 					EnumObstacle.BARREL,
@@ -639,7 +583,7 @@ var levelGen = {
 						}
 					});
 					if(addDoor) {
-						var door = new Obstacle(room.origin.y-2, i, EnumObstacle.DOOR);
+						var door = new Obstacle(EnumObstacle.DOOR, null, room.origin.y-2, i);
 					}
 				}
 			}
@@ -779,6 +723,82 @@ var levelGen = {
 
 	}
 };
+
+//	Boss rooms
+levelGen.bossRooms = [
+	//	Camp Vamp's dining room
+	function(room) {
+		level.boss = EnumCreature.CAMP_VAMP;
+		console.log("Adding Camp Vamp boss room");
+		//	Remove any existing obstacles apart from doors
+		for(var i = level.obstacles.length - 1; i >= 0; i--) {
+			if(	level.obstacles[i].grid.y >= room.origin.y && level.obstacles[i].grid.y <= room.origin.y + room.height && 
+				level.obstacles[i].grid.x >= room.origin.x && level.obstacles[i].grid.x <= room.origin.x + room.width
+				&& level.obstacles[i].type !== EnumObstacle.DOOR
+			) {
+				console.log("Deleting obstacle...");
+				level.obstacles.splice(i, 1);
+			}
+		}
+		//	Remove any existing decor **********************************Need to remove existing tall decor too********************************
+		for(var i = level.decor.length - 1; i >= 0; i--) {
+			if(	level.decor[i].grid.y >= room.origin.y && level.decor[i].grid.y <= room.origin.y + room.height && 
+				level.decor[i].grid.x >= room.origin.x && level.decor[i].grid.x <= room.origin.x + room.width
+			) {
+				console.log("Deleting decor...");
+				level.decor.splice(i, 1);
+			}
+		}
+		// Add tiled floor
+		for(var i = room.origin.y; i < room.origin.y + room.height + 1; i++) {
+			for(var j = room.origin.x; j < room.origin.x + room.width; j++) {
+				if(level.terrainArray[i][j] === 0) {
+					level.overlayArray[i][j] = level.tiles.tiledFloor[0];
+				}
+			}
+		}
+		//	Add special obstacles - dining table & chairs - ***** needs a min room height of 8 and width of 6
+		var rand = Math.floor(level.seed.nextFloat() * (room.height - 6 - 2));			//	6: total height of table & chairs, 2: to ensure a space either side
+		var diningRoom_y = room.origin.y + 1 + rand;
+		var rand2 = Math.floor(level.seed.nextFloat() * (room.width - 4 - 2));			//	4: total width of table & chairs, 2: to ensure a space either side
+		var diningRoom_x = room.origin.x + 1 + rand2;
+
+
+		new Obstacle(EnumObstacle.DINING_TABLE, null, diningRoom_y + 1, diningRoom_x + 1);
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 0, diningRoom_x + 2, 'Facing');
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 1, diningRoom_x + 0, 'Right');
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 3, diningRoom_x + 0, 'Right');
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 0, 'Right');
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 2, diningRoom_x + 3, 'Left');
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 3, 'Left');
+
+		new Obstacle(EnumObstacle.COFFIN, room);
+
+		//	Add columns on facing wall spaces
+		for(var i = room.origin.x; i < room.origin.x + room.width; i++) {
+			if(level.terrainArray[room.origin.y-2][i] === 1 && level.overlayArray[room.origin.y-2][i-1] !== level.tiles.wallDecorTall[1] &&
+				level.obstacleArray[room.origin.y-2][i] === undefined && level.obstacleArray[room.origin.y-1][i] === undefined
+			) {
+				level.overlayArray[room.origin.y-2][i] = level.tiles.wallDecorTall[1];
+				level.overlayArray[room.origin.y-1][i] = level.tiles.tiledFloor[1];
+				level.overlayArray[room.origin.y][i] = level.tiles.tiledFloor[2];
+			} else if(level.terrainArray[room.origin.y-2][i] === 1 && level.overlayArray[room.origin.y-2][i-1] === level.tiles.wallDecorTall[1] &&
+				level.obstacleArray[room.origin.y-2][i] === undefined && level.obstacleArray[room.origin.y-1][i] === undefined
+			) {
+				level.overlayArray[room.origin.y-1][i] = level.tiles.wallFace[0];
+			}
+		}
+
+		// level.playerStart = {y: room.origin.y, x: room.origin.x};
+
+		// Add boss and other creatures
+		room.addCreature(level.boss);
+		var rand = Math.floor(level.seed.nextFloat() * 3) + 3		//	From 3 - 5
+		for(var i = 0; i < rand; i++) {
+			room.addCreature(EnumCreature.SKELTON);
+		}	
+	}
+];
 
 
 //	Deep clone an array of objects
@@ -978,53 +998,10 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 		this.addContents = this.generateRoomContents();
 	}
 	switch(this.type) {
-		case EnumRoomtype.MUD_PATCH: {
+		case EnumRoomtype.LIGHT_FLOOR_PATCH: {
 			this.setupOverlays = function() {
-				var mud_origin_y, mud_origin_x, mud_height, mud_width;
-				mud_height = Math.floor(level.seed.nextFloat() * (this.height));
-				mud_width = Math.floor(level.seed.nextFloat() * (this.width));
-				if(mud_height < 3) {
-					mud_height = 3;
-				} else if(mud_height > this.height -2) {
-					mud_height = this.height -2;
-				}
-				if(mud_width < 3) {
-					mud_width = 3;
-				} else if(mud_width > this.width -2) {
-					mud_width = this.width -2;
-				}
-				mud_origin_y = this.origin.y + 1 + Math.floor(level.seed.nextFloat() * (this.height - mud_height -1));
-				mud_origin_x = this.origin.x + 1 + Math.floor(level.seed.nextFloat() * (this.width - mud_width - 1)); 
-				for(var i = 0; i < mud_height; i++) {
-					for(var j = 0; j < mud_width; j++) {
-						if(i === 0 && j === 0) {
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[1];
-						} else if(i === 0 && j === mud_width-1) {
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[4];
-						} else if(i === 0) {
-							var rand = Math.floor(level.seed.nextFloat() * 2);
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[2 + rand];
-						} else if(i < mud_height-1 && j === 0) {
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[5];
-						} else if(i < mud_height-1 && j === mud_width-1) {
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[8];
-						} else if(i === mud_height-1 && j === 0) {
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[9];
-						} else if(i === mud_height-1 && j === mud_width-1) {
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[12];
-						} else if(i === mud_height-1) {
-							var rand = Math.floor(level.seed.nextFloat() * 2);
-							level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[10 + rand];
-						} else {
-							var rand = Math.floor(level.seed.nextFloat() * 3);
-							if(rand === 2) {
-								level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[0];
-							} else {
-								level.overlayArray[mud_origin_y+i][mud_origin_x+j] = level.tiles.lightMudFloor[6 + rand];
-							}
-						}
-					}
-				}
+				// debugger;
+				this.addFloorPatch(EnumFloorpatch.LIGHT_PATCH);
 			}
 			break;
 		}
@@ -1077,6 +1054,41 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 					}
 					if(level.terrainArray[this.origin.y+this.height+1][this.origin.x+i] === 0) {
 						level.overlayArray[this.origin.y+this.height][this.origin.x+i] = level.tiles.greyCobbleFloor[7];
+					}
+				}
+				for(var i = 0; i < this.width; i++) {
+					if(level.terrainArray[this.origin.y-1][this.origin.x+i] === 1) {
+						if(level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 0 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 0) {
+							level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[3];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[3];
+						} else if(i === 0 || (level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 0 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 1)) {
+							level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[1];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[1];
+						} else if(i === this.width-1 || (level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 1 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 0)) {
+							level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[2];
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[2];
+						} else if(level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 1 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 1) {
+							var rand = Math.floor(level.seed.nextFloat() * 2)
+							if(rand < 1) {
+								level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallFace[0];
+							} else {
+								var rand2 = Math.floor(level.seed.nextFloat() * level.tiles.greyWallDecor.length);
+								level.overlayArray[this.origin.y-1][this.origin.x+i] = level.tiles.greyWallDecor[rand2];
+							}
+							level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.greyWallTop[0];
+						}
+					}
+				}
+			}
+			break;
+		}
+		case EnumRoomtype.GREY_TILE: {
+			this.setupOverlays = function() {
+				for(var i = 0; i < this.height+1; i++) {
+					for(var j = 0; j < this.width; j++) {
+						if(level.terrainArray[this.origin.y+i][this.origin.x+j] === 0) {
+							level.overlayArray[this.origin.y+i][this.origin.x+j] = level.tiles.greyTileFloor[0];
+						}
 					}
 				}
 				for(var i = 0; i < this.width; i++) {
@@ -1161,10 +1173,77 @@ Room.prototype.checkIfFits = function() {
 	}
 	return true;
 }
+//	Adds a variable-sized patch to the floor, leaving at least 1 tile of clearance at top, left & right 
+Room.prototype.addFloorPatch = function(type) {
+	var minHeight = 2;
+	var minWidth = 2;
+	var height = Math.floor(level.seed.nextFloat() * (this.height - 3)) + minHeight;
+	var width = Math.floor(level.seed.nextFloat() * (this.width - 4)) + minWidth;
+	var offset_y = Math.floor(level.seed.nextFloat() * (this.height - 2 - height)) + 2;
+	var offset_x = Math.floor(level.seed.nextFloat() * (this.width - 2 - width)) + 1;
+	var origin = {
+		y: this.origin.y + offset_y,
+		x: this.origin.x + offset_x
+	}
+	var tiles;
+	switch(type) {
+		case EnumFloorpatch.LIGHT_PATCH: {
+			tiles = level.tiles.mudPool;
+			break;
+		}
+		case EnumFloorpatch.MUD_POOL: {
+			tiles = level.tiles.mudPool;
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+	// debugger;
+	for(var i = origin.y; i < origin.y + height; i++) {
+		for(var j = origin.x; j < origin.x + width; j++) {
+			if(i === origin.y && j === origin.x) {							//	Top-left
+				var rand = Math.floor(level.seed.nextFloat() * tiles[1].length);
+				level.overlayArray[i][j] = tiles[1][rand];
+			} else if(i === origin.y && j === origin.x + width-1) {			//	Top-right
+				var rand = Math.floor(level.seed.nextFloat() * tiles[2].length);
+				level.overlayArray[i][j] = tiles[2][rand];
+			} else if(i === origin.y + height-1 && j === origin.x) {			//	Bottom-left
+				var rand = Math.floor(level.seed.nextFloat() * tiles[3].length);
+				level.overlayArray[i][j] = tiles[3][rand];
+			} else if(i === origin.y + height-1 && j === origin.x + width-1) {	//	Bottom-right
+				var rand = Math.floor(level.seed.nextFloat() * tiles[4].length);
+				level.overlayArray[i][j] = tiles[4][rand];
+			} else if(i === origin.y) {										//	Top
+				var rand = Math.floor(level.seed.nextFloat() * tiles[5].length);
+				level.overlayArray[i][j] = tiles[5][rand];
+			} else if(i === origin.y + height-1) {							//	Bottom
+				var rand = Math.floor(level.seed.nextFloat() * tiles[6].length);
+				level.overlayArray[i][j] = tiles[6][rand];
+			} else if(j === origin.x) {										//	Left
+				var rand = Math.floor(level.seed.nextFloat() * tiles[7].length);
+				level.overlayArray[i][j] = tiles[7][rand];
+			} else if(j === origin.x + width-1) {								//	Right
+				var rand = Math.floor(level.seed.nextFloat() * tiles[8].length);
+				level.overlayArray[i][j] = tiles[8][rand];
+			} else {
+				var rand = Math.floor(level.seed.nextFloat() * tiles[0].length);
+				level.overlayArray[i][j] = tiles[0][rand];
+			}
+		}
+	}
+}
 Room.prototype.generateRoomContents = function() {
 	var addContents = function() {
 		console.log("Adding contents!");
 		var rand = Math.floor(level.seed.nextFloat() * level.randomRoomFactor) + level.randomRoomIncrease;
+
+
+		console.log(this);
+		var obstacle = Math.floor(level.seed.nextFloat() * 7 + 7)
+		new Obstacle(obstacle, this);
+
+
 		switch(rand) {
 			case 0: case 1: case 2: case 3: {
 				//	Empty room
@@ -1273,19 +1352,68 @@ Decor = function(y, x, size_y, size_x, type) {
 	level.decor.push(this);
 }
 
-Obstacle = function(y, x, type, modifier) {
+Obstacle = function(type, room, y, x, modifier) {
 	this.type = type;
-	this.grid = {
-		x: x,
-		y: y
-	}
 	this.sprite = {
 		spriteSheet: level.img,
-		size: {
-			y: 1,
-			x: 1
-		}
 	};
+	//	Initial type switch to determine size needed for placement - only needed if sprite is bigger than 1x1
+	switch(type) {
+		case EnumObstacle.DOOR: {
+			this.sprite.size = {y: 2, x: 1}; break;
+		}
+		case EnumObstacle.DINING_TABLE: {
+			this.sprite.size = {x: 3, y: 4}; break;
+		}
+		case EnumObstacle.WELL: {
+			this.sprite.size = {y: 2, x: 2}; break;
+		}
+		case EnumObstacle.COFFIN: {
+			this.sprite.size = {y: 2, x: 1}; break;			
+		}
+		case EnumObstacle.TORTURE_TABLE: {
+			this.sprite.size = {y: 2, x: 2}; break;
+		}
+		case EnumObstacle.MEAT_RACK: {
+			this.sprite.size = {y: 2, x: 3}; break;
+		}
+		default: {
+			this.sprite.size = {y: 1, x: 1}; break;
+		}
+	}
+	//	If grid co-ordinates are passed, use them - otherwise attempt to fit randomly in passed room 
+	if(x && y) {
+		this.grid = {
+			x: x,
+			y: y
+		}
+	} else {
+		var attempts = levelGen.vars.addObstacleAttempts;
+		var validPlacement = false;
+		while(attempts && !validPlacement) {
+			validPlacement = true;
+			tryY = Math.floor(level.seed.nextFloat() * (room.height - 1 - this.sprite.size.y)) + 1 + room.origin.y;
+			tryX = Math.floor(level.seed.nextFloat() * (room.width - 1 - this.sprite.size.x)) + 1 + room.origin.x;
+			for(var i = 0; i < this.sprite.size.y; i++) {
+				for(var j = 0; j < this.sprite.size.x; j++) {
+					if(level.obstacleArray[tryY + i][tryX + j] !== undefined) {
+						validPlacement = false;
+					}	
+				}
+			}
+		}
+		if(validPlacement) {
+			this.grid = {
+				y: tryY,
+				x: tryX
+			}
+		} else {
+			this.grid = {
+				y: 0,
+				x: 0
+			}
+		}
+	}
 	this.foreground = true;
 	this.vars = {
 		drawOffset: {y:0,x:0}
@@ -1311,7 +1439,6 @@ Obstacle = function(y, x, type, modifier) {
 			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
-			this.sprite.size.y = 2;
 			this.interact = function() {
 				this.open = true;
 				this.animated = true;
@@ -1336,7 +1463,7 @@ Obstacle = function(y, x, type, modifier) {
 			level.obstacleArray[this.grid.y][this.grid.x] = 1;
 			this.currentSprite = level.tiles.obstacles[5];
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE,
+				y: this.grid.y * TILE_SIZE + 5,
 				x: this.grid.x * TILE_SIZE
 			}
 			this.box.bottomRight = {
@@ -1350,6 +1477,24 @@ Obstacle = function(y, x, type, modifier) {
 			this.offsetPosition();
 			break;
 		}
+		case EnumObstacle.BARREL_2: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.tiles.obstacles[11];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 14/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 12/16
+			}
+			this.maxOffset = {
+				y: 2,
+				x: 1
+			}
+			this.offsetPosition();
+			break;
+		}
 		case EnumObstacle.DINING_TABLE: {		//	Occupy 2 tiles on x axis * 4 on y in obstacleArray
 			for(var i = 0; i < 4; i++) {
 				for(var j = 0; j < 2; j++) {
@@ -1357,17 +1502,15 @@ Obstacle = function(y, x, type, modifier) {
 				}
 			}
 			this.currentSprite = level.tiles.obstacles[0];
-			this.sprite.size.x = 3;		
-			this.sprite.size.y = 4;
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE + TILE_SIZE * 8/16,
-				x: this.grid.x * TILE_SIZE + TILE_SIZE * 0
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
 			}
 			this.box.bottomRight = {
-				y: this.grid.y * TILE_SIZE + TILE_SIZE * 4,
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 3,
 				x: this.grid.x * TILE_SIZE + TILE_SIZE * 2
 			}
-			this.vars.drawOffset = {y: TILE_SIZE * this.sprite.size.y / 2, x:0};
+			this.vars.drawOffset = {y: TILE_SIZE * 1.75, x:0};
 			this.position = {
 				y: (this.grid.y * TILE_SIZE),
 				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
@@ -1377,7 +1520,7 @@ Obstacle = function(y, x, type, modifier) {
 		case EnumObstacle.DINING_CHAIR: {
 			level.obstacleArray[this.grid.y][this.grid.x] = 1;
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE,
+				y: this.grid.y * TILE_SIZE + 5,
 				x: this.grid.x * TILE_SIZE + 2
 			}
 			this.box.bottomRight = {
@@ -1402,7 +1545,7 @@ Obstacle = function(y, x, type, modifier) {
 				this.currentSprite = level.tiles.obstacles[3];
 				this.sprite.size.y = 2;
 				this.box.topLeft = {
-					y: this.grid.y * TILE_SIZE - TILE_SIZE / 2 + 6,
+					y: this.grid.y * TILE_SIZE - TILE_SIZE / 2 + 12,
 					x: this.grid.x * TILE_SIZE - TILE_SIZE / 2 -2
 				}
 				this.box.bottomRight = {
@@ -1421,7 +1564,7 @@ Obstacle = function(y, x, type, modifier) {
 			this.currentSprite = level.tiles.obstacles[6];
 			this.sprite.size.y = 1;
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE,
+				y: this.grid.y * TILE_SIZE + 4,
 				x: this.grid.x * TILE_SIZE
 			}
 			this.box.bottomRight = {
@@ -1445,12 +1588,8 @@ Obstacle = function(y, x, type, modifier) {
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			level.obstacleArray[this.grid.y+1][this.grid.x+1] = 1;
 			this.currentSprite = level.tiles.obstacles[7];
-			this.sprite.size = {
-				y: 2,
-				x: 2
-			}
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE + 8,
+				y: this.grid.y * TILE_SIZE + 16,
 				x: this.grid.x * TILE_SIZE + 1
 			}
 			this.box.bottomRight = {
@@ -1472,12 +1611,8 @@ Obstacle = function(y, x, type, modifier) {
 			level.obstacleArray[this.grid.y][this.grid.x] = 1;
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			this.currentSprite = level.tiles.obstacles[4];
-			this.sprite.size = {
-				y: 2,
-				x: 1
-			}
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE + 2,
+				y: this.grid.y * TILE_SIZE + 6,
 				x: this.grid.x * TILE_SIZE
 			}
 			this.box.bottomRight = {
@@ -1501,16 +1636,12 @@ Obstacle = function(y, x, type, modifier) {
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			level.obstacleArray[this.grid.y+1][this.grid.x+1] = 1;
 			this.currentSprite = level.tiles.obstacles[8];
-			this.sprite.size = {
-				y: 2,
-				x: 2
-			}
 			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE,
+				y: this.grid.y * TILE_SIZE + 5,
 				x: this.grid.x * TILE_SIZE
 			}
 			this.box.bottomRight = {
-				y: this.grid.y * TILE_SIZE + (TILE_SIZE * 2),
+				y: this.grid.y * TILE_SIZE + (TILE_SIZE * 2) - 4,
 				x: this.grid.x * TILE_SIZE + 28
 			}
 			this.position = {
@@ -1524,7 +1655,54 @@ Obstacle = function(y, x, type, modifier) {
 			this.offsetPosition();
 			break;
 		}
-		default: {
+		case EnumObstacle.MEAT_RACK: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 3; j++) {
+					level.obstacleArray[this.grid.y+i][this.grid.x+j] = 1;
+				}
+			}
+			this.currentSprite = level.tiles.obstacles[9];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 20,
+				x: this.grid.x * TILE_SIZE + 1
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + (TILE_SIZE * 2 - 1),
+				x: this.grid.x * TILE_SIZE + (TILE_SIZE * 2 - 1)
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE * 1.5)
+			}
+			this.maxOffset = {
+				y: 0,
+				x: 14
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.STOOL: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.tiles.obstacles[10];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 13/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 10/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 3,
+				x: 5
+			}
+			this.offsetPosition();
+			break;
+		}		default: {
 			break;
 		}
 	}
