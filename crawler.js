@@ -6,6 +6,7 @@ var session = {
 	focused: true,									//	Track whether browser tab is focused by user
 	levelNumber: 0,									//	Initial level
 	loadingLevel: false,
+	score: 0,
 	vars: {
 		interactDistance: 15						//	Distance at which player can interact with interactables
 	}
@@ -801,22 +802,26 @@ Creature.prototype.updateGear = function() {
 
 function updateCreatures() {
 	game.creatures.forEach(function(creature) {
-		if(performance.now() > creature.vars.deathTime) {					//	If creature's deathTime has passed...
+		if(performance.now() > creature.vars.deathTime) {							//	If creature's deathTime has passed...
+			addScore(creature.vars.score);
 			leaveCorpse(creature);
 			game.creatures.splice(game.creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
 		}
-		if(creature.vars.currentHP <= 0 && !creature.vars.deathTime) {		//	If creature has 0 or less HP and deathTime has not yet been set...
-			creature.deathResponse();										//	...trigger its death response.
+		if(performance.now() > creature.ai.endTime) {								//	If creature's ai action has run its duration...
+			setAiAction(creature);													//	...assign a new one.
 		}
-		if(performance.now() > creature.ai.endTime) {						//	If creature's ai action has run its duration...
-			setAiAction(creature);																		//	...assign a new one.
-		}
-		creature.animate();																				//	Animate creature
+		creature.animate();															//	Animate creature
 		creature.updateGear();
-		if(creature.movement.speed > 0) {																//	If creature has a current movement speed...
-			creature.move(creature.movement.direction, creature.movement.speed);						//	...move it accordingly
+		if(creature.movement.speed > 0) {											//	If creature has a current movement speed...
+			creature.move(creature.movement.direction, creature.movement.speed);	//	...move it accordingly
 		}
 	});
+}
+
+function addScore(score) {
+	session.score += score;
+	console.log(session.score);
+	$('.scoreSpan').text(session.score);
 }
 
 function updateAttacks() {
@@ -1106,11 +1111,18 @@ function playerDeath() {
 		creature.vars.animation = 0;
 	});
 	session.loadingLevel = false;
-	$('#gameMenuDiv').fadeIn('slow', function() {
-		$('#deathScreen').fadeIn('slow');
-	});
+	game.playerDeathTime = performance.now();
+	deathScreen();
 }
 
+function deathScreen() {
+	$('.finalScoreSpan').text(session.score);
+	$.when($('canvas').fadeOut('slow')).then(function() {
+		$('#gameMenuDiv').fadeIn('slow', function() {
+			$('#deathScreen').fadeIn('slow');
+		});
+	});
+}
 
 //	Master game update function
 function update(delta) {
@@ -1230,6 +1242,8 @@ function start(newGame) {
 	// debugger;
 	if(newGame) {
 		session.levelNumber = 0;
+		session.score = 0;
+		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
 	}
 	console.log("Seed: " + session.seed);
@@ -1250,6 +1264,9 @@ function start(newGame) {
 	});
 	$('#gameMenuDiv').fadeOut('slow', function() {
 		$('.gameMenuScreen').hide();
+		if(newGame) {
+			$('.finalScoreSpan').text('');
+		}
 		console.log("Starting game - level: " + level.levelNumber);
 		MainLoop.setUpdate(update).setDraw(draw).start();
 		drawMap();

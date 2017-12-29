@@ -170,3 +170,10 @@ var debugCanvas = $('<canvas id="debugCanvas" width="' + CANVAS_WIDTH + '" heigh
 var debugCtx = debugCanvas.get(0).getContext('2d');
 debugCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
 debugCanvas.appendTo('body');
+
+var interfaceCanvas = $('<canvas id="interfaceCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
+var interfaceCtx = interfaceCanvas.get(0).getContext('2d');
+interfaceCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel art in active canvas context
+interfaceCtx.font = "10pt dpcomic";
+interfaceCtx.fillStyle = "white";
+interfaceCanvas.appendTo('body');

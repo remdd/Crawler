@@ -91,7 +91,8 @@ var creatureTemplates = [
 		vars: {
 			speed: 0.6,
 			maxHP: 3,
-			currentHP: 3
+			currentHP: 3,
+			score: 50
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -159,7 +160,8 @@ var creatureTemplates = [
 			maxHP: 5,
 			currentHP: 5,
 			moveThroughColliders: true,
-			foreground: true
+			foreground: true,
+			score: 0
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -220,7 +222,8 @@ var creatureTemplates = [
 			speed: 0.5,
 			maxHP: 5,
 			currentHP: 5,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 50
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -300,7 +303,8 @@ var creatureTemplates = [
 			speed: 2,
 			maxHP: 3,
 			currentHP: 3,
-			minFacingChangeTime: 50
+			minFacingChangeTime: 50,
+			score: 75
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -358,7 +362,8 @@ var creatureTemplates = [
 			minFacingChangeTime: 50,
 			transformStartTime: 0,
 			transformEndTime: 0,
-			isBat: false
+			isBat: false,
+			score: 250
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -446,7 +451,8 @@ var creatureTemplates = [
 			speed: 0.5,
 			maxHP: 5,
 			currentHP: 5,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 60
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -516,7 +522,8 @@ var creatureTemplates = [
 			speed: 0.5,
 			maxHP: 5,
 			currentHP: 5,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 80
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -586,7 +593,8 @@ var creatureTemplates = [
 			speed: 0.4,
 			maxHP: 10,
 			currentHP: 10,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 120
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -673,7 +681,8 @@ var creatureTemplates = [
 			speed: 0.8,
 			maxHP: 4,
 			currentHP: 4,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 65
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -743,7 +752,8 @@ var creatureTemplates = [
 			speed: 0.8,
 			maxHP: 5,
 			currentHP: 5,
-			restingWeaponAnimation: false
+			restingWeaponAnimation: false,
+			score: 100
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -815,7 +825,8 @@ var creatureTemplates = [
 			speed: 0.5,
 			maxHP: 5,
 			currentHP: 5,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 50
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -887,7 +898,8 @@ var creatureTemplates = [
 			speed: 1,
 			maxHP: 4,
 			currentHP: 4,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 100
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -959,7 +971,8 @@ var creatureTemplates = [
 			speed: 0.4,
 			maxHP: 3,
 			currentHP: 3,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 50
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -1025,16 +1038,17 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			if(!this.vars.dead) {
+				addScore(this.vars.score);
+				this.vars.score = 0;														//	Override score so repeat kills do not earn extra points
 				this.vars.dead = true;
 				this.vars.moveThroughColliders = true;
-				// colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
 				this.ai.nextAction = 1;														//	Prevent further AI actions
-				this.movement.speed = 0;														//	Zero speed
-				this.movement.moving = false;													//	Stop moving
-				this.position.x = Math.floor(this.position.x);									//	Round co-ords down to prevent blurred drawing on canvas
+				this.movement.speed = 0;													//	Zero speed
+				this.movement.moving = false;												//	Stop moving
+				this.position.x = Math.floor(this.position.x);								//	Round co-ords down to prevent blurred drawing on canvas
 				this.position.y = Math.floor(this.position.y);
-				this.vars.animStart = performance.now();										//	Set animation start time to now...
-				if(this.vars.facingRight) {														//	...and set death animation
+				this.vars.animStart = performance.now();									//	Set animation start time to now...
+				if(this.vars.facingRight) {													//	...and set death animation
 					this.vars.animation = 4;
 				} else {
 					this.vars.animation = 5;
@@ -1051,7 +1065,8 @@ var creatureTemplates = [
 			speed: 0.8,
 			maxHP: 5,
 			currentHP: 5,
-			restingWeaponAnimation: true
+			restingWeaponAnimation: true,
+			score: 300
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -1125,7 +1140,8 @@ var creatureTemplates = [
 			maxHP: 5,
 			currentHP: 5,
 			moveThroughColliders: false,
-			foreground: true
+			foreground: true,
+			score: 175
 		},
 		sprite: {
 			spriteSheet: monsterSprites,

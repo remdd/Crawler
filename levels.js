@@ -80,18 +80,6 @@ var levelGen = {
 					EnumCreature.URK_SHAMAN,
 					EnumCreature.ZOMBI
 				];
-				level.commonObstacles = [
-					EnumObstacle.BARREL,
-					EnumObstacle.BUCKET,
-					EnumObstacle.BARREL_2
-				];
-				level.uncommonObstacles = [
-					EnumObstacle.WELL
-				];
-				level.rareObstacles = [
-					EnumObstacle.COFFIN,
-					EnumObstacle.TORTURE_TABLE
-				];
 				level.randomRoomRange = 10;			//	Sets range of possible random room contents for generator
 				level.randomRoomBaseline = 0;				//	Set baseline room number to be used by generator - higher values start from 
 				break;
@@ -318,8 +306,8 @@ var levelGen = {
 		var bossSizeX = 8 + bossRand;
 		var bossSizeY = 12 - bossRand; 
 		var exitRand = Math.floor(session.prng.nextFloat() * 4);
-		var exitSizeX = 7 - startRand; 
-		var exitSizeY = 3 + startRand;
+		var exitSizeX = 8 - startRand; 
+		var exitSizeY = 4 + startRand;
 		var startPosX, startPosY, bossPosX, bossPosY, exitPosX, exitPosY;
 		var startCorner = Math.floor(session.prng.nextFloat() * 4);
 		var startCorner = 1;

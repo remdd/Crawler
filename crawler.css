@@ -61,6 +61,13 @@ canvas {
 #interfaceCanvas {
 	z-index: 10;
 }
+#interfaceDiv {
+	position: absolute;
+	top: 40px;
+	left: 40px;
+	z-index: 5;
+	color: rgba(255,255,255,0.65);
+}
 
 
 
