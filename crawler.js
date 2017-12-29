@@ -1,31 +1,29 @@
 	var level;											//	Current level object, loaded from levels.js
 
 	var game = {
-		redrawBackground: false,
-		redrawObstaclesTo: 0,
-		viewport_offset_x: 0,
-		viewport_offset_y: 0,
+		redrawBackground: false,				//	Set to true only when background redraw is required - on viewport move or animated obstacle
+		redrawObstaclesTo: 0,					//	Holds time to which obstacles should be animated
+		viewport_offset_x: 0,					//	Holds current horizontal viewport offset
+		viewport_offset_y: 0,					//	Holds current vertical viewport offset
 		focused: true,							//	Track whether browser tab is focused by user
-		seed: Math.floor(Math.random() * 1000000),
-		creatures: []
+		seed: Math.floor(Math.random() * 1000000),		//	Holds level seed
+		creatures: [],							//	Holds creatures currently present in game
+		attacks: [],							//	Holds attacks currently present in game
+		projectiles: [],						//	Holds projectiles currently present in game
+		colliders: [],							//	Holds *all* collision boxes currently present in game - player, creatures, obstacles etc
+		nearbyColliders: [],					//	Holds any colliders near to the player for collision detection every tick
+		debugs: [],								//	Holds any objects to be passed to debug canvas
+		drawables: [],							//	Holds 
+		drawOnTop: [],							//	Holds drawables to be drawn on top of canvas
 		// seed: 9
-	}
 
-	console.log("Seed: " + game.seed);
+		vars: {
+			interactDistance: 15					//	Distance at which player can interact with interactables
+		}
+	}
 
 	var prng = new Random(game.seed);
 
-	var attacks = [];
-	var projectiles = [];
-	var colliders = [];							//	Store any active collision boxes - player, creatures, obstacles etc
-	var nearbyColliders = [];					//	Store any colliders near the player to be checked every tick
-	var debugs = [];							//	Store any objects to be passed to debug canvas
-	var drawables = [];
-	var drawOnTop = [];
-
-
-
-	var interactDistance = 15;					//	Distance at which player can interact with interactables
 
 
 	setViewportOffset = function() {
@@ -122,7 +120,7 @@
 	function setUpLevel() {
 		level.obstacles.forEach(function(obstacle) {
 			if(obstacle.box) {
-				colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
+				game.colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
 			}
 		});
 	}
@@ -367,13 +365,13 @@
 		this.movement = {};
 		Object.assign(this.movement, projectileTemplate.movement);
 		this.movement.direction = direction;
-		projectiles.push(this);
+		game.projectiles.push(this);
 	}
 
 	function updateProjectiles() {
-		projectiles.forEach(function(projectile) {
+		game.projectiles.forEach(function(projectile) {
 			if(performance.now() > projectile.deleteTime) {
-				projectiles.splice(projectiles.indexOf(projectile), 1);
+				game.projectiles.splice(game.projectiles.indexOf(projectile), 1);
 			} else {
 				Creature.prototype.move.call(projectile, projectile.movement.direction, projectile.movement.speed);
 				if(projectile.collidedWith && !projectile.deleteTime) {
@@ -449,7 +447,7 @@
 		}
 		this.inflictDamage = creatureTemplate.inflictDamage;		//	Set damage response function from template
 		this.deathResponse = creatureTemplate.deathResponse;		//	Set death response function from template
-		colliders.push(this);										//	Add creature to colliders array
+		game.colliders.push(this);										//	Add creature to colliders array
 	}
 	Creature.prototype.move = function(direction, speed) {
 		var tryX = this.position.x + (speed * Math.cos(direction));
@@ -518,7 +516,7 @@
 			if(this.weapon) {
 				delete this.weapon;															//	Delete creature's weapon property
 			}
-			colliders.splice(colliders.indexOf(this), 1);									//	Remove from the colliders array.
+			game.colliders.splice(game.colliders.indexOf(this), 1);									//	Remove from the colliders array.
 			this.ai.nextAction = -1;														//	Prevent further AI actions
 			this.movement.speed = 0;														//	Zero speed
 			this.movement.moving = false;													//	Stop moving
@@ -535,17 +533,17 @@
 	}
 	Creature.prototype.checkIfCollides = function() {
 		var collides = false;
-		for(var i = 0; i < colliders.length; i++) {
-			if(colliders[i] !== this) {
+		for(var i = 0; i < game.colliders.length; i++) {
+			if(game.colliders[i] !== this) {
 				var top = this.box.topLeft.y;
 				var btm = this.box.bottomRight.y;
 				var left = this.box.topLeft.x;
 				var right = this.box.bottomRight.x;
 
-				var objTop = colliders[i].box.topLeft.y - 1;
-				var objBtm = colliders[i].box.bottomRight.y + 1;
-				var objL = colliders[i].box.topLeft.x - 1;
-				var objR = colliders[i].box.bottomRight.x + 1;
+				var objTop = game.colliders[i].box.topLeft.y - 1;
+				var objBtm = game.colliders[i].box.bottomRight.y + 1;
+				var objL = game.colliders[i].box.topLeft.x - 1;
+				var objR = game.colliders[i].box.bottomRight.x + 1;
 
 				if(
 				//	Check if obj overlaps any corner of the collider...
@@ -576,7 +574,7 @@
 	interact = function() {
 		level.obstacles.forEach(function(obstacle) {
 			if(inViewport(obstacle.grid.x * TILE_SIZE, obstacle.grid.y * TILE_SIZE) && obstacle.interact) {
-				if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < interactDistance) {
+				if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < game.vars.interactDistance) {
 					game.redrawObstaclesTo = performance.now() + obstacle.interact();
 				}
 			}
@@ -638,9 +636,9 @@
 			default:
 				break;
 		} 
-		attacks.push(this);
+		game.attacks.push(this);
 		this.contactPoints.forEach(function(contactPoint) {
-			debugs.push(contactPoint);
+			game.debugs.push(contactPoint);
 		});
 	}
 
@@ -690,40 +688,40 @@
 	}
 
 	function drawAttacks() {
-		attacks.forEach(function(attack) {
+		game.attacks.forEach(function(attack) {
 			drawAttack(attack);
 		});
 	}
 
 	//	Add any drawable non-BG objects to drawables array and sort by y position for drawing on canvas
 	function updateDrawables() {
-		drawables.length = 0;
-		drawOnTop.length = 0;
-		drawables.push(player);
+		game.drawables.length = 0;
+		game.drawOnTop.length = 0;
+		game.drawables.push(player);
 		game.creatures.forEach(function(creature) {
 			if(inViewport(creature.position.x, creature.position.y)) {
 				if(creature.vars.foreground) {
-					drawOnTop.push(creature);
+					game.drawOnTop.push(creature);
 				} else {
-					drawables.push(creature);
+					game.drawables.push(creature);
 				}
 			}
 		});
-		projectiles.forEach(function(projectile) {
+		game.projectiles.forEach(function(projectile) {
 			if(inViewport(projectile.position.x, projectile.position.y)) {
 				if(projectile.vars.foreground) {
-					drawOnTop.push(projectile);
+					game.drawOnTop.push(projectile);
 				} else {
-					drawables.push(projectile);
+					game.drawables.push(projectile);
 				}
 			}
 		});
 		level.obstacles.forEach(function(obstacle) {
 			if(inViewport(obstacle.position.x, obstacle.position.y) && obstacle.foreground) {
-				drawables.push(obstacle);
+				game.drawables.push(obstacle);
 			}
 		});
-		drawables.sort(function(a, b) {
+		game.drawables.sort(function(a, b) {
 			return a.position.y-b.position.y;
 		});
 	}
@@ -820,15 +818,15 @@
 
 	function updateAttacks() {
 		resolveAttacks();
-		attacks.forEach(function(attack) {
+		game.attacks.forEach(function(attack) {
 			if(performance.now() > attack.created + attack.displayTime) {
-				attacks.splice(attacks.indexOf(attack), 1);
+				game.attacks.splice(game.attacks.indexOf(attack), 1);
 			}
 		});
 	}
 
 	function resolveAttacks() {
-		attacks.forEach(function(attack) {																							//	For each attack...
+		game.attacks.forEach(function(attack) {																							//	For each attack...
 			var hits = 0;																											//	Count successful hits
 			attack.contactPoints.forEach(function(contactPoint) {																	//	...iterate contact points...
 				if(attack.damagePlayer) {																					//	...and if attacker was not player...
@@ -938,10 +936,11 @@
 	//	Collider Collision Manager - check for contact with active box colliders
 	function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 		var returnCoords = { x: tryX, y: tryY, collidedWith: collidedWith };
-		for(var i = 0; i < nearbyColliders.length; i++) {
-			if(nearbyColliders[i] !== obj && !nearbyColliders[i].vars.moveThroughnearbyColliders && !obj.vars.moveThroughnearbyColliders && nearbyColliders[i] !== obj.vars.shooter) {
+		for(var i = 0; i < game.nearbyColliders.length; i++) {
+			if(game.nearbyColliders[i] !== obj && !game.nearbyColliders[i].vars.moveThroughColliders && 
+				!obj.vars.moveThroughColliders && game.nearbyColliders[i] !== obj.vars.shooter) {
 				//	Projectile nearbyColliders can pass through obstacle nearbyColliders
-				if(nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
+				if(game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
 					return returnCoords;
 				}
 				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
@@ -949,10 +948,10 @@
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 
-				var objTop = nearbyColliders[i].box.topLeft.y;
-				var objBtm = nearbyColliders[i].box.bottomRight.y;
-				var objL = nearbyColliders[i].box.topLeft.x;
-				var objR = nearbyColliders[i].box.bottomRight.x;
+				var objTop = game.nearbyColliders[i].box.topLeft.y;
+				var objBtm = game.nearbyColliders[i].box.bottomRight.y;
+				var objL = game.nearbyColliders[i].box.topLeft.x;
+				var objR = game.nearbyColliders[i].box.bottomRight.x;
 
 				if(
 				//	Check if obj overlaps any corner of the collider...
@@ -969,14 +968,14 @@
 				//	...or falls fully inside the collider
 				(newTop >= objTop && newBtm <= objBtm && newL >= objL && newR <= objR)
 				) {
-					if(obj.vars.touchDamage && nearbyColliders[i] === player) {
+					if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
 						obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
 						player.vars.lastDamageTime = performance.now();
 						player.inflictDamage(obj.touchDamage());
 					}
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
-					returnCoords.collidedWith = nearbyColliders[i];
+					returnCoords.collidedWith = game.nearbyColliders[i];
 					if(obj.movement.bounceOff) {
 						obj.movement.direction = obj.movement.direction + Math.PI;
 						obj.setFacing(obj.movement.direction);
@@ -988,7 +987,7 @@
 	}
 
 	function collisionFixer() {
-		colliders.forEach(function(collider) {
+		game.nearbyColliders.forEach(function(collider) {
 			if(collider !== player) {
 				if(	checkColliderCollision(collider, player.box.topLeft.x, player.box.topLeft.y).x !== player.box.topLeft.x ||
 					checkColliderCollision(collider, player.box.topLeft.x, player.box.topLeft.y).y !== player.box.topLeft.y ||
@@ -998,10 +997,7 @@
 					checkColliderCollision(collider, player.box.topLeft.x, player.box.bottomRight.y).y !== player.box.bottomRight.y ||
 					checkColliderCollision(collider, player.box.bottomRight.x, player.box.bottomRight.y).x !== player.box.bottomRight.x ||
 					checkColliderCollision(collider, player.box.bottomRight.x, player.box.bottomRight.y).y !== player.box.bottomRight.y ) {
-					console.log(collider);
-					console.log(player);
-					debugger;
-					console.log("STUCK!!!");
+					console.log(collider.name + " is STUCK!!!");
 				}
 				else {
 					console.log("Ok!");
@@ -1011,7 +1007,7 @@
 	}
 
 	function drawDrawables() {
-		drawables.forEach(function(drawable) {
+		game.drawables.forEach(function(drawable) {
 			if(drawable.weapon && !drawable.weapon.vars.hidden && !drawable.weapon.vars.foreground) {
 				drawOnCanvas(drawable.weapon, drawableCtx);
 			}
@@ -1020,7 +1016,7 @@
 				drawOnCanvas(drawable.weapon, drawableCtx);
 			}
 		});
-		drawOnTop.forEach(function(drawable) {
+		game.drawOnTop.forEach(function(drawable) {
 			if(drawable.weapon && !drawable.weapon.vars.hidden && !drawable.weapon.vars.foreground) {
 				drawOnCanvas(drawable.weapon, drawableCtx);
 			}
@@ -1029,7 +1025,7 @@
 				drawOnCanvas(drawable.weapon, drawableCtx);
 			}
 		});
-		projectiles.forEach(function(projectile) {
+		game.projectiles.forEach(function(projectile) {
 			drawOnCanvas(projectile, drawableCtx);
 		});
 	}
@@ -1052,37 +1048,39 @@
 	}
 
 	function updateColliders() {
-		nearbyColliders.length = 0;
-		nearbyColliders.push(player);
+		game.nearbyColliders.length = 0;
+		game.nearbyColliders.push(player);
 		game.creatures.forEach(function(creature) {
 			var offset = creature.getGridOffsetFromPlayer();
 			if(offset.x > CANVAS_WIDTH / TILE_SIZE || offset.y > CANVAS_HEIGHT / TILE_SIZE) {
 				creature.vars.suspended = true;
 				creature.movement.speed = 0;
+				creature.grid.x = Math.floor((creature.position.x / TILE_SIZE) + TILE_SIZE * creature.sprite.size.x / 2); 
+				creature.grid.y = Math.floor((creature.position.y / TILE_SIZE) + TILE_SIZE * creature.sprite.size.y / 2); 
 			} else {
 				creature.vars.suspended = false;
-				nearbyColliders.push(creature);
+				game.nearbyColliders.push(creature);
 			}
 		});
 		level.obstacles.forEach(function(obstacle) {
 			var offset = Creature.prototype.getGridOffsetFromPlayer.call(obstacle);
 			if(offset.x < CANVAS_WIDTH / TILE_SIZE && offset.y < CANVAS_HEIGHT / TILE_SIZE) {
-				nearbyColliders.push(obstacle);
+				game.nearbyColliders.push(obstacle);
 			}
 		});
 		// console.log(nearbyColliders);
 	}
 
 	function drawDebugCanvas() {
-		projectiles.forEach(function(projectile) {
+		game.projectiles.forEach(function(projectile) {
 			var debug = { x: projectile.position.x, y: projectile.position.y, color: 'orange'};
 			debugs.push(debug);
 		});
-		colliders.forEach(function(collider) {
+		game.colliders.forEach(function(collider) {
 			var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
-			debugs.push(debug);
+			game.debugs.push(debug);
 			var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
-			debugs.push(debug2);
+			game.debugs.push(debug2);
 		});
 		// attacks.forEach(function(attack) {
 		// 	attack.contactPoints.forEach(function(contactPoint) {
@@ -1090,11 +1088,11 @@
 		// 		debugs.push(debug);
 		// 	});
 		// });
-		debugs.forEach(function(debug) {
+		game.debugs.forEach(function(debug) {
 			debugCtx.strokeStyle = debug.color;
 			debugCtx.strokeRect(debug.x - game.viewport_offset_x, debug.y - game.viewport_offset_y, 1, 1);
 		});
-		debugs.length = 0;
+		game.debugs.length = 0;
 	}
 
 
@@ -1132,6 +1130,7 @@
 	function start() {
 		// debugger;
 		level = levelGen.loadLevel(0, prng);
+		console.log("Seed: " + game.seed);
 		console.log(level);
 		setUpPlayer();
 		setViewportOffset();

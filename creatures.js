@@ -666,10 +666,10 @@ var creatureTemplates = [
 		}	
 	},
 	{
-		name: 'Denzin',
+		name: 'Kob',
 		currentSprite: { x: 0, y: 20},
 		vars: {
-			speed: 1,
+			speed: 0.8,
 			maxHP: 6,
 			currentHP: 6,
 			restingWeaponAnimation: true
@@ -717,7 +717,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumAi.URK,
+			type: EnumAi.KOB,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -732,7 +732,7 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			return EnumCreatureWeapon.DENZIN_MACE;
+			return EnumCreatureWeapon.KOB_MACE;
 		}	
 	},
 	{
@@ -948,7 +948,7 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			return EnumCreatureWeapon.DENZIN_MACE;
+			return EnumCreatureWeapon.KOB_MACE;
 		}	
 	},
 	{
@@ -1047,7 +1047,7 @@ var creatureTemplates = [
 		name: 'Zombi Master',
 		currentSprite: { x: 21, y: 0},
 		vars: {
-			speed: 1.2,
+			speed: 0.8,
 			maxHP: 5,
 			currentHP: 5,
 			restingWeaponAnimation: true
@@ -1105,6 +1105,63 @@ var creatureTemplates = [
 		},
 		addWeapon: function() {
 			return EnumCreatureWeapon.ZOMBI_MASTER_STAFF;
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		}
+	},
+	{
+		name: 'Air Elemental',
+		currentSprite: { x: 8, y: 20},
+		vars: {
+			speed: 0.4,
+			maxHP: 5,
+			currentHP: 5,
+			moveThroughColliders: false,
+			foreground: true
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 8, y: 20 },
+				{ x: 9, y: 20 },
+				{ x: 10, y: 20 },
+				{ x: 11, y: 20 },
+				{ x: 8, y: 22 },
+				{ x: 9, y: 22 },
+				{ x: 10, y: 22 },
+				{ x: 11, y: 22 }
+			],
+			animations: [
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],						//	Resting, facing R
+				[ 400, [100, 200, 300, 400], [4, 5, 6, 7] ],						//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],						//	Resting, facing R
+				[ 400, [100, 200, 300, 400], [4, 5, 6, 7] ],						//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],						//	Resting, facing R
+				[ 400, [100, 200, 300, 400], [4, 5, 6, 7] ]						//	Resting, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 25,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.MINI_GHOST,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -1489,7 +1546,7 @@ var creatureWeapons = [
 	},
 		//	8
 	{
-		name: 'Denzin Mace',
+		name: 'Kob Mace',
 		currentSprite: { x: 7, y: 6},
 		use: function(direction) {
 			this.chop(direction);

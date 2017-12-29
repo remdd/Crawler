@@ -1,7 +1,7 @@
-// var CANVAS_WIDTH = 272;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
-// var CANVAS_HEIGHT = 200;
-var CANVAS_WIDTH = 240;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
-var CANVAS_HEIGHT = 168;
+var CANVAS_WIDTH = 272;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
+var CANVAS_HEIGHT = 200;
+// var CANVAS_WIDTH = 240;								//	Size of viewport in **native pixels** - scale up **in CSS** to avoid antialiasing artefacts
+// var CANVAS_HEIGHT = 168;
 var SCALE_FACTOR = 3;								//	Factor by which pixels are scaled up for display
 
 var TILE_SIZE = 16;									//	Native tile size in spriteSheet
@@ -34,12 +34,13 @@ var EnumCreature = {
 	URK: 6,
 	URK_SHAMAN: 7,
 	HULKING_URK: 8,
-	DENZIN: 9,
+	KOB: 9,
 	MUMI: 10,
 	SNEAKY_SKELTON: 11,
 	BLUE_SQUARK: 12,
 	ZOMBI: 13,
-	ZOMBI_MASTER: 14
+	ZOMBI_MASTER: 14,
+	AIR_ELEMENTAL: 15
 }
 
 var EnumAi = {
@@ -55,7 +56,8 @@ var EnumAi = {
 	MUMI: 10,
 	SNEAKY_SKELTON: 11,
 	ZOMBI: 12,
-	ZOMBI_MASTER: 13
+	ZOMBI_MASTER: 13,
+	KOB: 14
 }
 
 var EnumCreatureWeapon = {
@@ -66,7 +68,7 @@ var EnumCreatureWeapon = {
 	URK_SWORD: 5,
 	BONE_CROSSBOW: 6,
 	HULKING_URK_HAMMA: 7,
-	DENZIN_MACE: 8,
+	KOB_MACE: 8,
 	ZOMBI_BITE: 9,
 	ZOMBI_MASTER_STAFF: 10
 }
@@ -92,14 +94,19 @@ var EnumBoxtype = {
 }
 
 var EnumRoomtype = {
-	LIGHT_FLOOR_PATCH: 0,
-	COBBLES: 1,
-	GREY_STONE: 2,
-	GREY_TILE: 3
+	BASIC_ROOM: 0,
+	LIGHT_FLOOR_PATCH: 1,
+	MUD_POOL: 2,
+	COBBLES: 3,
+	GREY_STONE: 4,
+	SQUARE_TILE: 5,
+	PARQUET_FLOOR: 6,
+	FLOORBOARDS: 7,
+	PAVED_FLOOR: 8
 }
 
 var EnumFloorpatch = {
-	LIGHT_PATCH: 0,
+	LIGHT_RED: 0,
 	MUD_POOL: 1
 }
 
@@ -117,7 +124,23 @@ var EnumObstacle = {
 	TORTURE_TABLE: 10,
 	MEAT_RACK: 11,
 	STOOL: 12,
-	BARREL_2: 13
+	BARREL_2: 13,
+	SACK: 14,
+	BLOOD_BUCKET: 15,
+	ZOMBI_MASTER_DESK: 16,
+	ZOMBI_HEAD: 17,
+	STONE_PILE: 18,
+	SPIT: 19,
+	FILTH_BUCKET: 20,
+	BARRELSx3: 21
+}
+
+var EnumDecortype = {
+	FILTH: 0,
+	SPLATS: 1,
+	PLANTS: 2,
+	BONES: 3,
+	MISC: 4
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

@@ -13,6 +13,10 @@ getPlayerDistance = function(creature) {
 	}
 }
 
+getDistance = function(creature1, creature2) {
+	return Math.sqrt(Math.pow(creature1.position.y - creature2.position.y, 2) + Math.pow(creature1.position.x - creature2.position.x, 2));
+}
+
 setAiAction = function(creature) {
 	// console.log("Setting AI action...");
 	if(!creature.vars.suspended) {
@@ -509,6 +513,54 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.KOB: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						//	Next action not specified
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 4) {						//	If player is within 4x attack reach...
+							var action = Math.floor(Math.random() * 2);
+							var direction = getPlayerDirection(creature);
+							if(action < 1) {
+								ai.moveTowardsPlayer(creature, 250, 250, 1.5);
+								creature.ai.nextAction = 3;
+							} else {
+								ai.moveAwayFromPlayer(creature, 250, 250, 1.5);
+								creature.ai.nextAction = 0;															//	...and set next action to 1.
+							}
+						} else {
+							var action = Math.floor(Math.random() * 3);												//	Otherwise, randomly choose to...
+							if(action < 2) {
+								ai.rest(creature, 500, 250);														//	...rest...
+							} else {
+								ai.moveRandomVector(creature, 1500, 100, 1);										//	...or move in a random direction.
+							}
+							creature.ai.nextAction = 0;
+						}
+						break;
+					}
+					case 1: {
+						ai.rest(creature, 500, 250);																//	...rest for 250 - 750ms
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 2: {
+						ai.moveAwayFromPlayer(creature, 250, 250, 1.5);												//	...move away from player for 250-500ms, at 1.5x speed
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						var direction = getPlayerDirection(creature);
+						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
+						creature.ai.nextAction = 2;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
 			case EnumAi.ZOMBI: {
 				switch(creature.ai.nextAction) {
 					case 0: {
@@ -520,9 +572,9 @@ setAiAction = function(creature) {
 							} else {
 								ai.attack(creature, 0, 400, direction, 0, 7);
 							}
-						} else if(getPlayerDistance(creature) < TILE_SIZE * 5) {
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 10) {
 							var direction = getPlayerCompassDirection(creature);
-							ai.moveInDirection(creature, 0, 400, 1, direction, Math.PI)
+							ai.moveInDirection(creature, 0, 400, 1, direction, Math.PI / 2)
 						} else {
 							ai.moveRandomVector(creature, 0, 400, 1);
 						}
@@ -567,14 +619,12 @@ setAiAction = function(creature) {
 							ai.moveAwayFromPlayer(creature, 500, 500, 1.5);
 							creature.ai.nextAction = 0;
 						} else {
-							var rand = Math.floor(Math.random() * 5);
+							var rand = Math.floor(Math.random() * 8);
 							if(rand < 1) {
 								console.log("Raising zombies!");
-								game.creatures.forEach(function(creature) {
-									console.log(creature);
-									if(creature.ai.type === EnumAi.ZOMBI && creature.vars.dead) {
-										console.log(creature);
-										creature.ai.nextAction = 2;
+								game.creatures.forEach(function(zombi) {
+									if(zombi.ai.type === EnumAi.ZOMBI && zombi.vars.dead && getDistance(creature, zombi) < TILE_SIZE * 10) {
+										zombi.ai.nextAction = 2;
 									}
 								});
 								ai.rest(creature, 500, 500);

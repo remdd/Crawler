@@ -36,7 +36,7 @@ canvas {
 /*	Level map */
 #mapDiv {
 	position: absolute;
-	top: 580px;
+	top: 670px;
 	background: pink;
 	z-index: 99;
 }
