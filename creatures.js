@@ -77,7 +77,8 @@ var playerTemplates = [
 			// console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
 		},
 		deathResponse: function() {	
-			// console.log("The player has died!");
+			console.log("The player has died!");
+			playerDeath();
 		}
 	}
 ];
@@ -277,7 +278,7 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			var rand = Math.floor(level.seed.nextFloat() * 4);
+			var rand = Math.floor(session.prng.nextFloat() * 4);
 			if(rand < 1) {
 				return EnumCreatureWeapon.BONE_AXE;
 			} else if(rand < 2) {
@@ -443,8 +444,8 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 12},
 		vars: {
 			speed: 0.5,
-			maxHP: 7,
-			currentHP: 7,
+			maxHP: 5,
+			currentHP: 5,
 			restingWeaponAnimation: true
 		},
 		sprite: {
@@ -513,8 +514,8 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 14},
 		vars: {
 			speed: 0.5,
-			maxHP: 7,
-			currentHP: 7,
+			maxHP: 5,
+			currentHP: 5,
 			restingWeaponAnimation: true
 		},
 		sprite: {
@@ -583,8 +584,8 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 16},
 		vars: {
 			speed: 0.4,
-			maxHP: 12,
-			currentHP: 12,
+			maxHP: 10,
+			currentHP: 10,
 			restingWeaponAnimation: true
 		},
 		sprite: {
@@ -670,8 +671,8 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 20},
 		vars: {
 			speed: 0.8,
-			maxHP: 6,
-			currentHP: 6,
+			maxHP: 4,
+			currentHP: 4,
 			restingWeaponAnimation: true
 		},
 		sprite: {
@@ -956,8 +957,8 @@ var creatureTemplates = [
 		currentSprite: { x: 12, y: 0},
 		vars: {
 			speed: 0.4,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 3,
+			currentHP: 3,
 			restingWeaponAnimation: true
 		},
 		sprite: {

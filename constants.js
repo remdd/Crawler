@@ -143,6 +143,12 @@ var EnumDecortype = {
 	MISC: 4
 }
 
+var EnumObstacletype = {
+	BASIC_ROOM: 0,
+	TILED_FLOOR: 1,
+	STONE_FLOOR: 2
+}
+
 var playerSprite = document.getElementById('playerSpriteImg');
 var monsterSprites = document.getElementById('monsterSprites');
 

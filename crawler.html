@@ -12,7 +12,30 @@
 	<img class="tileSet" id="obstacleSprites" src="Obstacles.png">
 	<img class="tileSet" id="floorDecorSprites" src="Decor.png">
 
-	<p id="fps">fps</p>
+	<div id="gameMenuDiv">
+		<div id="startScreen" class="gameMenuScreen">
+			<h3>Red Mars Digital presents...</h3>
+			<h1>CREEPY CRAWLER</h1>
+			<h3>Insert 1 gold coin to play!<h3>
+			<hr class="symbol">
+			<h3 class="startBtn">New Game</h3>
+			<h3>Controls</h3>
+		</div>
+		<div id="deathScreen" class="gameMenuScreen" hidden>
+			<h1>You have died!</h1>
+			<h3>You scored XXXX points.</h3>
+			<hr class="symbol">
+			<h3 class="startBtn">New Game</h3>
+		</div>
+		<div id="endLevelScreen" class="gameMenuScreen" hidden>
+			<h1>Level <span id="completedLevelSpan">X</span> complete!</h1>
+			<h3>Our hero descends the dark stairwell.</h3>
+			<h3>What fresh horrors lie in wait below...?</h3>
+			<hr class="symbol">
+			<h3 class="nextLevelBtn">Start level <span id="nextLevelSpan">X</span></h3>
+		</div>
+	</div>
+
 
 	<script type="text/javascript" src="constants.js"></script>
 	<script type="text/javascript" src="lib/mainloop.js"></script>
@@ -24,6 +47,9 @@
 	<script type="text/javascript" src="gear.js"></script>
 	<script type="text/javascript" src="crawler.js"></script>
 	<script type="text/javascript" src="ai.js"></script>
+
+<!-- 	<p id="fps">fps</p>
+ -->
 
 </body>
 </html>

@@ -55,6 +55,9 @@ var levelTilesets = [
 		door: [
 			{y:8,x:0}, {y:8,x:1}, {y:8,x:2}, {y:10,x:0}, {y:10,x:1}, {y:10,x:2}
 		],
+		exitStairs: [
+			{y:10,x:3}, {y:10,x:5}, {y:10,x:7}
+		],
 		lightRed: [
 			[{y:2,x:0}, {y:4,x:1}, {y:4,x:2}],				//	Centre
 			[{y:3,x:0}],									//	Top-left

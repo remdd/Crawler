@@ -40,8 +40,8 @@ Obstacle = function(type, room, y, x, modifier) {
 		var validPlacement = false;
 		while(attempts && !validPlacement) {
 			validPlacement = true;
-			tryY = Math.floor(level.seed.nextFloat() * (room.height - 1 - this.sprite.size.y)) + 1 + room.origin.y;
-			tryX = Math.floor(level.seed.nextFloat() * (room.width - 1 - this.sprite.size.x)) + 1 + room.origin.x;
+			tryY = Math.floor(session.prng.nextFloat() * (room.height - 1 - this.sprite.size.y)) + 1 + room.origin.y;
+			tryX = Math.floor(session.prng.nextFloat() * (room.width - 1 - this.sprite.size.x)) + 1 + room.origin.x;
 			for(var i = 0; i < this.sprite.size.y; i++) {
 				for(var j = 0; j < this.sprite.size.x; j++) {
 					if(level.obstacleArray[tryY + i][tryX + j] !== undefined) {
@@ -49,6 +49,7 @@ Obstacle = function(type, room, y, x, modifier) {
 					}	
 				}
 			}
+			attempts--;
 		}
 		if(validPlacement) {
 			this.grid = {
@@ -82,7 +83,7 @@ Obstacle = function(type, room, y, x, modifier) {
 	// this.interact = function() {};
 	switch(this.type) {
 		case EnumObstacle.DOOR: {
-			this.doorType = Math.floor(level.seed.nextFloat() * level.tiles.door.length / 3);
+			this.doorType = Math.floor(session.prng.nextFloat() * level.tiles.door.length / 3);
 			this.sprite.spriteSheet = level.img;
 			this.closed = true;
 			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
@@ -105,6 +106,46 @@ Obstacle = function(type, room, y, x, modifier) {
 				this.currentSprite = level.tiles.door[2 + this.doorType * 3];
 			}
 			this.position = {				//	Centre of sprite
+				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			}
+			break;
+		}
+		case EnumObstacle.EXIT_STAIRS: {
+			this.closed = true;
+			this.sprite.spriteSheet = level.img;
+			this.sprite.size = {
+				y: 2,
+				x: 2
+			}
+			this.currentSprite = level.tiles.exitStairs[0];
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y][this.grid.x+1] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x+1] = 1;
+			this.interact = function() {
+				if(!this.open) {
+					this.open = true;
+					this.animated = true;
+					this.animTime = 500;
+					this.animStart = performance.now();
+					this.currentSprite = level.tiles.exitStairs[1];
+					return this.animTime;
+				} else {
+					console.log("Ending level!");
+					endLevel();
+				}
+			}
+			this.interactionEnd = function() {
+				this.animated = false;
+				this.ctx = bgCtx;
+				this.currentSprite = level.tiles.exitStairs[2];
+			}
+			this.vars.drawOffset = {
+				y: TILE_SIZE,
+				x: 0
+			}
+			this.position = {
 				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
 				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
 			}
@@ -550,8 +591,8 @@ Obstacle = function(type, room, y, x, modifier) {
 }
 
 Obstacle.prototype.offsetPosition = function() {
-	var offset_y = Math.floor(level.seed.nextFloat() * this.maxOffset.y);
-	var offset_x = Math.floor(level.seed.nextFloat() * this.maxOffset.x);
+	var offset_y = Math.floor(session.prng.nextFloat() * this.maxOffset.y);
+	var offset_x = Math.floor(session.prng.nextFloat() * this.maxOffset.x);
 	this.box.topLeft.y += offset_y;
 	this.box.bottomRight.y += offset_y;
 	this.position.y += offset_y;
