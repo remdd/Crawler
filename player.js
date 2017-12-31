@@ -63,7 +63,7 @@ var playerTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 12,
+			height: 14,
 			y_padding: 2,
 			type: EnumBoxtype.PLAYER
 		},

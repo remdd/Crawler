@@ -40,7 +40,14 @@ var EnumCreature = {
 	BLUE_SQUARK: 12,
 	ZOMBI: 13,
 	ZOMBI_MASTER: 14,
-	AIR_ELEMENTAL: 15
+	AIR_ELEMENTAL: 15,
+
+	BOSS_CAMP_VAMP: 105,
+	BOSS_URK_SHAMAN: 107,
+	BOSS_ZOMBI_MASTER: 114
+}
+
+var BossCreature = {
 }
 
 var EnumAi = {
@@ -57,7 +64,8 @@ var EnumAi = {
 	SNEAKY_SKELTON: 11,
 	ZOMBI: 12,
 	ZOMBI_MASTER: 13,
-	KOB: 14
+	KOB: 14,
+	BLUE_SQUARK: 15
 }
 
 var EnumCreatureWeapon = {

@@ -368,7 +368,8 @@ function Projectile(projectileTemplate, shooter, direction) {
 		rotation: direction + projectileTemplate.vars.rotation,
 		displayTime: projectileTemplate.vars.displayTime,
 		damagePlayer: projectileTemplate.vars.damagePlayer,
-		damageCreatures: projectileTemplate.vars.damageCreatures
+		damageCreatures: projectileTemplate.vars.damageCreatures,
+		startY: shooter.grid.y
 	};
 	this.damage = projectileTemplate.damage;
 	this.currentSprite = projectileTemplate.currentSprite;
@@ -379,6 +380,7 @@ function Projectile(projectileTemplate, shooter, direction) {
 	Object.assign(this.movement, projectileTemplate.movement);
 	this.movement.direction = direction;
 	game.projectiles.push(this);
+	console.log(this);
 }
 
 function updateProjectiles() {
@@ -927,6 +929,7 @@ function checkTerrainCollision(obj, tryX, tryY) {
 	var tryTerRX = Math.floor(((tryX + (obj.box.width / 2)) / TILE_SIZE));
 	var tryTerLX = Math.floor(((tryX - (obj.box.width / 2) - 1) / TILE_SIZE));
 	var tryTerY;
+	var okY;
 
 	if(obj.position.y === tryY) {																						//	If movement has no Y component...
 		tryTerY = Math.floor(((obj.position.y - obj.sprite.y_padding) / TILE_SIZE) + (obj.sprite.size.y * 0.5));		//	...set tryTerY to current grid row...
@@ -934,10 +937,11 @@ function checkTerrainCollision(obj, tryX, tryY) {
 	} else {
 		if(tryY > obj.position.y) {																						//	Else if obj is trying to move down...
 			if(obj.box.type === EnumBoxtype.PROJECTILE) {																//	...and is a projectile...
-				if(obj.position.y > obj.vars.shooter.position.y + obj.vars.shooter.sprite.size.y * TILE_SIZE / 2) {		//	...and has a y position lower than the base of its shooter...
-					tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE) - 8/16);									//	...set tryTerY to be 1/2 row lower...
+				tryTerY = Math.floor(((tryY - obj.sprite.y_padding) / TILE_SIZE) + 8/16);								//	...set tryTerY.
+				if(tryTerY === obj.vars.startY) {																		//	If tryTerY is on same grid row as start,
+					okY = true;																							//	allow movement
 				} else {
-					tryTerY = Math.floor(((tryY + TILE_SIZE * obj.sprite.size.y / 2) / TILE_SIZE));						//	...else set tryTerY as per norrmal.
+					tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE) - 8/16);									//	...else set tryTerY to be 1/2 row below...
 				}
 			} else {
 				tryTerY = Math.floor(((tryY + TILE_SIZE* obj.sprite.size.y / 2) / TILE_SIZE));							//	...else set tryTerY...
@@ -945,23 +949,27 @@ function checkTerrainCollision(obj, tryX, tryY) {
 		} else {																										//	...or if trying to move up...
 			tryTerY = Math.floor(((tryY - obj.sprite.y_padding) / TILE_SIZE) + 8/16);									//	...set tryTerY.
 		}
-		if(level.terrainArray[tryTerY] === undefined ||																	//	Check whether terrain in tryY direction does not exist...
-		tryTerY === 0 ||																								//	...or is on top row of terrain grid...
-		(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0) || 		//	...or is impassable on the right...
-		(level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {			//	...or is impassable on the left.
-			returnCoords.y = obj.position.y;																			//	If so, set y to return unchanged...
-			returnCoords.collidedWith = 1;
-			if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
-				obj.movement.direction = -obj.movement.direction;														//	...invert direction...
-				obj.setFacing(obj.movement.direction);
-			} else if(obj.ai !== undefined) {
-				// obj.movement.speed = 0;
-				obj.ai.endTime = performance.now();
-			}
-			tryTerY = Math.floor(((obj.position.y - obj.sprite.y_padding) / TILE_SIZE) + 0.5);							//	...and reset TryTerY to current position
+		if(okY) {
+			returnCoords.y = tryY;
 		} else {
-			returnCoords.y = tryY;																						//	Otherwise, success - return tryY coord
-		}																												//	Else if obj is trying to move up...
+			if(level.terrainArray[tryTerY] === undefined ||																	//	Check whether terrain in tryY direction does not exist...
+			tryTerY === 0 ||																								//	...or is on top row of terrain grid...
+			(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0) || 		//	...or is impassable on the right...
+			(level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {			//	...or is impassable on the left.
+				returnCoords.y = obj.position.y;																			//	If so, set y to return unchanged...
+				returnCoords.collidedWith = 1;
+				if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
+					obj.movement.direction = -obj.movement.direction;														//	...invert direction...
+					obj.setFacing(obj.movement.direction);
+				} else if(obj.ai !== undefined) {
+					// obj.movement.speed = 0;
+					obj.ai.endTime = performance.now();
+				}
+				tryTerY = Math.floor(((obj.position.y - obj.sprite.y_padding) / TILE_SIZE) + 0.5);							//	...and reset TryTerY to current position
+			} else {
+				returnCoords.y = tryY;																						//	Otherwise, success - return tryY coord
+			}																												//	Else if obj is trying to move up...
+		}
 	}
 	if(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0 || 			//	If terrain does not exist or is impassable on the right...
 	level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0) {				//	...or on the left...

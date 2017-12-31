@@ -903,7 +903,7 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		ai: {
-			type: EnumAi.SKELTON_ARCHER,
+			type: EnumAi.BLUE_SQUARK,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;

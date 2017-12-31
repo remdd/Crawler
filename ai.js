@@ -81,7 +81,7 @@ setAiAction = function(creature) {
 				}
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 5) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveTowardsPlayer(creature, 300, 350, 2);
@@ -136,7 +136,7 @@ setAiAction = function(creature) {
 				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 6) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 8) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveAwayFromPlayer(creature, 300, 350, 1);
@@ -313,7 +313,7 @@ setAiAction = function(creature) {
 				switch(creature.ai.nextAction) {
 					case 0: {
 						creature.weapon.vars.hidden = false;											//	Redisplay dagger if hidden while flying
-						if(getPlayerDistance(creature) < TILE_SIZE * 4) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 6) {
 							ai.moveTowardsPlayer(creature, 300, 350, 2);
 							creature.movement.bounceOff = false;
 							creature.ai.nextAction = 1;
@@ -345,6 +345,7 @@ setAiAction = function(creature) {
 						creature.vars.animation = 6;														//	Transform to bat
 						creature.ai.nextAction = 4;															//	Fly as bat
 						creature.vars.isBat = true;
+						creature.vars.foreground = true;
 						creature.weapon.vars.hidden = true;
 						creature.vars.moveThroughColliders = true;
 						break;
@@ -382,6 +383,7 @@ setAiAction = function(creature) {
 						ai.rest(creature, 0, creature.sprite.animations[7][0]);			//	Set AI timing to last for duration of transformation animation
 						creature.vars.animation = 7;									//	Transform back to vamp
 						creature.ai.nextAction = 0;
+						creature.vars.foreground = false;
 						creature.vars.isBat = false;
 						break;
 					}
@@ -406,9 +408,11 @@ setAiAction = function(creature) {
 								creature.ai.nextAction = 1;															//	...and set next action to 1.
 							}
 						} else {
-							var action = Math.floor(Math.random() * 3);												//	Otherwise, randomly choose to...
+							var action = Math.floor(Math.random() * 4);												//	Otherwise, randomly choose to...
 							if(action < 2) {
 								ai.rest(creature, 500, 250);														//	...rest...
+							} else if(action < 3) {
+								ai.moveTowardsPlayer(creature, 250, 250, 1);
 							} else {
 								ai.moveRandomVector(creature, 1500, 100, 1);										//	...or move in a random direction.
 							}
@@ -665,6 +669,74 @@ setAiAction = function(creature) {
 					}
 					case 1: {
 						ai.moveAwayFromPlayer(creature, 500, 500, 1.5);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+			case EnumAi.BLUE_SQUARK: {
+				creature.movement.bounceOff = true;
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 2) {
+							var action = Math.floor(Math.random() * 3);
+							if(action < 1) {
+								creature.ai.nextAction = 1;
+							} else {
+								ai.moveAwayFromPlayer(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+								creature.ai.nextAction = 0;
+							}
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 8) {
+							var action = Math.floor(Math.random() * 4)
+							if(action < 3) {
+								ai.moveAwayFromPlayer(creature, 300, 350, 1);
+								creature.movement.bounceOff = false;
+								creature.ai.nextAction = 1;
+							} else {
+								ai.moveRandomVector(creature, 300, 350, 2);
+							}
+						} else {
+							var action = Math.floor(Math.random() * 2);
+							if(action < 1) {
+								ai.moveRandomVector(creature, 1000, 500, 1);
+							} else {
+								ai.rest(creature, 1000, 500);
+							}
+						}
+						break;				
+					}
+					case 1: {
+						var direction = getPlayerCompassDirection(creature);
+						ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, Math.PI / 16);					//	...attack in player's compass direction...
+						creature.ai.nextAction = 4;
+						break;
+					}
+					case 2: {
+						ai.moveAwayFromPlayer(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						var rand = Math.floor(Math.random() * 3);
+						if(rand < 1) {
+							ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+							creature.ai.nextAction = 0;
+						} else if(rand < 2) {
+							ai.moveRandomVector(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+							creature.ai.nextAction = 0;
+						} else {
+							ai.rest(creature, 200, 0);
+							creature.ai.nextAction = 1;
+						}
+						break;
+					}
+					case 4: {
+						ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);
 						creature.ai.nextAction = 0;
 						break;
 					}

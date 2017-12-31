@@ -48,13 +48,13 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					// level.playerStart = {y: this.origin.y, x: this.origin.x};
+					level.playerStart = {y: this.origin.y, x: this.origin.x};
 					// new Obstacle(EnumObstacle.GRAIN_BARREL, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					this.addCreature(EnumCreature.SKELTON);
+					this.addCreature(EnumCreature.BLUE_SQUARK);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
-					level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
+					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
 					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
 					levelGen.bossRooms[0](this);
 				};
