@@ -11,7 +11,7 @@ var startSound = new Howl({
 
 var urkGrunts = new Howl({
 	src: ['snd/Urk.wav'],
-	volume: 0.5,
+	volume: 0.7,
 	sprite: {
 		grunt1: [0, 500],
 		grunt2: [1500, 500],

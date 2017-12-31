@@ -113,12 +113,16 @@ setAiAction = function(creature) {
 					}
 					case 3: {
 						var rand = Math.floor(Math.random() * 3);
-						if(rand < 2) {
+						if(rand < 1) {
 							ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+							creature.ai.nextAction = 0;
+						} else if(rand < 2) {
+							ai.moveRandomVector(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+							creature.ai.nextAction = 0;
 						} else {
-							ai.moveRandomVector(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+							ai.rest(creature, 200, 0);
+							creature.ai.nextAction = 1;
 						}
-						creature.ai.nextAction = 0;
 						break;
 					}
 					default: {
@@ -164,12 +168,16 @@ setAiAction = function(creature) {
 					}
 					case 3: {
 						var rand = Math.floor(Math.random() * 3);
-						if(rand < 2) {
+						if(rand < 1) {
 							ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+							creature.ai.nextAction = 0;
+						} else if(rand < 2) {
+							ai.moveRandomVector(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+							creature.ai.nextAction = 0;
 						} else {
-							ai.moveRandomVector(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+							ai.rest(creature, 200, 0);
+							creature.ai.nextAction = 1;
 						}
-						creature.ai.nextAction = 0;
 						break;
 					}
 					case 4: {

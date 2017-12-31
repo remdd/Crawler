@@ -70,11 +70,13 @@ var EnumCreatureWeapon = {
 	HULKING_URK_HAMMA: 7,
 	KOB_MACE: 8,
 	ZOMBI_BITE: 9,
-	ZOMBI_MASTER_STAFF: 10
+	ZOMBI_MASTER_STAFF: 10,
+	SQUARK_KNIFE: 11
 }
 
 var EnumCreatureProjectile = {
-	BONE_ARROW: 1
+	BONE_ARROW: 1,
+	SQUARK_KNIFE: 2
 }
 
 var	EnumLodetype = {

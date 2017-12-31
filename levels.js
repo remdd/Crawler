@@ -48,15 +48,15 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					level.playerStart = {y: this.origin.y, x: this.origin.x};
+					// level.playerStart = {y: this.origin.y, x: this.origin.x};
 					// new Obstacle(EnumObstacle.GRAIN_BARREL, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					this.addCreature(EnumCreature.URK);
+					this.addCreature(EnumCreature.SKELTON);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
-					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
+					level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
 					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
-					levelGen.bossRooms[1](this);
+					levelGen.bossRooms[0](this);
 				};
 				level.exitRoomContents = function() {
 					new Obstacle(EnumObstacle.EXIT_STAIRS, null, this.origin.y + 1, this.origin.x + 1);
@@ -72,6 +72,7 @@ var levelGen = {
 					EnumCreature.HULKING_URK,
 					EnumCreature.KOB,
 					EnumCreature.SNEAKY_SKELTON,
+					EnumCreature.BLUE_SQUARK,
 					EnumCreature.MUMI
 				];
 				level.rareCreatures = [
@@ -117,6 +118,7 @@ var levelGen = {
 		});
 		//	Add a smattering of extra random creatures
 		this.addRandomCreatures();
+
 	},
 
 
@@ -1569,7 +1571,12 @@ Room.prototype.addWellRoomObstacles = function() {
 	}
 }
 Room.prototype.addCreature = function(creature) {
-	var tries = levelGen.vars.addCreatureAttempts;
+	var tries;
+	if(creature === level.boss) {
+		tries = Infinity;
+	} else {
+		tries = levelGen.vars.addCreatureAttempts;
+	}
 	var retry = true;
 	while(tries && retry) {
 		var randY = this.origin.y + Math.floor(session.prng.nextFloat() * (this.height - 2)) + 1;

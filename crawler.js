@@ -153,6 +153,7 @@ function drawOverlays() {
 
 //	Set up player
 function setUpPlayer() {
+	player = {};
 	var playerType = 0;																						//	Set playerType template
 	player = new Creature(playerTemplates[playerType], level.playerStart.x, level.playerStart.y);			//	Construct player from playerType
 	player.weapon = new Weapon(playerWeapons[0], player);													//	Assign starting weapon
@@ -364,7 +365,7 @@ function Projectile(projectileTemplate, shooter, direction) {
 	this.vars = { 
 		shooter: shooter, 
 		drawOffset: { x: projectileTemplate.vars.drawOffset.x, y: projectileTemplate.vars.drawOffset.y }, 
-		rotation: direction,
+		rotation: direction + projectileTemplate.vars.rotation,
 		displayTime: projectileTemplate.vars.displayTime,
 		damagePlayer: projectileTemplate.vars.damagePlayer,
 		damageCreatures: projectileTemplate.vars.damageCreatures
@@ -507,7 +508,7 @@ Creature.prototype.aim = function(direction) {
 			this.weapon.currentSprite = this.sprite.frames[1];
 			this.weapon.vars.rotation = direction + Math.PI;
 		}
-	}			
+	}
 }
 Creature.prototype.setFacing = function(direction) {
 	if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
@@ -752,38 +753,47 @@ function updateDrawables() {
 
 //	Update player movement
 function updatePlayer() {
-	var moving = player.vars.moving;
-	if(Key.isDown(Key.MOVE_UP)) { player.move(Math.PI * 1.5, player.vars.speed); player.vars.moving = true; };
-	if(Key.isDown(Key.MOVE_DOWN)) { player.move(Math.PI * 0.5, player.vars.speed); player.vars.moving = true; }
-	if(Key.isDown(Key.MOVE_LEFT)) { player.move(Math.PI * 1, player.vars.speed); player.vars.moving = true; if(player.vars.facingRight) { player.vars.facingRight = false }}
-	if(Key.isDown(Key.MOVE_RIGHT)) { player.move(0, player.vars.speed); player.vars.moving = true; if(!player.vars.facingRight) { player.vars.facingRight = true }}
-
-	if(Key.isDown(Key.ATTACK_UP)) { player.attack(Math.PI * 1.5); }
-	if(Key.isDown(Key.ATTACK_DOWN)) { player.attack(Math.PI / 2); }
-	if(Key.isDown(Key.ATTACK_LEFT)) { player.attack(Math.PI); }
-	if(Key.isDown(Key.ATTACK_RIGHT)) { player.attack(0); }
-
-	if(Key.isDown(Key.INTERACT)) { interact(); }
-
-	if(!Key.isDown(Key.MOVE_UP) && !Key.isDown(Key.MOVE_DOWN) && !Key.isDown(Key.MOVE_LEFT) && !Key.isDown(Key.MOVE_RIGHT)) { player.vars.moving = false; }
-	if(moving != player.vars.moving) { 
-		player.vars.animStart = performance.now();
-	}
 	//	Assign current player animation
-	if(performance.now() < player.vars.lastDamageTime + 1000) {						//	+ length of time to flash after taking damage
-		if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_R; }
-		else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_L; }
-		else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_R; }
-		else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_L; }
+	if(player.vars.dead) {
+		if(performance.now() > game.playerDeathTime + 3000) {
+			deathScreen();
+		} else {
+			if(player.vars.facingRight) {
+				player.vars.animation = 8;
+			} else {
+				player.vars.animation = 9;
+			}
+		}
 	} else {
-		if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_R; }
-		else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_L; }
-		else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
-		else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
-	}
+		var moving = player.vars.moving;
+		if(Key.isDown(Key.MOVE_UP)) { player.move(Math.PI * 1.5, player.vars.speed); player.vars.moving = true; };
+		if(Key.isDown(Key.MOVE_DOWN)) { player.move(Math.PI * 0.5, player.vars.speed); player.vars.moving = true; }
+		if(Key.isDown(Key.MOVE_LEFT)) { player.move(Math.PI * 1, player.vars.speed); player.vars.moving = true; if(player.vars.facingRight) { player.vars.facingRight = false }}
+		if(Key.isDown(Key.MOVE_RIGHT)) { player.move(0, player.vars.speed); player.vars.moving = true; if(!player.vars.facingRight) { player.vars.facingRight = true }}
 
-	//	Assign player grid co-ords
-	// player.grid.x
+		if(Key.isDown(Key.ATTACK_UP)) { player.attack(Math.PI * 1.5); }
+		if(Key.isDown(Key.ATTACK_DOWN)) { player.attack(Math.PI / 2); }
+		if(Key.isDown(Key.ATTACK_LEFT)) { player.attack(Math.PI); }
+		if(Key.isDown(Key.ATTACK_RIGHT)) { player.attack(0); }
+
+		if(Key.isDown(Key.INTERACT)) { interact(); }
+
+		if(!Key.isDown(Key.MOVE_UP) && !Key.isDown(Key.MOVE_DOWN) && !Key.isDown(Key.MOVE_LEFT) && !Key.isDown(Key.MOVE_RIGHT)) { player.vars.moving = false; }
+		if(moving != player.vars.moving) { 
+			player.vars.animStart = performance.now();
+		}
+		if(performance.now() < player.vars.lastDamageTime + 1000) {						//	+ length of time to flash after taking damage
+			if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_R; }
+			else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_L; }
+			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_R; }
+			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_L; }
+		} else {
+			if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_R; }
+			else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_L; }
+			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
+			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
+		}
+	}
 
 	player.animate();
 	player.updateGear();
@@ -977,10 +987,17 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			if(game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
 				return returnCoords;
 			}
-			var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
-			var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2);
-			var newL = returnCoords.x - (obj.box.width / 2 );
-			var newR = returnCoords.x + (obj.box.width / 2 );
+			if(obj.box.type === EnumBoxtype.PROJECTILE) {
+				var newTop = returnCoords.y - (obj.box.height / 2);
+				var newBtm = returnCoords.y + (obj.box.height / 2);
+				var newL = returnCoords.x - (obj.box.width / 2 );
+				var newR = returnCoords.x + (obj.box.width / 2 );
+			} else {
+				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
+				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2);
+				var newL = returnCoords.x - (obj.box.width / 2 );
+				var newR = returnCoords.x + (obj.box.width / 2 );
+			}
 
 			var objTop = game.nearbyColliders[i].box.topLeft.y;
 			var objBtm = game.nearbyColliders[i].box.bottomRight.y;
@@ -1007,6 +1024,7 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 					player.vars.lastDamageTime = performance.now();
 					player.inflictDamage(obj.touchDamage());
 				}
+
 				returnCoords.x = obj.position.x;
 				returnCoords.y = obj.position.y;
 				returnCoords.collidedWith = game.nearbyColliders[i];
@@ -1094,7 +1112,7 @@ function updateColliders() {
 function drawDebugCanvas() {
 	game.projectiles.forEach(function(projectile) {
 		var debug = { x: projectile.position.x, y: projectile.position.y, color: 'orange'};
-		debugs.push(debug);
+		game.debugs.push(debug);
 	});
 	game.colliders.forEach(function(collider) {
 		var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
@@ -1102,12 +1120,12 @@ function drawDebugCanvas() {
 		var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
 		game.debugs.push(debug2);
 	});
-	// attacks.forEach(function(attack) {
-	// 	attack.contactPoints.forEach(function(contactPoint) {
-	// 		var debug = { x: contactPoint.x, y: contactPoint.y, color: 'green'};
-	// 		debugs.push(debug);
-	// 	});
-	// });
+	game.attacks.forEach(function(attack) {
+		attack.contactPoints.forEach(function(contactPoint) {
+			var debug = { x: contactPoint.x, y: contactPoint.y, color: 'green'};
+			game.debugs.push(debug);
+		});
+	});
 	game.debugs.forEach(function(debug) {
 		debugCtx.strokeStyle = debug.color;
 		debugCtx.strokeRect(debug.x - game.viewport_offset_x, debug.y - game.viewport_offset_y, 1, 1);
@@ -1116,15 +1134,22 @@ function drawDebugCanvas() {
 }
 
 function playerDeath() {
-	// game.creatures.forEach(function(creature) {
-	// 	creature.ai.nextAction = -1;
-	// 	creature.movement.speed = 0;
-	// 	creature.setFacing(0);
-	// 	creature.vars.animation = 0;
-	// });
-	// session.loadingLevel = false;
-	// game.playerDeathTime = performance.now();
-	// deathScreen();
+	console.log("The player has died!");
+	game.creatures.forEach(function(creature) {
+		creature.ai.nextAction = -1;
+		creature.movement.speed = 0;
+		if(creature.vars.facingRight) {
+			creature.vars.animation = 0;
+		} else {
+			creature.vars.animation = 1;
+		}
+	});
+	player.vars.dead = true;
+	player.movement.speed = 0;
+	delete player.weapon;
+	session.loadingLevel = false;
+	player.vars.animStart = performance.now();
+	game.playerDeathTime = performance.now();
 }
 
 function deathScreen() {
@@ -1249,13 +1274,13 @@ function initializeLevel() {
 
 //	Start routines
 function start(newGame) {
-	// debugger;
 	if(newGame) {
 		startSound.play();
 		session.levelNumber = 0;
 		session.score = 0;
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
+		// session.prng = new Random(617547);
 	}
 	console.log("Seed: " + session.seed);
 	initializeLevel();
@@ -1292,7 +1317,6 @@ function start(newGame) {
 		$('canvas').fadeIn('slow');
 	});
 }
-startScreen();
 
 //	Pause & restart game when browser tab loses & regains focus
 window.onfocus = function() {
@@ -1328,3 +1352,8 @@ function drawMap() {
 		}
 	}
 }
+
+
+
+//	Show game start screen on load
+startScreen();
