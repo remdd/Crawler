@@ -147,8 +147,15 @@ var obstacleTiles = [
 		{y:6,x:6},	//	15	Zombi Master's Desk
 		{y:6,x:9},	//	16	Zombi head
 		{y:4,x:9},	//	17	Spit
-		{y:6,x:10},//	18	Filth bucket
-		{y:2,x:9}	//	19	3x Barrels
+		{y:6,x:10},	//	18	Filth bucket
+		{y:2,x:9},	//	19	3x Barrels
+		{y:0,x:9},	//	20	2x Barrels
+		{y:4,x:11},	//	21	Sack 2
+		{y:0,x:11},	//	22	Sack x2
+		{y:0,x:12},	//	23	Tipped Barrel
+		{y:1,x:12},	//	24	Split Sack
+		{y:2,x:12},	//	25	Water Butt
+		{y:3,x:12}	//	26	Grain Barrel
 	]
 ];
 

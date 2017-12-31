@@ -7,6 +7,7 @@ Obstacle = function(type, room, y, x, modifier) {
 	switch(type) {
 		case EnumObstacle.DOOR:
 		case EnumObstacle.COFFIN: 
+		case EnumObstacle.SACKx2:
 		{
 			this.sprite.size = {y: 2, x: 1}; break;
 		}
@@ -14,6 +15,7 @@ Obstacle = function(type, room, y, x, modifier) {
 		case EnumObstacle.TORTURE_TABLE:
 		case EnumObstacle.SPIT:
 		case EnumObstacle.BARRELSx3:
+		case EnumObstacle.BARRELSx2:
 		{
 			this.sprite.size = {y: 2, x: 2}; break;
 		}
@@ -579,6 +581,165 @@ Obstacle = function(type, room, y, x, modifier) {
 			this.maxOffset = {
 				y: 10,
 				x: 10
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.BARRELSx2: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 2; j++) {
+					level.obstacleArray[this.grid.y+i][this.grid.x+j] = 1;
+				}
+			}
+			this.currentSprite = level.obstacleTiles[20];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 6,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE,
+				x: this.grid.x * TILE_SIZE + 19
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {
+				y: 13,
+				x: 10
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.SACK_2: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.obstacleTiles[21];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 14/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 11/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 0,
+				x: 2
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.SACKx2: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
+			this.currentSprite = level.obstacleTiles[22];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE + 1
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 19,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 14/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 10,
+				x: 0
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.TIPPED_BARREL: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.obstacleTiles[23];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 10/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 4,
+				x: 0
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.SPLIT_SACK: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.obstacleTiles[24];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 8/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 14/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 3,
+				x: 0
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.WATER_BUTT: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.obstacleTiles[25];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 13/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 12/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 0,
+				x: 4
+			}
+			this.offsetPosition();
+			break;
+		}
+		case EnumObstacle.GRAIN_BARREL: {
+			level.obstacleArray[this.grid.y][this.grid.x] = 1;
+			this.currentSprite = level.obstacleTiles[26];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 5,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 13/16,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 14/16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {
+				y: 0,
+				x: 0
 			}
 			this.offsetPosition();
 			break;

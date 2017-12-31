@@ -160,6 +160,7 @@ function setUpPlayer() {
 	player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
 	player.weapon.reset();
 	player.updateGear();
+	$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
 }
 
 function setUpCreatures() {
@@ -200,16 +201,23 @@ function drawOnCanvas(entity, ctx) {
 			);
 			ctx.restore();
 		} else {
-			ctx.drawImage(entity.sprite.spriteSheet,
-				entity.currentSprite.x * TILE_SIZE, 												//	x-coord to start clipping
-				entity.currentSprite.y * TILE_SIZE, 												//	y-coord to start clipping
-				entity.sprite.size.x * TILE_SIZE, 													//	width of clipped image
-				entity.sprite.size.y * TILE_SIZE, 													//	height of clipped image
-				Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - game.viewport_offset_x) + entity.vars.drawOffset.x, 	//	x-coord of canvas placement
-				Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - game.viewport_offset_y) + entity.vars.drawOffset.y, 	//	y-coord of canvas placement
-				entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
-				entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
-			);
+			try {
+				ctx.drawImage(entity.sprite.spriteSheet,
+					entity.currentSprite.x * TILE_SIZE, 												//	x-coord to start clipping
+					entity.currentSprite.y * TILE_SIZE, 												//	y-coord to start clipping
+					entity.sprite.size.x * TILE_SIZE, 													//	width of clipped image
+					entity.sprite.size.y * TILE_SIZE, 													//	height of clipped image
+					Math.floor(entity.position.x - TILE_SIZE * entity.sprite.size.x / 2 - game.viewport_offset_x) + entity.vars.drawOffset.x, 	//	x-coord of canvas placement
+					Math.floor(entity.position.y - TILE_SIZE * entity.sprite.size.y / 2 - game.viewport_offset_y) + entity.vars.drawOffset.y, 	//	y-coord of canvas placement
+					entity.sprite.size.x * TILE_SIZE, 			//	width of image on canvas
+					entity.sprite.size.y * TILE_SIZE			//	height of image on canvas
+				);
+			}
+			catch(err) {
+				console.log(err);
+				console.log(entity);
+				// debugger;
+			}
 		}
 	}
 }
@@ -449,6 +457,13 @@ function Creature(creatureTemplate) {
 	if(creatureTemplate.touchDamage) {
 		this.touchDamage = creatureTemplate.touchDamage;
 	}
+	if(creatureTemplate.deathDrop) {
+		this.deathDrop = creatureTemplate.deathDrop;
+	} else {
+		this.deathDrop = function() {
+			console.log("Default death drop...");
+		}
+	}
 	this.inflictDamage = creatureTemplate.inflictDamage;		//	Set damage response function from template
 	this.deathResponse = creatureTemplate.deathResponse;		//	Set death response function from template
 	game.colliders.push(this);										//	Add creature to colliders array
@@ -516,6 +531,7 @@ Creature.prototype.setFacing = function(direction) {
 }
 Creature.prototype.kill = function() {
 	if(!this.vars.dead) {
+		addScore(this.vars.score);
 		this.vars.dead = true;
 		if(this.weapon) {
 			delete this.weapon;															//	Delete creature's weapon property
@@ -532,13 +548,17 @@ Creature.prototype.kill = function() {
 		} else {
 			this.vars.animation = 5;
 		}
+		if(this.deathDrop) {
+			this.deathDrop();
+		}
 		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 	}
 }
+
 Creature.prototype.checkIfCollides = function() {
 	var collides = false;
 	for(var i = 0; i < game.colliders.length; i++) {
-		if(game.colliders[i] !== this) {
+		if(game.colliders[i] !== this && !game.colliders[i].vars.moveThroughColliders) {
 			var top = this.box.topLeft.y;
 			var btm = this.box.bottomRight.y;
 			var left = this.box.topLeft.x;
@@ -564,7 +584,7 @@ Creature.prototype.checkIfCollides = function() {
 			//	...or falls fully inside the collider
 			(top >= objTop && btm <= objBtm && left >= objL && right <= objR)
 			) {
-				collides = true;
+				collides = game.colliders[i];
 			}
 		}
 		if(collides) {
@@ -803,9 +823,15 @@ Creature.prototype.updateGear = function() {
 function updateCreatures() {
 	game.creatures.forEach(function(creature) {
 		if(performance.now() > creature.vars.deathTime) {							//	If creature's deathTime has passed...
-			addScore(creature.vars.score);
 			leaveCorpse(creature);
 			game.creatures.splice(game.creatures.indexOf(creature), 1);				//	...and remove the creature from creatures array...
+		}
+		var offset = creature.getGridOffsetFromPlayer();
+		if(offset.x > CANVAS_WIDTH / TILE_SIZE - 1 || offset.y > CANVAS_HEIGHT / TILE_SIZE - 1) {
+			creature.vars.suspended = true;
+			creature.movement.speed = 0;
+		} else {
+			creature.vars.suspended = false;
 		}
 		if(performance.now() > creature.ai.endTime) {								//	If creature's ai action has run its duration...
 			setAiAction(creature);													//	...assign a new one.
@@ -821,7 +847,7 @@ function updateCreatures() {
 function addScore(score) {
 	session.score += score;
 	console.log(session.score);
-	$('.scoreSpan').text(session.score);
+	$('.scoreSpan').text('Score: ' + session.score);
 }
 
 function updateAttacks() {
@@ -851,7 +877,7 @@ function resolveAttacks() {
 				// }
 			}
 			game.creatures.forEach(function(creature) {
-				if(attack.damageCreatures) {
+				if(!creature.vars.dead && attack.damageCreatures) {
 					//	Check whether contactPoint falls within bounding box of any creature
 					if(contactPoint.x >= creature.box.topLeft.x && contactPoint.x <= creature.box.bottomRight.x
 					&& contactPoint.y >= creature.box.topLeft.y && contactPoint.y <= creature.box.bottomRight.y) {
@@ -874,7 +900,7 @@ function resolveHit(attack, target) {
 	//	DAMAGE CALC GOES HERE
 	var damage = 1;
 	target.inflictDamage(damage);
-	console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
+	// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 }
 
 function checkCollision(obj, tryX, tryY) {
@@ -994,26 +1020,6 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 	return returnCoords;
 }
 
-function collisionFixer() {
-	game.nearbyColliders.forEach(function(collider) {
-		if(collider !== player) {
-			if(	checkColliderCollision(collider, player.box.topLeft.x, player.box.topLeft.y).x !== player.box.topLeft.x ||
-				checkColliderCollision(collider, player.box.topLeft.x, player.box.topLeft.y).y !== player.box.topLeft.y ||
-				checkColliderCollision(collider, player.box.bottomRight.x, player.box.topLeft.y).x !== player.box.bottomRight.x ||
-				checkColliderCollision(collider, player.box.bottomRight.x, player.box.topLeft.y).y !== player.box.topLeft.y ||
-				checkColliderCollision(collider, player.box.topLeft.x, player.box.bottomRight.y).x !== player.box.topLeft.x ||
-				checkColliderCollision(collider, player.box.topLeft.x, player.box.bottomRight.y).y !== player.box.bottomRight.y ||
-				checkColliderCollision(collider, player.box.bottomRight.x, player.box.bottomRight.y).x !== player.box.bottomRight.x ||
-				checkColliderCollision(collider, player.box.bottomRight.x, player.box.bottomRight.y).y !== player.box.bottomRight.y ) {
-				console.log(collider.name + " is STUCK!!!");
-			}
-			else {
-				console.log("Ok!");
-			}
-		}
-	});
-}
-
 function drawDrawables() {
 	game.drawables.forEach(function(drawable) {
 		if(drawable.weapon && !drawable.weapon.vars.hidden && !drawable.weapon.vars.foreground) {
@@ -1060,19 +1066,25 @@ function updateColliders() {
 	game.nearbyColliders.push(player);
 	game.creatures.forEach(function(creature) {
 		var offset = creature.getGridOffsetFromPlayer();
-		if(offset.x > CANVAS_WIDTH / TILE_SIZE || offset.y > CANVAS_HEIGHT / TILE_SIZE) {
-			creature.vars.suspended = true;
-			creature.movement.speed = 0;
+		if(offset.x >= CANVAS_WIDTH / TILE_SIZE + 1 || offset.y >= CANVAS_HEIGHT / TILE_SIZE + 1) {
+			if(!creature.vars.suspended) {
+				if(creature.checkIfCollides()) {
+					console.log(creature);
+					console.log("Collides with...");
+					console.log(creature.checkIfCollides());
+				}
+				// creature.grid.x = Math.floor(creature.position.x / TILE_SIZE);
+				// creature.grid.y = Math.floor(creature.position.y / TILE_SIZE);
+				// creature.position.x = creature.grid.x * TILE_SIZE + (TILE_SIZE / 2);
+				// creature.position.y = creature.grid.y * TILE_SIZE + (TILE_SIZE / 2);
+			}
 		} else {
-			creature.vars.suspended = false;
-			creature.grid.x = Math.floor((creature.position.x / TILE_SIZE) + (creature.sprite.size.x / 2));
-			creature.grid.y = Math.floor((creature.position.y / TILE_SIZE) + (creature.sprite.size.y / 2));
 			game.nearbyColliders.push(creature);
 		}
 	});
 	level.obstacles.forEach(function(obstacle) {
 		var offset = Creature.prototype.getGridOffsetFromPlayer.call(obstacle);
-		if(offset.x < CANVAS_WIDTH / TILE_SIZE && offset.y < CANVAS_HEIGHT / TILE_SIZE) {
+		if(offset.x <= CANVAS_WIDTH / TILE_SIZE + 3 || offset.y <= CANVAS_HEIGHT / TILE_SIZE + 3) {
 			game.nearbyColliders.push(obstacle);
 		}
 	});
@@ -1104,15 +1116,15 @@ function drawDebugCanvas() {
 }
 
 function playerDeath() {
-	game.creatures.forEach(function(creature) {
-		creature.ai.nextAction = -1;
-		creature.movement.speed = 0;
-		creature.setFacing(0);
-		creature.vars.animation = 0;
-	});
-	session.loadingLevel = false;
-	game.playerDeathTime = performance.now();
-	deathScreen();
+	// game.creatures.forEach(function(creature) {
+	// 	creature.ai.nextAction = -1;
+	// 	creature.movement.speed = 0;
+	// 	creature.setFacing(0);
+	// 	creature.vars.animation = 0;
+	// });
+	// session.loadingLevel = false;
+	// game.playerDeathTime = performance.now();
+	// deathScreen();
 }
 
 function deathScreen() {
@@ -1126,16 +1138,14 @@ function deathScreen() {
 
 //	Master game update function
 function update(delta) {
-	setViewportOffset();
 	updateColliders();
+	setViewportOffset();
 	updatePlayer();
 	updateCreatures();
 	updateAttacks();
 	updateObstacles();
 	updateProjectiles();
 	updateDrawables();
-	// collisionFixer();
-	// console.log(colliders);
 }
 
 //	Master game draw function
@@ -1151,7 +1161,7 @@ function draw(interpolationPercentage) {
 	drawAttacks();
 	// debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	// drawDebugCanvas();
-	$('#fps').text(MainLoop.getFPS());
+	$('#fps').text("FPS: " + MainLoop.getFPS().toFixed(4));
 }
 
 function startScreen() {
@@ -1171,8 +1181,8 @@ $('.startBtn').click(function() {
 
 function endLevel() {
 	$.when($('canvas').fadeOut('slow')).then(function() {
-		$('#completedLevelSpan').text(session.levelNumber);
-		$('#nextLevelSpan').text(session.levelNumber + 1);
+		$('#completedLevelSpan').text(session.levelNumber + 1);
+		$('#nextLevelSpan').text(session.levelNumber + 2);
 		$('#gameMenuDiv').fadeIn('slow', function() {
 			$('#endLevelScreen').fadeIn('slow');
 			MainLoop.stop();
@@ -1241,6 +1251,7 @@ function initializeLevel() {
 function start(newGame) {
 	// debugger;
 	if(newGame) {
+		startSound.play();
 		session.levelNumber = 0;
 		session.score = 0;
 		$('.scoreSpan').text('');
@@ -1251,7 +1262,14 @@ function start(newGame) {
 	level = levelGen.loadLevel(session.levelNumber);
 	initializeGame();
 	console.log(level);
-	setUpPlayer();
+	if(newGame) {
+		setUpPlayer();
+	} else {
+		player.grid.x = level.playerStart.x;
+		player.grid.y = level.playerStart.y;
+		player.position.x = player.grid.x * TILE_SIZE + TILE_SIZE / 2;
+		player.position.y = player.grid.y * TILE_SIZE + TILE_SIZE / 2;
+	}
 	setViewportOffset();
 	addBackground();
 	setUpLevel();
@@ -1262,6 +1280,7 @@ function start(newGame) {
 			creature.weapon.reset();
 		}
 	});
+	// bgMusic.play();
 	$('#gameMenuDiv').fadeOut('slow', function() {
 		$('.gameMenuScreen').hide();
 		if(newGame) {
@@ -1278,10 +1297,12 @@ startScreen();
 //	Pause & restart game when browser tab loses & regains focus
 window.onfocus = function() {
 	session.focused = true;
+	// bgMusic.play();
 	MainLoop.start();
 }
 window.onblur = function() {
 	session.focused = false;
+	// bgMusic.pause();
 	Key.clearPressed();
 	MainLoop.stop();
 }

@@ -48,15 +48,15 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					// level.playerStart = {y: this.origin.y, x: this.origin.x};
-					// new Obstacle(EnumObstacle.BARRELSx3, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					// this.addCreature(EnumCreature.HULKING_URK);
+					level.playerStart = {y: this.origin.y, x: this.origin.x};
+					// new Obstacle(EnumObstacle.GRAIN_BARREL, null, level.playerStart.y + 1, level.playerStart.x + 1);
+					this.addCreature(EnumCreature.URK);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
-					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
-					levelGen.bossRooms[rand](this);
 					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
+					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
+					levelGen.bossRooms[1](this);
 				};
 				level.exitRoomContents = function() {
 					new Obstacle(EnumObstacle.EXIT_STAIRS, null, this.origin.y + 1, this.origin.x + 1);
@@ -309,6 +309,7 @@ var levelGen = {
 		var exitSizeX = 8 - startRand; 
 		var exitSizeY = 4 + startRand;
 		var startPosX, startPosY, bossPosX, bossPosY, exitPosX, exitPosY;
+		// debugger;
 		var startCorner = Math.floor(session.prng.nextFloat() * 4);
 		var startCorner = 1;
 		var rand = Math.floor(session.prng.nextFloat() * 2);
@@ -325,6 +326,7 @@ var levelGen = {
 					exitPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - exitSizeY -2;
 					exitPosX = Math.floor(session.prng.nextFloat() * level.terrainArray[0].length * 0.3 +2);
 				}
+				break;
 			}
 			case 1: {
 				startPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - startSizeY -2;
@@ -338,6 +340,7 @@ var levelGen = {
 					exitPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - exitSizeY -2;
 					exitPosX = Math.floor(session.prng.nextFloat() * level.terrainArray[0].length * 0.3 +2);
 				}
+				break;
 			}
 			case 2: {
 				startPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - startSizeY -2;
@@ -351,6 +354,7 @@ var levelGen = {
 					exitPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - exitSizeY -2;
 					exitPosX = level.terrainArray[0].length - (Math.floor(session.prng.nextFloat() * level.terrainArray[0].length * 0.3)) - exitSizeX -2;
 				}
+				break;
 			}
 			case 4: {
 				startPosY = Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3 +2);
@@ -364,6 +368,7 @@ var levelGen = {
 					exitPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - exitSizeY -2;
 					exitPosX = level.terrainArray[0].length - (Math.floor(session.prng.nextFloat() * level.terrainArray[0].length * 0.3)) - exitSizeX -2;
 				}
+				break;
 			}
 			default: {
 				break;
@@ -807,7 +812,7 @@ levelGen.bossRooms = [
 		// Add boss and other creatures
 		room.addCreature(level.boss);
 		var rand = Math.floor(session.prng.nextFloat() * 3) + 3		//	From 3 - 5
-		for(var i = 0; i < rand; i++) {
+		for(var i = 0; i < 15; i++) {
 			room.addCreature(EnumCreature.ZOMBI);
 		}	
 	},
@@ -1453,73 +1458,14 @@ Room.prototype.addObstacles = function(obstacleType) {
 				this.addFloorDecor(2);
 			} else if(rand < 6) {
 				//	Storeroom
+				this.addStoreRoomObstacles();
 				this.addFloorDecor(1);
-				var rand2 = Math.floor(session.prng.nextFloat() * 10);
-				if(rand2 < 3) {
-					new Obstacle(EnumObstacle.BARREL, this);
-				} else if(rand2 < 5) {
-					new Obstacle(EnumObstacle.SACK, this);
-				} else if(rand2 < 6) {
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-				} else if(rand2 < 7) {
-					var rand3 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.BARREL, this);
-					}
-					var rand4 = Math.floor(session.prng.nextFloat() * 2);
-					if(rand4 < 1) {
-						new Obstacle(EnumObstacle.BARREL_2, this);
-					}
-					var rand5 = Math.floor(session.prng.nextFloat() * 2);
-					if(rand5 < 1) {
-						new Obstacle(EnumObstacle.SACK, this);
-					}
-				} else if(rand2 < 8) {
-					var rand3 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.SACK, this);
-					}
-					new Obstacle(EnumObstacle.BARREL, this);
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-				} else if(rand2 < 9) {
-					var rand3 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.BARREL, this);
-					}
-					var rand4 = Math.floor(session.prng.nextFloat() * 2);
-					if(rand4 < 1) {
-						new Obstacle(EnumObstacle.BARREL_2, this);
-					}
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-				} else {
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-					var rand3 = Math.floor(session.prng.nextFloat() * 4);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.BARREL, this);
-					}
-					var rand4 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand4; i++) {
-						new Obstacle(EnumObstacle.BARREL_2, this);
-					}
-					new Obstacle(EnumObstacle.SACK, this);
-				}
 			} else if(rand < 7) {
 				//	Well room
+				this.addWellRoomObstacles();
 				this.addFloorDecor(2, [EnumDecortype.FILTH, EnumDecortype.SPLATS, EnumDecortype.PLANTS]);
-				new Obstacle(EnumObstacle.WELL, this);
-				var rand2 = Math.floor(session.prng.nextFloat() * 4);
-				if(rand2 < 2) {
-					new Obstacle(EnumObstacle.STOOL, this);
-				} else if(rand2 < 3) {
-					new Obstacle(EnumObstacle.BUCKET, this);
-				} else {
-					new Obstacle(EnumObstacle.STOOL, this);
-					new Obstacle(EnumObstacle.BUCKET, this);
-				}
 			} else if(rand < 8) {
 				//	Torture table room
-				this.addFloorDecor(2);
 				new Obstacle(EnumObstacle.TORTURE_TABLE, this);
 				var rand2 = Math.floor(session.prng.nextFloat() * 5);
 				if(rand2 < 1) {
@@ -1529,9 +1475,9 @@ Room.prototype.addObstacles = function(obstacleType) {
 				} else if(rand2 < 3) {
 					new Obstacle(EnumObstacle.FILTH_BUCKET, this);
 				}
+				this.addFloorDecor(2);
 			} else if(rand < 9) {
 				//	Food room
-				this.addFloorDecor(1);
 				var rand2 = Math.floor(session.prng.nextFloat() * 5);
 				if(rand2 < 1) {
 					new Obstacle(EnumObstacle.SPIT, this);
@@ -1551,11 +1497,13 @@ Room.prototype.addObstacles = function(obstacleType) {
 					new Obstacle(EnumObstacle.BUCKET, this);
 					new Obstacle(EnumObstacle.STOOL, this);
 				}
+				this.addFloorDecor(1);
 			} else if(rand < 10) {
 				//	???
-				this.addFloorDecor(1);
 				new Obstacle(EnumObstacle.STONE_PILE, this);
+				this.addFloorDecor(1);
 			}
+			break;
 		}
 		case EnumObstacletype.TILED_FLOOR: {
 			var rand = Math.floor(session.prng.nextFloat() * 10);
@@ -1564,63 +1512,60 @@ Room.prototype.addObstacles = function(obstacleType) {
 				this.addFloorDecor(2);
 			} else if(rand < 8) {
 				//	Storeroom
+				this.addStoreRoomObstacles();
 				this.addFloorDecor(1);
-				var rand2 = Math.floor(session.prng.nextFloat() * 10);
-				if(rand2 < 3) {
-					new Obstacle(EnumObstacle.BARREL, this);
-				} else if(rand2 < 5) {
-					new Obstacle(EnumObstacle.SACK, this);
-				} else if(rand2 < 6) {
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-				} else if(rand2 < 7) {
-					var rand3 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.BARREL, this);
-					}
-					var rand4 = Math.floor(session.prng.nextFloat() * 2);
-					if(rand4 < 1) {
-						new Obstacle(EnumObstacle.BARREL_2, this);
-					}
-					var rand5 = Math.floor(session.prng.nextFloat() * 2);
-					if(rand5 < 1) {
-						new Obstacle(EnumObstacle.SACK, this);
-					}
-				} else if(rand2 < 8) {
-					var rand3 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.SACK, this);
-					}
-					new Obstacle(EnumObstacle.BARREL, this);
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-				} else if(rand2 < 9) {
-					var rand3 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.BARREL, this);
-					}
-					var rand4 = Math.floor(session.prng.nextFloat() * 2);
-					if(rand4 < 1) {
-						new Obstacle(EnumObstacle.BARREL_2, this);
-					}
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-				} else {
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-					new Obstacle(EnumObstacle.BARRELSx3, this);
-					var rand3 = Math.floor(session.prng.nextFloat() * 4);
-					for(var i = 0; i < rand3; i++) {
-						new Obstacle(EnumObstacle.BARREL, this);
-					}
-					var rand4 = Math.floor(session.prng.nextFloat() * 3);
-					for(var i = 0; i < rand4; i++) {
-						new Obstacle(EnumObstacle.BARREL_2, this);
-					}
-					new Obstacle(EnumObstacle.SACK, this);
-				}
 			} else if(rand < 10) {
 				//	Torture room
-				this.addFloorDecor(2, [EnumDecortype.SPLATS]);
 				new Obstacle(EnumObstacle.TORTURE_TABLE, this);
+				this.addFloorDecor(2, [EnumDecortype.SPLATS]);
 			}
+			break;
 		}
+		default: {
+			break;
+		}
+	}
+}
+Room.prototype.addStoreRoomObstacles = function(num) {
+	if(!num) {
+		num = Math.floor(session.prng.nextFloat() * 10) + 1;		//	Random 1-10
+	}
+	var storeRoomObstacles = [
+		EnumObstacle.BARREL,
+		EnumObstacle.BARREL,
+		EnumObstacle.BARREL_2,
+		EnumObstacle.BARRELSx2,
+		EnumObstacle.BARRELSx2,
+		EnumObstacle.BARRELSx3,
+		EnumObstacle.BARRELSx3,
+		EnumObstacle.SACK,
+		EnumObstacle.SACK,
+		EnumObstacle.SACK_2,
+		EnumObstacle.SACK_2,
+		EnumObstacle.SACKx2,
+		EnumObstacle.SACKx2,
+		EnumObstacle.TIPPED_BARREL,
+		EnumObstacle.SPLIT_SACK,
+		EnumObstacle.WATER_BUTT,
+		EnumObstacle.GRAIN_BARREL
+	];
+	for(var i = 0; i < num; i++) {
+		var rand = Math.floor(session.prng.nextFloat() * storeRoomObstacles.length);
+		new Obstacle(storeRoomObstacles[rand], this);
+	}
+}
+Room.prototype.addWellRoomObstacles = function() {
+	new Obstacle(EnumObstacle.WELL, this);
+	var wellRoomObstacles = [
+		EnumObstacle.STOOL,
+		EnumObstacle.BUCKET,
+		EnumObstacle.WATER_BUTT,
+		EnumObstacle.BARREL
+	]
+	var rand2 = Math.floor(session.prng.nextFloat() * 5);
+	for(var i = 0; i < rand2; i++) {
+		var rand3 = Math.floor(session.prng.nextFloat() * wellRoomObstacles.length);
+		new Obstacle(wellRoomObstacles[rand3], this);
 	}
 }
 Room.prototype.addCreature = function(creature) {

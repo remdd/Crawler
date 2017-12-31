@@ -65,6 +65,7 @@ var playerTemplates = [
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
+			$('.healthSpan').text(this.vars.currentHP + ' / ' + this.vars.maxHP);
 			if(this.vars.facingRight) {
 				this.vars.animation = EnumState.HITFLASH_R;
 			} else {
@@ -273,12 +274,26 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
+				var rand = Math.floor(Math.random() * 3);
+				if(rand < 1) {
+					skeltonNoises.play('noise1');
+				} else if(rand < 2) {
+					skeltonNoises.play('noise2');
+				} else if(rand < 3) {
+					skeltonNoises.play('noise3');
+				} else {
+					skeltonNoises.play('noise4');
+				}
 				this.ai.nextAction = 3;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
+			skeltonNoises.play('death1');
 			this.kill();
+		},
+		deathDrop: function() {
+			console.log("Skelton death drop");
 		},
 		addWeapon: function() {
 			var rand = Math.floor(session.prng.nextFloat() * 4);
@@ -504,11 +519,25 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
+				var rand = Math.floor(Math.random() * 3);
+				if(rand < 1) {
+					urkGrunts.play('grunt5');
+				} else if(rand < 2) {
+					urkGrunts.play('grunt6');
+				} else {
+					urkGrunts.play('grunt7');
+				}
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
+			var rand = Math.floor(Math.random() * 2);
+			if(rand < 1) {
+				urkGrunts.play('death1');
+			} else {
+				urkGrunts.play('death2');
+			}
 			this.kill();
 		},
 		addWeapon: function() {
@@ -575,11 +604,25 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
+				var rand = Math.floor(Math.random() * 3);
+				if(rand < 1) {
+					urkGrunts.play('grunt5');
+				} else if(rand < 2) {
+					urkGrunts.play('grunt6');
+				} else {
+					urkGrunts.play('grunt7');
+				}
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
+			var rand = Math.floor(Math.random() * 2);
+			if(rand < 1) {
+				urkGrunts.play('death1');
+			} else {
+				urkGrunts.play('death2');
+			}
 			this.kill();
 		},
 		addWeapon: function() {
@@ -1418,6 +1461,16 @@ var creatureWeapons = [
 		name: 'Urk Sword',
 		currentSprite: { x: 2, y: 7},
 		use: function(direction) {
+			var rand = Math.floor(Math.random() * 4);
+			if(rand < 1) {
+				urkGrunts.play('grunt1');
+			} else if(rand < 2) {
+				urkGrunts.play('grunt2');
+			} else if(rand < 3) {
+				urkGrunts.play('grunt3');
+			} else if(rand < 4) {
+				urkGrunts.play('grunt4');
+			}
 			this.swipe(direction);
 			return this.attack;
 		},

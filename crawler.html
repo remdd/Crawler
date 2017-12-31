@@ -29,25 +29,39 @@
 		</div>
 		<div id="endLevelScreen" class="gameMenuScreen" hidden>
 			<h1>Level <span id="completedLevelSpan">X</span> complete!</h1>
-			<h3>Our hero descends the dark stairwell.</h3>
+			<h3>Our hero descends into the dark stairwell.</h3>
 			<h3>What fresh horrors lie in wait below...?</h3>
 			<hr class="symbol">
-			<h3 class="nextLevelBtn">Start level <span id="nextLevelSpan">X</span></h3>
+			<h3 class="nextLevelBtn">Start level <span id="nextLevelSpan">X</span>!</h3>
 		</div>
 	</div>
 
-	<div id="interfaceDiv">
+	<div id="interfaceDivLeft">
 		<div id="scoreDiv">
-			<span class="scoreSpan"></span>
+			<p>
+				<img src="img/heart.png"> 
+				<span class="healthSpan"></span>
+			</p>
+			<p class="itemSpan">
+				
+			</p>
+			<p class="fpsSpan" id="fps"></p>
 		</div>
 		<div id="messageDiv">
 			<span id="messageSpan"></span>
 		</div>
 	</div>
 
+	<div id="interfaceDivRight">
+		<div id="scoreDiv">
+			<p class="scoreSpan"></p>
+		</div>
+	</div>
+
 	<script type="text/javascript" src="constants.js"></script>
 	<script type="text/javascript" src="lib/mainloop.js"></script>
 	<script type="text/javascript" src="lib/prng.js"></script>
+	<script type="text/javascript" src="lib/howler.js"></script>
 	<script type="text/javascript" src="levelTilesets.js"></script>
 	<script type="text/javascript" src="levels.js"></script>
 	<script type="text/javascript" src="obstacles.js"></script>
@@ -55,9 +69,7 @@
 	<script type="text/javascript" src="gear.js"></script>
 	<script type="text/javascript" src="crawler.js"></script>
 	<script type="text/javascript" src="ai.js"></script>
-
-<!-- 	<p id="fps">fps</p>
- -->
+	<script type="text/javascript" src="audio.js"></script>
 
 </body>
 </html>

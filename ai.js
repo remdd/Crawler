@@ -410,6 +410,12 @@ setAiAction = function(creature) {
 					}
 					case 1: {
 						ai.rest(creature, 500, 250);																//	...rest for 250 - 750ms
+						var rand = Math.floor(Math.random() * 10);
+						if(rand < 1) {
+							urkGrunts.play('grunt3');
+						} else if(rand < 2) {
+							urkGrunts.play('grunt4');
+						}
 						creature.ai.nextAction = 0;
 						break;
 					}
@@ -590,15 +596,28 @@ setAiAction = function(creature) {
 					}
 					case 2: {
 						console.log("Reanimating");
-						creature.vars.moveThroughColliders = false;
-						creature.vars.dead = false;
-						creature.vars.currentHP = creature.vars.maxHP;
-						if(creature.vars.facingRight) {
-							ai.rest(creature, 0, 600, 10);
+						if(creature.checkIfCollides()) {
+							creature.ai.nextAction = 3;
 						} else {
-							ai.rest(creature, 0, 600, 11);
+							creature.vars.moveThroughColliders = false;
+							creature.vars.dead = false;
+							creature.vars.currentHP = creature.vars.maxHP;
+							if(creature.vars.facingRight) {
+								ai.rest(creature, 0, 600, 10);
+							} else {
+								ai.rest(creature, 0, 600, 11);
+							}
+							creature.ai.nextAction = 0;
 						}
-						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						if(creature.vars.facingRight) {
+							ai.rest(creature, 0, 200, 8);
+						} else {
+							ai.rest(creature, 0, 200, 9);
+						}
+						creature.ai.nextAction = 2;
 						break;
 					}
 					default: {
