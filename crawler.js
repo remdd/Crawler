@@ -380,7 +380,6 @@ function Projectile(projectileTemplate, shooter, direction) {
 	Object.assign(this.movement, projectileTemplate.movement);
 	this.movement.direction = direction;
 	game.projectiles.push(this);
-	console.log(this);
 }
 
 function updateProjectiles() {
@@ -555,6 +554,90 @@ Creature.prototype.kill = function() {
 			this.deathDrop();
 		}
 		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
+	}
+}
+Creature.prototype.hasClearPathToPlayer = function() {
+	var x1, x2, y1, y2;
+	if(this.grid.x > player.grid.x) {
+		x1 = player.grid.x;
+		x2 = this.grid.x;
+	} else {
+		x1 = this.grid.x;
+		x2 = player.grid.x;
+	}
+	if(this.grid.y > player.grid.y) {
+		y1 = player.grid.y;
+		y2 = this.grid.y;
+	} else {
+		y1 = this.grid.y;
+		y2 = player.grid.y;
+	}
+	var diffX = x2 - x1;
+	var diffY = y2 - y1;
+	if(Math.abs(diffX) <= 1 && Math.abs(diffY) <= 1) {				//	If grid squares are adjacent, return clear
+		return true;
+	} else if(diffX === 0) {
+		for(var i = 0; i < diffY; i++) {
+			if(level.terrainArray[y1+i][x1] !== 0) {
+				console.log("Blocked vertically!");
+				return false;
+			}
+		}
+		console.log("Clear path vertically");
+		return true;
+	} else if(diffY === 0) {
+		for(var i = 0; i < diffX; i++) {
+			if(level.terrainArray[y1][x1+i] !== 0) {
+				console.log("Blocked horizontally!");
+				return false;
+			}
+		}
+		console.log("Clear path horizontally");
+		return true;
+	} else {
+		var diff;
+		if(diffX === diffY) {
+			for(var i = 0; i < diffX; i++) {
+				if(level.terrainArray[y1+i][x1+i] !== 0) {
+					console.log("Blocked perfect diag!");
+					return false;
+				}
+			}
+			console.log("Clear path perfect diag");
+			return true;
+		} else if(diffX >= diffY) {
+			var stepY = diffY / diffX;
+			var incY = 0;
+			for(var i = 0; i < diffX; i++) {
+				if(diff > 0.5) {
+					diff--;
+					incY++;
+				}
+				if(level.terrainArray[y1+incY][x1+i] !== 0) {
+					console.log("Blocked across diag!");
+					return false;
+				}
+				diff += stepY;
+			}
+			console.log("Clear path across diag");
+			return true;
+		} else {
+			var stepX = diffX / diffY;
+			var incX = 0;
+			for(var i = 0; i < diffY; i++) {
+				if(diff > 0.5) {
+					diff--;
+					incX++;
+				}
+				if(level.terrainArray[y1+i][x1+incX] !== 0) {
+					console.log("Blocked down diag!");
+					return false;
+				}
+				diff += stepX;
+			}
+			console.log("Clear path down diag");
+			return true;
+		}
 	}
 }
 

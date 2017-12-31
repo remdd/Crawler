@@ -26,7 +26,7 @@ setAiAction = function(creature) {
 				switch(creature.ai.nextAction) {
 					case 0: {
 						//	Next action not specified
-						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3) {					//	If player is within 3x attack reach...
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3 && creature.hasClearPathToPlayer()) {					//	If player is within 3x attack reach...
 							var direction = getPlayerDirection(creature);
 							ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);	//	...attack in player's general direction...
 							creature.ai.nextAction = 1;															//	...and set next action to 1.
@@ -81,7 +81,7 @@ setAiAction = function(creature) {
 				}
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 5) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 5 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveTowardsPlayer(creature, 300, 350, 2);
@@ -136,7 +136,7 @@ setAiAction = function(creature) {
 				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 8) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 8 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveAwayFromPlayer(creature, 300, 350, 1);
@@ -197,7 +197,7 @@ setAiAction = function(creature) {
 					case 0: {
 						creature.weapon.vars.hidden = true;
 						creature.vars.animation = 6;
-						if(getPlayerDistance(creature) < TILE_SIZE * 2.5) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 2.5 && creature.hasClearPathToPlayer()) {
 							ai.rest(creature, 0, 100, 6);
 							creature.ai.nextAction = 1;
 						} else {
@@ -222,7 +222,7 @@ setAiAction = function(creature) {
 				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 3.5) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 3.5 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveTowardsPlayer(creature, 300, 350, 1.5);
@@ -313,7 +313,7 @@ setAiAction = function(creature) {
 				switch(creature.ai.nextAction) {
 					case 0: {
 						creature.weapon.vars.hidden = false;											//	Redisplay dagger if hidden while flying
-						if(getPlayerDistance(creature) < TILE_SIZE * 6) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 6 && creature.hasClearPathToPlayer()) {
 							ai.moveTowardsPlayer(creature, 300, 350, 2);
 							creature.movement.bounceOff = false;
 							creature.ai.nextAction = 1;
@@ -397,7 +397,7 @@ setAiAction = function(creature) {
 				switch(creature.ai.nextAction) {
 					case 0: {
 						//	Next action not specified
-						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3) {						//	If player is within 3x attack reach...
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3 && creature.hasClearPathToPlayer()) {						//	If player is within 3x attack reach...
 							var action = Math.floor(Math.random() * 2);
 							var direction = getPlayerDirection(creature);
 							if(action < 1) {
@@ -455,7 +455,7 @@ setAiAction = function(creature) {
 						//	Next action not specified
 						creature.weapon.vars.attackRate = 1200;														//	Reset to normal attack rate if resetting from bezerk
 						creature.weapon.vars.animTime = 800;
-						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3) {						//	If player is within 3x attack reach...
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 3 && creature.hasClearPathToPlayer()) {						//	If player is within 3x attack reach...
 							var action = Math.floor(Math.random() * 2);
 							var direction = getPlayerDirection(creature);
 							if(action < 1) {
@@ -535,7 +535,7 @@ setAiAction = function(creature) {
 				switch(creature.ai.nextAction) {
 					case 0: {
 						//	Next action not specified
-						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 4) {						//	If player is within 4x attack reach...
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 4 && creature.hasClearPathToPlayer()) {						//	If player is within 4x attack reach...
 							var action = Math.floor(Math.random() * 2);
 							var direction = getPlayerDirection(creature);
 							if(action < 1) {
@@ -582,7 +582,7 @@ setAiAction = function(creature) {
 			case EnumAi.ZOMBI: {
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 1) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 1 && creature.hasClearPathToPlayer()) {
 							var direction = getPlayerCompassDirection(creature);
 							creature.setFacing(direction);
 							if(creature.vars.facingRight) {
@@ -642,11 +642,11 @@ setAiAction = function(creature) {
 			case EnumAi.ZOMBI_MASTER: {
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 1.5) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 1.5 && creature.hasClearPathToPlayer()) {
 							var direction = getPlayerDirection(creature);
 							ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, 0);
 							creature.ai.nextAction = 1;
-						} else if(getPlayerDistance(creature) < TILE_SIZE * 3) {
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 3 && creature.hasClearPathToPlayer()) {
 							ai.moveAwayFromPlayer(creature, 500, 500, 1.5);
 							creature.ai.nextAction = 0;
 						} else {
@@ -683,22 +683,22 @@ setAiAction = function(creature) {
 				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 2) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 2 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 3);
 							if(action < 1) {
 								creature.ai.nextAction = 1;
 							} else {
-								ai.moveAwayFromPlayer(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+								ai.moveAwayFromPlayer(creature, 500, 500, 1.5);
 								creature.ai.nextAction = 0;
 							}
-						} else if(getPlayerDistance(creature) < TILE_SIZE * 8) {
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 8 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveAwayFromPlayer(creature, 300, 350, 1);
 								creature.movement.bounceOff = false;
 								creature.ai.nextAction = 1;
 							} else {
-								ai.moveRandomVector(creature, 300, 350, 2);
+								ai.moveRandomVector(creature, 300, 350, 1);
 							}
 						} else {
 							var action = Math.floor(Math.random() * 2);
@@ -712,22 +712,22 @@ setAiAction = function(creature) {
 					}
 					case 1: {
 						var direction = getPlayerCompassDirection(creature);
-						ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, Math.PI / 16);					//	...attack in player's compass direction...
+						ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, Math.PI / 16);
 						creature.ai.nextAction = 4;
 						break;
 					}
 					case 2: {
-						ai.moveAwayFromPlayer(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+						ai.moveAwayFromPlayer(creature, 500, 500, 1.5);
 						creature.ai.nextAction = 0;
 						break;
 					}
 					case 3: {
 						var rand = Math.floor(Math.random() * 3);
 						if(rand < 1) {
-							ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
+							ai.moveAwayFromPlayer(creature, 500, 500, 1.5);
 							creature.ai.nextAction = 0;
 						} else if(rand < 2) {
-							ai.moveRandomVector(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
+							ai.moveRandomVector(creature, 500, 500, 1);
 							creature.ai.nextAction = 0;
 						} else {
 							ai.rest(creature, 200, 0);
