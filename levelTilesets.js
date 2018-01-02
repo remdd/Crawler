@@ -143,7 +143,7 @@ var obstacleTiles = [
 		{y:3,x:6},	//	11	Barrel 2
 		{y:5,x:7},	//	12	Sack
 		{y:5,x:8},	//	13	Blood Bucket
-		{y:4,x:8},	//	14	Stone pile
+		{y:4,x:8},	//	14	Stone pile 1
 		{y:6,x:6},	//	15	Zombi Master's Desk
 		{y:6,x:9},	//	16	Zombi head
 		{y:4,x:9},	//	17	Spit
@@ -155,7 +155,27 @@ var obstacleTiles = [
 		{y:0,x:12},	//	23	Tipped Barrel
 		{y:1,x:12},	//	24	Split Sack
 		{y:2,x:12},	//	25	Water Butt
-		{y:3,x:12}	//	26	Grain Barrel
+		{y:3,x:12},	//	26	Grain Barrel
+
+		{y:0,x:4},	//	27	Wooden chair - R facing
+		{y:1,x:4},	//	28	Wooden chair - L facing
+		{y:0,x:2},	//	29	Wooden bench - vertical
+		{y:0,x:3},	//	30	Wooden bench - horizontal
+		{y:0,x:5},	//	31	Mug & knife table
+		{y:0,x:7},	//	32	Sword table
+		{y:0,x:13},	//	33	Wide shelves 1
+		{y:2,x:13},	//	34	Narrow shelves 1
+		{y:2,x:14},	//	35	Wide shelves 1
+		{y:0,x:15},	//	36	Narrow shelves 1
+
+		{y:1,x:0},	//	37	Rubble pile 1
+		{y:1,x:1},	//	38	Rubble pile 2
+		{y:1,x:2},	//	39	Stone lump
+		{y:4,x:1},	//	40	Skull spike R
+		{y:4,x:1.5},//	41	Skull spike L
+		{y:5,x:1},	//	42	Flag spike R
+		{y:5,x:1.5},//	43	Flag spike L
+		{y:2,x:11}	//	44	Monolith
 	]
 ];
 

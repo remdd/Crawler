@@ -8,7 +8,8 @@ var session = {
 	loadingLevel: false,
 	score: 0,
 	vars: {
-		interactDistance: 15						//	Distance at which player can interact with interactables
+		interactDistance: 15,						//	Distance at which player can interact with interactables
+		healthDropFrequency: 1						//	Average number of default death drops per health heart drop
 	}
 }
 
@@ -24,6 +25,7 @@ var game = {
 	projectiles: [],						//	Holds projectiles currently present in game
 	colliders: [],							//	Holds *all* collision boxes currently present in game - player, creatures, obstacles etc
 	nearbyColliders: [],					//	Holds any colliders near to the player for collision detection every tick
+	pickups: [],							//	Holds any contact-collected pickups
 	debugs: [],								//	Holds any objects to be passed to debug canvas
 	drawables: [],							//	Holds 
 	drawOnTop: []							//	Holds drawables to be drawn on top of canvas
@@ -161,7 +163,12 @@ function setUpPlayer() {
 	player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
 	player.weapon.reset();
 	player.updateGear();
+	player.items = [];
 	$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+	player.addItem = function(item) {
+		player.items.push(item);
+		console.log(player.items);
+	}
 }
 
 function setUpCreatures() {
@@ -217,7 +224,6 @@ function drawOnCanvas(entity, ctx) {
 			catch(err) {
 				console.log(err);
 				console.log(entity);
-				// debugger;
 			}
 		}
 	}
@@ -305,6 +311,22 @@ Entity.prototype.getGridOffsetFromPlayer = function() {
 	if(offset.x < 0) { offset.x *= -1 };
 	if(offset.y < 0) { offset.y *= -1 };
 	return offset;
+}
+
+//	Assign Entity prototype
+Pickup.prototype = Object.create(Entity.prototype);
+Pickup.prototype.constructor = Pickup;
+
+function Pickup(pickupTemplate) {
+	Entity.apply(this, arguments);
+	this.pickup = pickupTemplate.pickup;
+	this.vars.background = true;
+	this.vars.animStart = performance.now();
+	this.vars.animation = 0;
+	this.currentSprite = pickupTemplate.currentSprite;
+	this.movement = {};
+	Object.assign(this.movement, pickupTemplate.movement);
+	game.pickups.push(this);
 }
 
 //	Assign Entity prototype
@@ -463,6 +485,21 @@ function Creature(creatureTemplate) {
 		this.deathDrop = creatureTemplate.deathDrop;
 	} else {
 		this.deathDrop = function() {
+			var rand = Math.floor(Math.random() * session.vars.healthDropFrequency);
+			if(rand < 1) {
+				var exitKey = new Pickup(pickupTemplates[EnumPickup.EXIT_KEY], this.grid.x, this.grid.y);
+				exitKey.position.x = this.position.x;
+				exitKey.position.y = this.position.y + 2;
+				exitKey.movement.speed = 1;
+				exitKey.movement.direction = getPlayerDirection(this) + Math.PI;
+			}
+			// if(rand < 1) {
+			// 	var heart = new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], this.grid.x, this.grid.y);
+			// 	heart.position.x = this.position.x;
+			// 	heart.position.y = this.position.y + 2;
+			// 	heart.movement.speed = 1;
+			// 	heart.movement.direction = getPlayerDirection(this) + Math.PI;
+			// }
 			console.log("Default death drop...");
 		}
 	}
@@ -477,8 +514,8 @@ Creature.prototype.move = function(direction, speed) {
 	this.position.x = newCoords.x;
 	this.position.y = newCoords.y;
 	this.grid = {
-		x: Math.floor((this.position.x + (TILE_SIZE * this.sprite.size.x / 2)) / TILE_SIZE),
-		y: Math.floor((this.position.y + (TILE_SIZE * this.sprite.size.y / 2)) / TILE_SIZE),
+		x: Math.floor(this.position.x / TILE_SIZE),
+		y: Math.floor(this.position.y / TILE_SIZE),
 	}
 	this.collidedWith = newCoords.collidedWith;
 	if(this.updateBox) {
@@ -595,7 +632,7 @@ Creature.prototype.hasClearPathToPlayer = function() {
 		console.log("Clear path horizontally");
 		return true;
 	} else {
-		var diff;
+		var diff = 0;
 		if(diffX === diffY) {
 			for(var i = 0; i < diffX; i++) {
 				if(level.terrainArray[y1+i][x1+i] !== 0) {
@@ -624,11 +661,14 @@ Creature.prototype.hasClearPathToPlayer = function() {
 		} else {
 			var stepX = diffX / diffY;
 			var incX = 0;
+			console.log(stepX);
 			for(var i = 0; i < diffY; i++) {
+				console.log(i);
+				console.log(diff);
 				if(diff > 0.5) {
 					diff--;
 					incX++;
-				}
+						}
 				if(level.terrainArray[y1+i][x1+incX] !== 0) {
 					console.log("Blocked down diag!");
 					return false;
@@ -640,7 +680,10 @@ Creature.prototype.hasClearPathToPlayer = function() {
 		}
 	}
 }
-
+Creature.prototype.addHealth = function(health) {
+	console.log("Adding health!");
+	this.vars.currentHP += health;
+}
 Creature.prototype.checkIfCollides = function() {
 	var collides = false;
 	for(var i = 0; i < game.colliders.length; i++) {
@@ -679,7 +722,6 @@ Creature.prototype.checkIfCollides = function() {
 	}
 	return collides;
 }
-
 
 interact = function() {
 	level.obstacles.forEach(function(obstacle) {
@@ -829,6 +871,11 @@ function updateDrawables() {
 	level.obstacles.forEach(function(obstacle) {
 		if(inViewport(obstacle.position.x, obstacle.position.y) && obstacle.foreground) {
 			game.drawables.push(obstacle);
+		}
+	});
+	game.pickups.forEach(function(pickup) {
+		if(pickup.movement.speed > 0) {
+
 		}
 	});
 	game.drawables.sort(function(a, b) {
@@ -1043,7 +1090,9 @@ function checkTerrainCollision(obj, tryX, tryY) {
 				returnCoords.collidedWith = 1;
 				if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
 					obj.movement.direction = -obj.movement.direction;														//	...invert direction...
-					obj.setFacing(obj.movement.direction);
+					if(obj.setFacing) {
+						obj.setFacing(obj.movement.direction);
+					}
 				} else if(obj.ai !== undefined) {
 					// obj.movement.speed = 0;
 					obj.ai.endTime = performance.now();
@@ -1060,7 +1109,9 @@ function checkTerrainCollision(obj, tryX, tryY) {
 		returnCoords.collidedWith = 1;
 		if(obj.movement.bounceOff) {																					//	...and if obj bounces off...
 			obj.movement.direction += Math.PI;																			//	...and invert direction.
-			obj.setFacing(obj.movement.direction);
+			if(obj.setFacing) {
+				obj.setFacing(obj.movement.direction);
+			}
 		}
 	} else {
 		returnCoords.x = tryX;																							//	Otherwise, success - return tryX coord
@@ -1072,8 +1123,10 @@ function checkTerrainCollision(obj, tryX, tryY) {
 function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 	var returnCoords = { x: tryX, y: tryY, collidedWith: collidedWith };
 	for(var i = 0; i < game.nearbyColliders.length; i++) {
+
 		if(game.nearbyColliders[i] !== obj && !game.nearbyColliders[i].vars.moveThroughColliders && 
 			!obj.vars.moveThroughColliders && game.nearbyColliders[i] !== obj.vars.shooter) {
+
 			//	Projectile nearbyColliders can pass through obstacle nearbyColliders
 			if(game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
 				return returnCoords;
@@ -1110,18 +1163,30 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			//	...or falls fully inside the collider
 			(newTop >= objTop && newBtm <= objBtm && newL >= objL && newR <= objR)
 			) {
+				//	If player comes into contact with a collider dealing touch damage, execute its touchDamage function
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
 					obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
 					player.vars.lastDamageTime = performance.now();
 					player.inflictDamage(obj.touchDamage());
 				}
-
-				returnCoords.x = obj.position.x;
-				returnCoords.y = obj.position.y;
-				returnCoords.collidedWith = game.nearbyColliders[i];
-				if(obj.movement.bounceOff) {
-					obj.movement.direction = obj.movement.direction + Math.PI;
-					obj.setFacing(obj.movement.direction);
+				//	If player comes into contact with a pickup, execute its pickup function
+				if(game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP || obj.box.type === EnumBoxtype.PICKUP) {
+					if(obj === player) {
+						game.nearbyColliders[i].pickup();
+					} else if(obj.box.type === EnumBoxtype.CREATURE || game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE) {
+						console.log("sdfasdf")
+						return returnCoords;
+					}
+				} else {
+					returnCoords.x = obj.position.x;
+					returnCoords.y = obj.position.y;
+					returnCoords.collidedWith = game.nearbyColliders[i];
+					if(obj.movement.bounceOff) {
+						obj.movement.direction = obj.movement.direction + Math.PI;
+						if(obj.setFacing) {
+							obj.setFacing(obj.movement.direction);
+						}
+					}
 				}
 			}
 		}
@@ -1130,6 +1195,9 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 }
 
 function drawDrawables() {
+	game.pickups.forEach(function(pickup) {
+		drawOnCanvas(pickup, drawableCtx);
+	});
 	game.drawables.forEach(function(drawable) {
 		if(drawable.weapon && !drawable.weapon.vars.hidden && !drawable.weapon.vars.foreground) {
 			drawOnCanvas(drawable.weapon, drawableCtx);
@@ -1170,6 +1238,19 @@ function updateObstacles() {
 	});
 }
 
+function updatePickups() {
+	game.pickups.forEach(function(pickup) {
+		if(pickup.movement.speed > 0) {
+			// debugger;
+			Creature.prototype.move.call(pickup, pickup.movement.direction, pickup.movement.speed);
+			if(pickup.movement.deceleration) {
+				pickup.movement.speed -= pickup.movement.deceleration;
+			}
+		}
+		pickup.animate();
+	});
+}
+
 function updateColliders() {
 	game.nearbyColliders.length = 0;
 	game.nearbyColliders.push(player);
@@ -1197,7 +1278,36 @@ function updateColliders() {
 			game.nearbyColliders.push(obstacle);
 		}
 	});
+	game.pickups.forEach(function(pickup) {
+		var offset = Creature.prototype.getGridOffsetFromPlayer.call(pickup);
+		if(offset.x <= CANVAS_WIDTH / TILE_SIZE + 3 || offset.y <= CANVAS_HEIGHT / TILE_SIZE + 3) {
+			game.nearbyColliders.push(pickup);
+		}
+	});
 	// console.log(nearbyColliders);
+}
+
+function updateInterface() {
+	if(game.displayedMessage && performance.now() > game.messageHideTime) {
+		hideMessage();
+	}
+}
+
+function displayMessage(duration, line1, line2, line3) {
+	if(line3) {
+		$('#messageSpan').html(line1 + '<br>' + line2 + '<br>' + line3);
+	} else if(line2) {
+		$('#messageSpan').html(line1 + '<br>' + line2);
+	} else if(line1) {
+		$('#messageSpan').html(line1);
+	}
+	$('#messageDiv').fadeIn('fast');
+	game.displayedMessage = true;
+	game.messageHideTime = performance.now() + duration;
+}
+
+function hideMessage() {
+	$('#messageDiv').fadeOut('slow');
 }
 
 function drawDebugCanvas() {
@@ -1260,8 +1370,10 @@ function update(delta) {
 	updateCreatures();
 	updateAttacks();
 	updateObstacles();
+	updatePickups();
 	updateProjectiles();
 	updateDrawables();
+	updateInterface();
 }
 
 //	Master game draw function
@@ -1286,6 +1398,8 @@ function startScreen() {
 	$('canvas').attr('hidden', true);
 	$('#gameMenuDiv').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
 	$('#gameMenuDiv').css('width', CANVAS_WIDTH * SCALE_FACTOR);
+	$('#messageDiv').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
+	$('#messageDiv').css('width', CANVAS_WIDTH * SCALE_FACTOR);
 }
 
 $('.startBtn').click(function() {
@@ -1324,6 +1438,7 @@ function initializeGame() {
 	game.creatures.length = 0;
 	game.attacks.length = 0;
 	game.projectiles.length = 0;
+	game.pickups.length = 0;
 	game.colliders.length = 0;
 	game.nearbyColliders.length = 0;
 	game.debugs.length = 0;
@@ -1343,7 +1458,6 @@ function initializeLevel() {
 		fillArray: [],
 		obstacles: [],
 		rooms: [],
-		obstacles: [],
 		decor: [],
 		corridors: [],
 		playerStart: {
@@ -1401,11 +1515,14 @@ function start(newGame) {
 		$('.gameMenuScreen').hide();
 		if(newGame) {
 			$('.finalScoreSpan').text('');
+			new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], player.grid.x + 1, player.grid.y + 1);
 		}
 		console.log("Starting game - level: " + level.levelNumber);
 		MainLoop.setUpdate(update).setDraw(draw).start();
 		drawMap();
-		$('canvas').fadeIn('slow');
+		$('canvas').fadeIn('slow', function() {
+			displayMessage(5000, "Gripping your trusty knife in sweaty palms,", "you enter the Baron's dungeon...")
+		});
 	});
 }
 

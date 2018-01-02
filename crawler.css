@@ -81,8 +81,22 @@ canvas {
 #scoreDiv p {
 	margin: 0;
 }
-
-
+#messageDiv {
+	position: absolute;
+	z-index: 11;
+	color: white;
+}
+#messageSpan {
+	position: absolute;
+	border-radius: 10px;
+	padding: 20px;
+	top: 20%;
+	left: 50%;
+	transform: translateX(-50%); 
+	white-space: nowrap;
+	background: rgba(0,0,0,0.5);
+	text-align: center;
+}
 
 /*	Level map */
 #mapDiv {

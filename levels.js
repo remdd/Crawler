@@ -49,8 +49,8 @@ var levelGen = {
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
 					level.playerStart = {y: this.origin.y, x: this.origin.x};
-					// new Obstacle(EnumObstacle.GRAIN_BARREL, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					this.addCreature(EnumCreature.BLUE_SQUARK);
+					// new Obstacle(EnumObstacle.MONOLITH, null, level.playerStart.y + 1, level.playerStart.x + 1);
+					// this.addCreature(EnumCreature.BLUE_SQUARK);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
@@ -739,12 +739,12 @@ levelGen.bossRooms = [
 
 
 		new Obstacle(EnumObstacle.DINING_TABLE, null, diningRoom_y + 1, diningRoom_x + 1);
-		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 0, diningRoom_x + 2, 'Facing');
-		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 1, diningRoom_x + 0, 'Right');
-		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 3, diningRoom_x + 0, 'Right');
-		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 0, 'Right');
-		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 2, diningRoom_x + 3, 'Left');
-		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 3, 'Left');
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 0, diningRoom_x + 2, 3);
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 1, diningRoom_x + 0, 1);
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 3, diningRoom_x + 0, 1);
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 0, 1);
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 2, diningRoom_x + 3, 2);
+		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 3, 2);
 
 		new Obstacle(EnumObstacle.COFFIN, room);
 
@@ -1467,16 +1467,8 @@ Room.prototype.addObstacles = function(obstacleType) {
 				this.addWellRoomObstacles();
 				this.addFloorDecor(2, [EnumDecortype.FILTH, EnumDecortype.SPLATS, EnumDecortype.PLANTS]);
 			} else if(rand < 8) {
-				//	Torture table room
-				new Obstacle(EnumObstacle.TORTURE_TABLE, this);
-				var rand2 = Math.floor(session.prng.nextFloat() * 5);
-				if(rand2 < 1) {
-					new Obstacle(EnumObstacle.BLOOD_BUCKET, this);
-				} else if(rand2 < 2) {
-					new Obstacle(EnumObstacle.BARREL, this);
-				} else if(rand2 < 3) {
-					new Obstacle(EnumObstacle.FILTH_BUCKET, this);
-				}
+				//	Table room
+				this.addTableRoomObstacles();
 				this.addFloorDecor(2);
 			} else if(rand < 9) {
 				//	Food room
@@ -1502,7 +1494,7 @@ Room.prototype.addObstacles = function(obstacleType) {
 				this.addFloorDecor(1);
 			} else if(rand < 10) {
 				//	???
-				new Obstacle(EnumObstacle.STONE_PILE, this);
+				new Obstacle(EnumObstacle.STONES, this);
 				this.addFloorDecor(1);
 			}
 			break;
@@ -1512,13 +1504,13 @@ Room.prototype.addObstacles = function(obstacleType) {
 			if(rand < 5) {
 				//	Empty room
 				this.addFloorDecor(2);
-			} else if(rand < 8) {
+			} else if(rand < 7) {
 				//	Storeroom
 				this.addStoreRoomObstacles();
 				this.addFloorDecor(1);
 			} else if(rand < 10) {
 				//	Torture room
-				new Obstacle(EnumObstacle.TORTURE_TABLE, this);
+				this.addTableRoomObstacles();
 				this.addFloorDecor(2, [EnumDecortype.SPLATS]);
 			}
 			break;
@@ -1549,7 +1541,10 @@ Room.prototype.addStoreRoomObstacles = function(num) {
 		EnumObstacle.TIPPED_BARREL,
 		EnumObstacle.SPLIT_SACK,
 		EnumObstacle.WATER_BUTT,
-		EnumObstacle.GRAIN_BARREL
+		EnumObstacle.GRAIN_BARREL,
+		EnumObstacle.WIDE_SHELVES,
+		EnumObstacle.NARROW_SHELVES,
+		EnumObstacle.RUBBLE
 	];
 	for(var i = 0; i < num; i++) {
 		var rand = Math.floor(session.prng.nextFloat() * storeRoomObstacles.length);
@@ -1562,7 +1557,10 @@ Room.prototype.addWellRoomObstacles = function() {
 		EnumObstacle.STOOL,
 		EnumObstacle.BUCKET,
 		EnumObstacle.WATER_BUTT,
-		EnumObstacle.BARREL
+		EnumObstacle.BARREL,
+		EnumObstacle.WOODEN_BENCH,
+		EnumObstacle.STONES,
+		EnumObstacle.RUBBLE
 	]
 	var rand2 = Math.floor(session.prng.nextFloat() * 5);
 	for(var i = 0; i < rand2; i++) {
@@ -1570,6 +1568,63 @@ Room.prototype.addWellRoomObstacles = function() {
 		new Obstacle(wellRoomObstacles[rand3], this);
 	}
 }
+Room.prototype.addTableRoomObstacles = function() {
+	var rand = Math.floor(session.prng.nextFloat() * 3);
+	if(rand < 1) {
+		new Obstacle(EnumObstacle.TORTURE_TABLE, this);
+		var rand2 = Math.floor(session.prng.nextFloat() * 5);
+		if(rand2 < 1) {
+			new Obstacle(EnumObstacle.BLOOD_BUCKET, this);
+		} else if(rand2 < 2) {
+			this.addStoreRoomObstacles(1);
+		} else if(rand2 < 3) {
+			new Obstacle(EnumObstacle.FILTH_BUCKET, this);
+		}
+		var rand3 = Math.floor(session.prng.nextFloat() * 3);
+		if(rand3 < 1) {
+			new Obstacle(EnumObstacle.SKULL_SPIKE, this);
+		}
+	} else if(rand < 2) {
+		new Obstacle(EnumObstacle.MUG_TABLE, this);
+		var rand2 = Math.floor(session.prng.nextFloat() * 10);
+		if(rand2 < 1) {
+			this.addStoreRoomObstacles(1);
+		} else if(rand2 < 2) {
+			this.addStoreRoomObstacles(2);
+		} else if(rand2 < 3) {
+			new Obstacle(EnumObstacle.FILTH_BUCKET, this);
+		} else if(rand2 < 4) {
+			new Obstacle(EnumObstacle.WOODEN_CHAIR, this);
+		} else if(rand2 < 5) {
+			new Obstacle(EnumObstacle.WOODEN_CHAIR, this);
+			new Obstacle(EnumObstacle.WOODEN_CHAIR, this);
+		} else if(rand2 < 6) {
+			new Obstacle(EnumObstacle.WOODEN_BENCH, this);
+		} else if(rand2 < 7) {
+			new Obstacle(EnumObstacle.WOODEN_BENCH, this);
+			new Obstacle(EnumObstacle.WOODEN_BENCH, this);
+		}
+		var rand3 = Math.floor(session.prng.nextFloat() * 3);
+		if(rand3 < 1) {
+			new Obstacle(EnumObstacle.FLAG_SPIKE, this);
+		}
+	} else {
+		new Obstacle(EnumObstacle.SWORD_TABLE, this);
+		var rand2 = Math.floor(session.prng.nextFloat() * 5);
+		if(rand2 < 1) {
+			this.addStoreRoomObstacles(1);
+		} else if(rand2 < 2) {
+			this.addStoreRoomObstacles(2);
+		} else if(rand2 < 3) {
+			new Obstacle(EnumObstacle.BLOOD_BUCKET, this);
+		}
+		var rand3 = Math.floor(session.prng.nextFloat() * 3);
+		if(rand3 < 1) {
+			new Obstacle(EnumObstacle.FLAG_SPIKE, this);
+		}
+	}
+}
+
 Room.prototype.addCreature = function(creature) {
 	var tries;
 	if(creature === level.boss) {

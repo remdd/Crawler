@@ -87,6 +87,11 @@ var EnumCreatureProjectile = {
 	SQUARK_KNIFE: 2
 }
 
+var EnumPickup = {
+	HEALTH_HEART: 1,
+	EXIT_KEY: 2
+}
+
 var	EnumLodetype = {
 	IRON: 1,
 	BONE: 2,
@@ -100,7 +105,8 @@ var EnumBoxtype = {
 	CREATURE: 1,
 	PROJECTILE: 2,
 	OBSTACLE: 3,
-	ITEM: 4
+	ITEM: 4,
+	PICKUP: 5
 }
 
 var EnumRoomtype = {
@@ -126,8 +132,8 @@ var EnumObstacle = {
 	BARREL: 2,
 	BARREL_2: 3,
 	DINING_TABLE: 4,
-	DINING_CHAIR_R: 5,
-	DINING_CHAIR_L: 6,
+	DINING_CHAIR: 5,
+	DINING_CHAIR: 6,
 	BUCKET: 7,
 	WELL: 8,
 	COFFIN: 9,
@@ -138,7 +144,7 @@ var EnumObstacle = {
 	BLOOD_BUCKET: 14,
 	ZOMBI_MASTER_DESK: 15,
 	ZOMBI_HEAD: 16,
-	STONE_PILE: 17,
+	STONES: 17,
 	SPIT: 18,
 	FILTH_BUCKET: 19,
 	BARRELSx3: 20,
@@ -148,7 +154,18 @@ var EnumObstacle = {
 	TIPPED_BARREL: 24,
 	SPLIT_SACK: 25,
 	WATER_BUTT: 26,
-	GRAIN_BARREL:27
+	GRAIN_BARREL:27,
+	BENCH: 28,
+	WOODEN_CHAIR: 29,
+	WOODEN_BENCH: 30,
+	MUG_TABLE: 31,
+	SWORD_TABLE: 32,
+	WIDE_SHELVES: 33,
+	NARROW_SHELVES: 34,
+	RUBBLE: 35,
+	SKULL_SPIKE: 36,
+	FLAG_SPIKE: 37,
+	MONOLITH: 38
 }
 
 var EnumDecortype = {
