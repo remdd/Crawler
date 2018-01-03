@@ -206,9 +206,9 @@ var creatureTemplates = [
 			skeltonNoises.play('death1');
 			this.kill();
 		},
-		deathDrop: function() {
-			console.log("Skelton death drop");
-		},
+		// deathDrop: function() {
+		// 	console.log("Skelton death drop");
+		// },
 		addWeapon: function() {
 			var rand = Math.floor(session.prng.nextFloat() * 4);
 			if(rand < 1) {
@@ -581,7 +581,11 @@ var creatureTemplates = [
 				{ x: 20, y: 16 },	//	Bezerk facing R 1
 				{ x: 22, y: 16 },	//	Bezerk facing R 2
 				{ x: 20, y: 18 },	//	Bezerk facing L 1
-				{ x: 22, y: 18 }	//	Bezerk facing L 2
+				{ x: 22, y: 18 },	//	Bezerk facing L 2
+				{ x: 24, y: 16 },	//	Exhausted facing R 1
+				{ x: 26, y: 16 },	//	Exhausted facing R 2
+				{ x: 24, y: 18 },	//	Exhausted facing L 1
+				{ x: 26, y: 18 }	//	Exhausted facing L 2
 			],
 			animations: [
 				[ 1000, [600, 800], [ 0, 1] ],									//	Resting, facing R
@@ -590,8 +594,10 @@ var creatureTemplates = [
 				[ 1000, [200, 400, 600, 800, 1000], [ 12,13,14,10,15 ] ],		//	Moving, facing L
 				[ 2000, [600, 1100, 1500, 2000], [6, 7, 8, 9 ] ],				//	Death, facing R
 				[ 2000, [600, 1100, 1500, 2000], [16,17,18,19] ],				//	Death, facing L
-				[ 200, [100, 200], [20, 21] ],							//	Bezerk, facing R
-				[ 200, [100, 200], [22, 23] ],							//	Bezerk, facing L
+				[ 200, [100, 200], [20, 21] ],									//	Bezerk, facing R
+				[ 200, [100, 200], [22, 23] ],									//	Bezerk, facing L
+				[ 700, [500, 700], [ 24, 25] ],									//	Exhausted, facing R
+				[ 700, [500, 700], [ 26, 27] ],									//	Exhausted, facing L
 			]
 		},
 		box: {
@@ -1146,5 +1152,91 @@ var creatureTemplates = [
 		deathResponse: function() {
 			this.kill();
 		}
+	},
+	{
+		name: 'Urk Veteran',
+		currentSprite: { x: 8, y: 12},
+		vars: {
+			speed: 0.5,
+			maxHP: 6,
+			currentHP: 6,
+			restingWeaponAnimation: true,
+			attackRate: 0.5,
+			score: 100
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 8, y: 12 },	//	Resting facing R 1
+				{ x: 9, y: 12 },	//	Resting facing R 2
+				{ x: 10, y: 12 },	//	Moving facing R 1
+				{ x: 11, y: 12 },	//	Moving facing R 2
+				{ x: 12, y: 12 },	//	Moving facing R 3
+				{ x: 13, y: 12 },	//	Death facing R 1
+				{ x: 14, y: 12 },	//	Death facing R 2
+				{ x: 15, y: 12 },	//	Death facing R 3
+				{ x: 8, y: 13 },	//	Resting facing L 1
+				{ x: 9, y: 13 },	//	Resting facing L 2
+				{ x: 10, y: 13 },	//	Moving facing L 1
+				{ x: 11, y: 13 },	//	Moving facing L 2
+				{ x: 12, y: 13 },	//	Moving facing L 3
+				{ x: 13, y: 13 },	//	Death facing L 1
+				{ x: 14, y: 13 },	//	Death facing L 2
+				{ x: 15, y: 13 }	//	Death facing L 3
+			],
+			animations: [
+				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
+				[ 800, [500, 800], [ 8, 9] ],											//	Resting, facing L
+				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [ 10,11,12,9 ] ],							//	Moving, facing L
+				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
+				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 12, 
+			height: 15,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.URK_VETERAN,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				var rand = Math.floor(Math.random() * 3);
+				if(rand < 1) {
+					urkGrunts.play('grunt5');
+				} else if(rand < 2) {
+					urkGrunts.play('grunt6');
+				} else {
+					urkGrunts.play('grunt7');
+				}
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			var rand = Math.floor(Math.random() * 2);
+			if(rand < 1) {
+				urkGrunts.play('death1');
+			} else {
+				urkGrunts.play('death2');
+			}
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.URK_SWORD;
+		}	
 	}
 ];

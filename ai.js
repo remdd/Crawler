@@ -449,6 +449,80 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.URK_VETERAN: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						//	Next action not specified
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 2 && creature.hasClearPathToPlayer()) {						//	If player is within 3x attack reach...
+							var action = Math.floor(Math.random() * 2);
+							var direction = getPlayerDirection(creature);
+							if(action < 1) {
+								ai.moveTowardsPlayer(creature, 100, 100, 3);
+								creature.ai.nextAction = 3;
+							} else {
+								ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);	//	...attack in player's general direction...
+								var rand = Math.floor(Math.random() * 2);
+								if(rand < 1) {
+									creature.ai.nextAction = 0;
+								} else {
+									creature.ai.nextAction = 1;
+								}
+							}
+						} else if(getPlayerDistance(creature) < creature.weapon.attack.reach * 5 && creature.hasClearPathToPlayer()) {
+							var rand = Math.floor(Math.random() * 2);
+							var direction;
+							if(rand < 1) {
+								direction = getPlayerDirection(creature) + Math.PI / 4;
+							} else {
+								direction = getPlayerDirection(creature) - Math.PI / 4;
+							}
+							ai.moveInDirection(creature, 250, 250, 1.5, direction);
+						} else {
+							var action = Math.floor(Math.random() * 4);												//	Otherwise, randomly choose to...
+							if(action < 2) {
+								ai.rest(creature, 500, 250);														//	...rest...
+							} else if(action < 3) {
+								ai.moveTowardsPlayer(creature, 250, 250, 1);
+							} else {
+								ai.moveRandomVector(creature, 1500, 100, 1);										//	...or move in a random direction.
+							}
+							creature.ai.nextAction = 0;
+						}
+						break;
+					}
+					case 1: {
+						ai.rest(creature, 500, 250);																//	...rest for 250 - 750ms
+						var rand = Math.floor(Math.random() * 10);
+						if(rand < 1) {
+							urkGrunts.play('grunt3');
+						} else if(rand < 2) {
+							urkGrunts.play('grunt4');
+						}
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 2: {
+						ai.moveAwayFromPlayer(creature, 250, 250, 1.5);												//	...move away from player for 250-500ms, at 1.5x speed
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						var direction = getPlayerDirection(creature);
+						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
+						if(rand < 1) {
+							creature.ai.nextAction = 0;
+						} else {
+							creature.ai.nextAction = 1;
+						}
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
 			case EnumAi.HULKING_URK: {
 				switch(creature.ai.nextAction) {
 					case 0: {
@@ -512,8 +586,7 @@ setAiAction = function(creature) {
 							ai.moveTowardsPlayer(creature, 0, 200, 3);
 							creature.ai.nextAction = 6;
 						} else {
-							ai.rest(creature, 1000, 1000, 1);
-							creature.ai.nextAction = 0;
+							creature.ai.nextAction = 7;
 						}
 						break;
 					}
@@ -522,6 +595,16 @@ setAiAction = function(creature) {
 						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
 						creature.vars.bezerkAttacks--;
 						creature.ai.nextAction = 5;
+						break;
+					}
+					case 7: {																//	Exhausted...
+						if(creature.vars.facingRight) {
+							animation = 8;
+						} else {
+							animation = 9;
+						}
+						ai.rest(creature, 3000, 3000, animation);
+						creature.ai.nextAction = 0;
 						break;
 					}
 					default: {
@@ -866,6 +949,9 @@ var ai = {
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
 		creature.movement.speed = creature.vars.speed * speed_multiplier;
+		if(!accuracy) {
+			accuracy = 1;
+		}
 		direction += Math.random() * accuracy;
 		direction -= Math.random() * accuracy;
 		creature.movement.direction = direction;

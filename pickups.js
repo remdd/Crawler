@@ -38,6 +38,7 @@ var pickupTemplates = [
 				player.addHealth(1);
 				$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
 				game.pickups.splice(game.pickups.indexOf(this), 1);
+				return true;
 			}
 		}
 	},
@@ -76,6 +77,173 @@ var pickupTemplates = [
 			console.log("Picking up exit key!");
 			player.addItem(this);
 			game.pickups.splice(game.pickups.indexOf(this), 1);
+			return true;
+		}
+	},
+	{
+		name: 'Purple Mushroom',
+		type: EnumPickup.PURPLE_MUSHROOM,
+		currentSprite: {x:4,y:4},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 4, y: 4 },
+				{ x: 4.5, y: 4 },		
+				{ x: 4, y: 4.5 },
+				{ x: 4.5, y: 4.5 }		
+			],
+			animations: [
+				[ 3000, [2700, 2800, 2900, 3000], [0, 1, 2, 3] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		movement: {
+			moving: true,
+			direction: 0,
+			speed: 0,
+			deceleration: 0.01,
+			bounceOff: true
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				player.effects.push(new Effect(EnumPickup.PURPLE_MUSHROOM));
+				console.log(this);
+				game.pickups.splice(game.pickups.indexOf(this), 1);
+			}
+			this.vars.collected = true;
+			return true;
 		}
 	}
 ];
+
+var count = 0;
+
+
+function Effect(type) {
+	this.applied = false;
+	count++;
+	switch(type) {
+		case EnumPickup.PURPLE_MUSHROOM: {
+			this.color = EnumColor.PURPLE;
+			var rand = Math.floor(Math.random() * 6);
+			console.log("rand: " + rand);
+			switch(rand) {
+				case 0: {
+					this.name = "Reduced speed";
+					this.message1 = "The mushroom doesn't taste great.";
+					this.message2 = "You feel woozy...";
+					this.message3 = "";
+					this.apply = function() {
+						player.vars.speed = player.vars.speed * 0.6;
+					};
+					this.remove = function() {
+						player.vars.speed = player.vars.speed / 0.6;
+					}
+					break;
+				}
+				case 1: {
+					this.name = "Increased attack rate";
+					this.message1 = "The mushroom has an odd, nutty flavour.";
+					this.message2 = "You feel sharp and alert.";
+					this.message3 = "";
+					this.apply = function() {
+						player.vars.speed = player.vars.speed * 1.05;
+						player.vars.attackRate = player.vars.attackRate * 0.8;
+					};
+					this.remove = function() {
+						player.vars.speed = player.vars.speed / 1.05;
+						player.vars.attackRate = player.vars.attackRate / 0.8;
+					}
+					break;
+				}
+				case 2: {		
+					this.name = "Increased speed";
+					this.message1 = "The mushroom tastes slightly lemony.";
+					this.message2 = "You feel like it has given you an energy boost.";
+					this.message3 = "";
+					this.apply = function() {
+						player.vars.speed = player.vars.speed * 1.1;
+					};
+					this.remove = function() {
+						player.vars.speed = player.vars.speed / 1.1;
+					}
+					break;
+				}
+				case 3: {
+					this.name = "Disorientation";
+					this.message1 = "The mushroom tastes foul and acidic.";
+					this.message2 = "You feel utterly disoriented!";
+					this.message3 = "";
+					this.duration = Math.random() * 5000 + 5000;
+					this.apply = function() {
+						player.vars.speed = -player.vars.speed * 0.7;
+					};
+					this.remove = function() {
+						player.vars.speed = -player.vars.speed / 0.7;
+					}
+					break;
+				}
+				case 4: {		
+					this.name = "No effect";
+					this.message1 = "The mushroom tastes pretty horrible.";
+					this.message2 = "Maybe eating random dungeon fungus isn't a smart move...";
+					this.message3 = "";
+					this.apply = function() {
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 5: {
+					this.name = "Increase max HP";
+					this.message1 = "That was surprisingly tasty!";
+					this.message2 = "A most benevolent mushroom...";
+					this.message3 = "";
+					this.duration = 1000;
+					this.apply = function() {
+						player.vars.maxHP++;
+						$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 6: {
+					this.name = "Clear effects";
+					this.message1 = "Wow, that tasted bland.";
+					this.message2 = "...";
+					this.message3 = "";
+					this.duration = 1000;
+					this.apply = function() {
+						player.effects.forEach(function(effect) {
+							effect.endTime = performance.now() + 1;
+						});
+					};
+					this.remove = function() {
+					}
+					break;				
+				}
+				default: {
+					break;
+				}
+			}
+		}
+		break;
+		default: {
+			break;
+		}
+	}
+	displayMessage(3000, this.message1, this.message2, this.message3);
+	if(!this.duration) {
+		this.duration = Math.random() * 50000 + 10000;
+	}
+}

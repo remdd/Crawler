@@ -164,6 +164,7 @@ function setUpPlayer() {
 	player.weapon.reset();
 	player.updateGear();
 	player.items = [];
+	player.effects = [];
 	$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
 	player.addItem = function(item) {
 		player.items.push(item);
@@ -485,14 +486,16 @@ function Creature(creatureTemplate) {
 		this.deathDrop = creatureTemplate.deathDrop;
 	} else {
 		this.deathDrop = function() {
+			console.log("Dropping!");
 			var rand = Math.floor(Math.random() * session.vars.healthDropFrequency);
 			if(rand < 1) {
-				var exitKey = new Pickup(pickupTemplates[EnumPickup.EXIT_KEY], this.grid.x, this.grid.y);
+				var exitKey = new Pickup(pickupTemplates[EnumPickup.PURPLE_MUSHROOM], this.grid.x, this.grid.y);
 				exitKey.position.x = this.position.x;
 				exitKey.position.y = this.position.y + 2;
 				exitKey.movement.speed = 1;
 				exitKey.movement.direction = getPlayerDirection(this) + Math.PI;
 			}
+			console.log(exitKey);
 			// if(rand < 1) {
 			// 	var heart = new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], this.grid.x, this.grid.y);
 			// 	heart.position.x = this.position.x;
@@ -570,12 +573,12 @@ Creature.prototype.setFacing = function(direction) {
 }
 Creature.prototype.kill = function() {
 	if(!this.vars.dead) {
-		addScore(this.vars.score);
 		this.vars.dead = true;
+		addScore(this.vars.score);
 		if(this.weapon) {
 			delete this.weapon;															//	Delete creature's weapon property
 		}
-		game.colliders.splice(game.colliders.indexOf(this), 1);									//	Remove from the colliders array.
+		game.colliders.splice(game.colliders.indexOf(this), 1);							//	Remove from the colliders array.
 		this.ai.nextAction = -1;														//	Prevent further AI actions
 		this.movement.speed = 0;														//	Zero speed
 		this.movement.moving = false;													//	Stop moving
@@ -873,11 +876,6 @@ function updateDrawables() {
 			game.drawables.push(obstacle);
 		}
 	});
-	game.pickups.forEach(function(pickup) {
-		if(pickup.movement.speed > 0) {
-
-		}
-	});
 	game.drawables.sort(function(a, b) {
 		return a.position.y-b.position.y;
 	});
@@ -925,6 +923,30 @@ function updatePlayer() {
 			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
 			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
 		}
+	}
+
+	if(player.effects.length > 0) {
+		//	If player is not colored to match last effect in array, color the player accordingly 
+		if(player.vars.color !== player.effects[player.effects.length-1].color) {
+			colorPlayer(player.effects[player.effects.length-1].color);
+		}
+		//	Iterate effects and remove if endTime has passed, or apply if not yet applied
+		for(var i = player.effects.length-1; i >= 0; i--) {
+			if(performance.now() > player.effects[i].endTime) {
+				player.effects[i].remove();
+				player.effects.splice(i, 1);
+			} else if(!player.effects[i].applied) {
+				player.effects[i].applied = true;
+				player.effects[i].endTime = performance.now() + player.effects[i].duration;
+				player.effects[i].apply();
+				console.log(player.effects[i].name);
+			}
+		}
+		console.log(player.effects);
+		console.log(count);
+	} else if(player.vars.color !== EnumColor.NORMAL) {
+		//	If effect array is empty, color the player normally
+		colorPlayer(EnumColor.NORMAL);
 	}
 
 	player.animate();
@@ -988,7 +1010,6 @@ function updateCreatures() {
 
 function addScore(score) {
 	session.score += score;
-	console.log(session.score);
 	$('.scoreSpan').text('Score: ' + session.score);
 }
 
@@ -1131,6 +1152,11 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			if(game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
 				return returnCoords;
 			}
+			//	Creature colliders ignore pickups
+			if((game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE && obj.box.type === EnumBoxtype.PICKUP) ||
+			   (game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP && obj.box.type === EnumBoxtype.CREATURE)) {
+				return returnCoords;
+			}
 			if(obj.box.type === EnumBoxtype.PROJECTILE) {
 				var newTop = returnCoords.y - (obj.box.height / 2);
 				var newBtm = returnCoords.y + (obj.box.height / 2);
@@ -1170,13 +1196,8 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 					player.inflictDamage(obj.touchDamage());
 				}
 				//	If player comes into contact with a pickup, execute its pickup function
-				if(game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP || obj.box.type === EnumBoxtype.PICKUP) {
-					if(obj === player) {
-						game.nearbyColliders[i].pickup();
-					} else if(obj.box.type === EnumBoxtype.CREATURE || game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE) {
-						console.log("sdfasdf")
-						return returnCoords;
-					}
+				if(obj === player && game.nearbyColliders[i].pickup) {
+					game.nearbyColliders[i].pickup();
 				} else {
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
@@ -1241,7 +1262,6 @@ function updateObstacles() {
 function updatePickups() {
 	game.pickups.forEach(function(pickup) {
 		if(pickup.movement.speed > 0) {
-			// debugger;
 			Creature.prototype.move.call(pickup, pickup.movement.direction, pickup.movement.speed);
 			if(pickup.movement.deceleration) {
 				pickup.movement.speed -= pickup.movement.deceleration;
@@ -1410,6 +1430,7 @@ $('.startBtn').click(function() {
 });
 
 function endLevel() {
+	$('#messageDiv').fadeOut('fast');
 	$.when($('canvas').fadeOut('slow')).then(function() {
 		$('#completedLevelSpan').text(session.levelNumber + 1);
 		$('#nextLevelSpan').text(session.levelNumber + 2);
@@ -1521,7 +1542,9 @@ function start(newGame) {
 		MainLoop.setUpdate(update).setDraw(draw).start();
 		drawMap();
 		$('canvas').fadeIn('slow', function() {
-			displayMessage(5000, "Gripping your trusty knife in sweaty palms,", "you enter the Baron's dungeon...")
+			if(newGame) {
+				displayMessage(3000, "Clutching your trusty knife in your sweaty palms,", "you enter the Baron's dungeon...")
+			}
 		});
 	});
 }

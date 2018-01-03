@@ -19,6 +19,11 @@ var EnumState = {
 	MOVING_HITFLASH_L: 7 
 }
 
+var EnumColor = {
+	NORMAL: 0,
+	PURPLE: 1
+}
+
 var EnumAttack = { 
 	SWIPE: 0,
 	STAB: 1,
@@ -41,6 +46,7 @@ var EnumCreature = {
 	ZOMBI: 13,
 	ZOMBI_MASTER: 14,
 	AIR_ELEMENTAL: 15,
+	URK_VETERAN: 16,
 
 	BOSS_CAMP_VAMP: 105,
 	BOSS_URK_SHAMAN: 107,
@@ -65,7 +71,8 @@ var EnumAi = {
 	ZOMBI: 12,
 	ZOMBI_MASTER: 13,
 	KOB: 14,
-	BLUE_SQUARK: 15
+	BLUE_SQUARK: 15,
+	URK_VETERAN: 16
 }
 
 var EnumCreatureWeapon = {
@@ -89,7 +96,8 @@ var EnumCreatureProjectile = {
 
 var EnumPickup = {
 	HEALTH_HEART: 1,
-	EXIT_KEY: 2
+	EXIT_KEY: 2,
+	PURPLE_MUSHROOM: 3
 }
 
 var	EnumLodetype = {

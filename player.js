@@ -5,7 +5,7 @@ var playerTemplates = [
 		vars: {
 			speed: 1.2,
 			maxHP: 5,
-			currentHP: 5,
+			currentHP: 50,
 			restingWeaponAnimation: true,
 			attackRate: 1,
 			moving: false
@@ -92,3 +92,36 @@ var playerTemplates = [
 		}
 	}
 ];
+
+function colorPlayer(color) {
+	player.vars.color = color;
+	switch(color) {
+		case EnumColor.NORMAL: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 6; j++) {
+					player.sprite.frames[j+i*6].x = j;
+					player.sprite.frames[j+i*6].y = i;
+				}
+			}
+			break;
+		}
+		case EnumColor.PURPLE: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 6; j++) {
+					player.sprite.frames[j+i*6].x = j+10;
+					player.sprite.frames[j+i*6].y = i;
+				}
+			}
+			break;
+		}
+		default: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 6; j++) {
+					player.sprite.frames[j+i*6].x = j;
+					player.sprite.frames[j+i*6].y = i;
+				}
+			}
+			break;
+		}
+	}
+} 

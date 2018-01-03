@@ -50,13 +50,15 @@ var levelGen = {
 					console.log("Adding start room contents");
 					level.playerStart = {y: this.origin.y, x: this.origin.x};
 					// new Obstacle(EnumObstacle.MONOLITH, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					// this.addCreature(EnumCreature.BLUE_SQUARK);
+					this.addCreature(EnumCreature.URK_VETERAN);
+					this.addCreature(EnumCreature.HULKING_URK);
+					// this.addCreature(EnumCreature.GREEN_GOBLIN);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
 					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
 					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
-					levelGen.bossRooms[0](this);
+					levelGen.bossRooms[1](this);
 				};
 				level.exitRoomContents = function() {
 					new Obstacle(EnumObstacle.EXIT_STAIRS, null, this.origin.y + 1, this.origin.x + 1);
@@ -311,9 +313,7 @@ var levelGen = {
 		var exitSizeX = 8 - startRand; 
 		var exitSizeY = 4 + startRand;
 		var startPosX, startPosY, bossPosX, bossPosY, exitPosX, exitPosY;
-		// debugger;
 		var startCorner = Math.floor(session.prng.nextFloat() * 4);
-		var startCorner = 1;
 		var rand = Math.floor(session.prng.nextFloat() * 2);
 		switch(startCorner) {
 			case 0: {
@@ -358,7 +358,7 @@ var levelGen = {
 				}
 				break;
 			}
-			case 4: {
+			case 3: {
 				startPosY = Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3 +2);
 				startPosX = level.terrainArray[0].length - (Math.floor(session.prng.nextFloat() * level.terrainArray[0].length * 0.3)) - startSizeX -2;
 				bossPosY = level.terrainArray.length - (Math.floor(session.prng.nextFloat() * level.terrainArray.length * 0.3)) - bossSizeY -2;
