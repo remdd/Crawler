@@ -4,7 +4,7 @@ var playerTemplates = [
 		currentSprite: { x: 0, y: 0 },
 		vars: {
 			speed: 1.2,
-			maxHP: 5,
+			maxHP: 50,
 			currentHP: 50,
 			restingWeaponAnimation: true,
 			attackRate: 1,

@@ -44,8 +44,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.GREEN_GOBLIN,
@@ -177,8 +176,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.SKELTON,
@@ -348,8 +346,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.CAMP_VAMP,
@@ -422,8 +419,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.URK,
@@ -508,8 +504,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.URK,
@@ -687,8 +682,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.KOB,
@@ -760,8 +754,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.MUMI,
@@ -833,8 +826,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.SNEAKY_SKELTON,
@@ -906,8 +898,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.BLUE_SQUARK,
@@ -985,8 +976,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.ZOMBI,
@@ -1077,8 +1067,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.ZOMBI_MASTER,
@@ -1138,8 +1127,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.MINI_GHOST,
@@ -1206,8 +1194,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.URK_VETERAN,
@@ -1294,8 +1281,7 @@ var creatureTemplates = [
 		movement: {
 			moving: false,
 			direction: 0,
-			speed: 0,
-			bounceOff: true
+			speed: 0
 		},
 		ai: {
 			type: EnumAi.URK_SHAMAN,

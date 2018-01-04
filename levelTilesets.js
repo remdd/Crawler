@@ -66,8 +66,8 @@ var levelTilesets = [
 			[{y:5,x:3}],									//	Bottom-right
 			[{y:3,x:1}, {y:3,x:2}],							//	Top
 			[{y:5,x:1}, {y:5,x:2}],							//	Bottom
-			[{y:4,x:0}],									//	Left
-			[{y:4,x:3}]										//	Right
+			[{y:4,x:0}, {y:8,x:3}],							//	Left
+			[{y:4,x:3}, {y:9,x:3}]							//	Right
 		],
 		mudPool: [
 			[{y:5,x:14}, {y:8,x:14}, {y:8,x:15}],		//	Centre
@@ -109,7 +109,7 @@ var levelTilesets = [
 			{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}, {y:4,x:7}, {y:4,x:8}, {y:4,x:9}, {y:4,x:10}
 		],
 		squareTileFloor: [
-			{y:9,x:10}
+			{y:10,x:11}, {y:11,x:11}, {y:12,x:11}
 		],
 		pavedFloor: [
 			{y:9,x:12}, {y:9,x:13}, {y:9,x:14}
@@ -118,10 +118,10 @@ var levelTilesets = [
 			{y:9,x:15}
 		],
 		tiledFloor: [
-			{y:9,x:8}, {y:1,x:10}, {y:9,x:9}
+			{y:10,x:9}, {y:11,x:9}, {y:12,x:9}, {y:1,x:10}, {y:9,x:9}
 		],
 		parquetFloor: [
-			{y:9,x:11}
+			{y:10,x:10}, {y:11,x:10}, {y:12,x:10}
 		] 
 	}
 ];

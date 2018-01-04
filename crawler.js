@@ -427,6 +427,8 @@ function Projectile(projectileTemplate, shooter, direction) {
 	this.movement = {};
 	Object.assign(this.movement, projectileTemplate.movement);
 	this.movement.direction = direction;
+	this.grid.x = shooter.grid.x;
+	this.grid.y = shooter.grid.y;
 	game.projectiles.push(this);
 }
 
@@ -451,8 +453,8 @@ function updateProjectiles() {
 			if(projectile.collidedWith && !projectile.deleteTime) {
 				projectile.deleteTime = performance.now() + projectile.vars.displayTime;
 			}
-			//	If the projectile is sticky and is not yet stuck to something and has collided with something other than terrain, add it to the object's 'stuckProjectiles' array
-			if(projectile.vars.sticky && !projectile.stuckTo && projectile.collidedWith && projectile.collidedWith !== 1) {
+			//	If the projectile has not missed, is sticky and is not yet stuck to something and has collided with something other than terrain, add it to the object's 'stuckProjectiles' array
+			if(!projectile.missed && projectile.vars.sticky && !projectile.stuckTo && projectile.collidedWith && projectile.collidedWith !== 1) {
 				if(projectile.collidedWith.stuckProjectiles === undefined) {
 					projectile.collidedWith.stuckProjectiles = [];
 				}
@@ -532,6 +534,7 @@ function Creature(creatureTemplate) {
 	this.ai.nextAction = 0;		
 	this.movement = {};
 	Object.assign(this.movement, creatureTemplate.movement);	//	Copy movement object for this creature template
+	this.movement.bounceRandom = true;
 	if(creatureTemplate.addWeapon) {
 		var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
 		this.weapon = weapon;
@@ -1145,8 +1148,8 @@ function checkTerrainCollision(obj, tryX, tryY) {
 		if(tryY > obj.position.y) {																						//	Else if obj is trying to move down...
 			if(obj.box.type === EnumBoxtype.PROJECTILE) {																//	...and is a projectile...
 				tryTerY = Math.floor(tryY / TILE_SIZE);																	//	...set tryTerY.
-				if(tryTerY === obj.vars.startY) {																		//	If tryTerY is on same grid row as start,
-					okY = true;																							//	allow movement
+				if(level.terrainArray[tryTerY][obj.grid.x] === 1 && level.terrainArray[tryTerY+1][obj.grid.x] === 0) {
+					okY = true;
 				} else {
 					tryTerY = Math.floor(((tryY + TILE_SIZE / 2) / TILE_SIZE) - 8/16);									//	...else set tryTerY to be 1/2 row below...
 				}
@@ -1183,12 +1186,25 @@ function checkTerrainCollision(obj, tryX, tryY) {
 	if(level.terrainArray[tryTerY][tryTerRX] === undefined || level.terrainArray[tryTerY][tryTerRX] !== 0 || 			//	If terrain does not exist or is impassable on the right...
 	level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0) {				//	...or on the left...
 		returnCoords.x = obj.position.x;																				//	...set x to return unchanged
-		returnCoords.collidedWith = 1;
-		if(obj.movement.bounceOff) {																					//	...and if obj bounces off...
-			obj.movement.direction += Math.PI;																			//	...and invert direction.
-			if(obj.setFacing) {
-				obj.setFacing(obj.movement.direction);
+		if(!okY) {
+			returnCoords.collidedWith = 1;
+		}
+		if(obj.movement.bounceOff) {
+			obj.movement.direction = obj.movement.direction + Math.PI;
+		} else if(obj.movement.bounceRandom) {
+			var rand = Math.floor(Math.random() * 4);
+			if(rand < 1) {
+				obj.movement.direction = 0;
+			} else if(rand < 2) {
+				obj.movement.direction = Math.PI / 2;
+			} else if(rand < 3) {
+				obj.movement.direction = Math.PI;
+			} else {
+				obj.movement.direction = 3 * Math.PI / 2;
 			}
+		}
+		if(obj.setFacing) {
+			obj.setFacing(obj.movement.direction);
 		}
 	} else {
 		returnCoords.x = tryX;																							//	Otherwise, success - return tryX coord
@@ -1212,6 +1228,8 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE ||
 			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
 			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
+			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
+			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.PROJECTILE ||
 			game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].vars.dead
 		) {
 			pass = true;
@@ -1261,14 +1279,25 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 				if(obj === player && game.nearbyColliders[i].pickup) {
 					game.nearbyColliders[i].pickup();
 				} else {
+					returnCoords.collidedWith = game.nearbyColliders[i];
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
-					returnCoords.collidedWith = game.nearbyColliders[i];
 					if(obj.movement.bounceOff) {
 						obj.movement.direction = obj.movement.direction + Math.PI;
-						if(obj.setFacing) {
-							obj.setFacing(obj.movement.direction);
+					} else if(obj.movement.bounceRandom) {
+						var rand = Math.floor(Math.random() * 4);
+						if(rand < 1) {
+							obj.movement.direction = 0;
+						} else if(rand < 2) {
+							obj.movement.direction = Math.PI / 2;
+						} else if(rand < 3) {
+							obj.movement.direction = Math.PI;
+						} else {
+							obj.movement.direction = 3 * Math.PI / 2;
 						}
+					}
+					if(obj.setFacing) {
+						obj.setFacing(obj.movement.direction);
 					}
 				}
 			}

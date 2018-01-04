@@ -49,12 +49,14 @@ var levelGen = {
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
 					// level.playerStart = {y: this.origin.y, x: this.origin.x};
-					// new Obstacle(EnumObstacle.MONOLITH, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					// this.addCreature(EnumCreature.URK_SHAMAN);
+					this.addCreature(EnumCreature.HULKING_URK);
+					// this.addCreature(EnumCreature.SKELTON);
+					// this.addCreature(EnumCreature.SKELTON);
+					// new Obstacle(EnumObstacle.BARRELSx3, null, level.playerStart.y + 1, level.playerStart.x + 1);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
-					level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
+					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
 					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
 					levelGen.bossRooms[rand](this);
 				};
@@ -310,8 +312,8 @@ var levelGen = {
 
 	setupEssentialRooms: function() {
 		var startRand = Math.floor(session.prng.nextFloat() * 5);
-		var startSizeX = 7 - startRand; 
-		var startSizeY = 3 + startRand;
+		var startSizeX = 8 - startRand; 
+		var startSizeY = 4 + startRand;
 		var bossRand = Math.floor(session.prng.nextFloat() * 5);
 		var bossSizeX = 8 + bossRand;
 		var bossSizeY = 12 - bossRand; 
@@ -736,14 +738,6 @@ levelGen.bossRooms = [
 				level.decor.splice(i, 1);
 			}
 		}
-		// Add tiled floor
-		for(var i = room.origin.y; i < room.origin.y + room.height + 1; i++) {
-			for(var j = room.origin.x; j < room.origin.x + room.width; j++) {
-				if(level.terrainArray[i][j] === 0) {
-					level.overlayArray[i][j] = level.tiles.tiledFloor[0];
-				}
-			}
-		}
 
 		//	Add special obstacles - dining table & chairs - ***** needs a min room height of 8 and width of 6
 		var rand = Math.floor(session.prng.nextFloat() * (room.height - 6 - 2));			//	6: total height of table & chairs, 2: to ensure a space either side
@@ -762,14 +756,17 @@ levelGen.bossRooms = [
 
 		new Obstacle(EnumObstacle.COFFIN, room);
 
+		//	Add tiled floor
+		room.addFloor(level.tiles.tiledFloor, null, null, true);
+
 		//	Add columns on facing wall spaces
 		for(var i = room.origin.x; i < room.origin.x + room.width; i++) {
 			if(level.terrainArray[room.origin.y-2][i] === 1 && level.overlayArray[room.origin.y-2][i-1] !== level.tiles.wallDecorTall[1] &&
 				level.obstacleArray[room.origin.y-2][i] === undefined && level.obstacleArray[room.origin.y-1][i] === undefined
 			) {
 				level.overlayArray[room.origin.y-2][i] = level.tiles.wallDecorTall[1];
-				level.overlayArray[room.origin.y-1][i] = level.tiles.tiledFloor[1];
-				level.overlayArray[room.origin.y][i] = level.tiles.tiledFloor[2];
+				level.overlayArray[room.origin.y-1][i] = level.tiles.tiledFloor[3];
+				level.overlayArray[room.origin.y][i] = level.tiles.tiledFloor[4];
 			} else if(level.terrainArray[room.origin.y-2][i] === 1 && level.overlayArray[room.origin.y-2][i-1] === level.tiles.wallDecorTall[1] &&
 				level.obstacleArray[room.origin.y-2][i] === undefined && level.obstacleArray[room.origin.y-1][i] === undefined
 			) {
@@ -1132,7 +1129,7 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 		}
 		case EnumRoomtype.SQUARE_TILE: {
 			this.setupOverlays = function() {
-				this.addFloor(level.tiles.squareTileFloor);
+				this.addFloor(level.tiles.squareTileFloor, null, null, true);
 				this.addWallDecor(false);
 				this.addObstacles(EnumObstacletype.TILED_FLOOR);
 			}
@@ -1140,7 +1137,7 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 		}
 		case EnumRoomtype.PARQUET_FLOOR: {
 			this.setupOverlays = function() {
-				this.addFloor(level.tiles.parquetFloor);
+				this.addFloor(level.tiles.parquetFloor, null, null, true);
 				this.addWallDecor(false);
 				this.addObstacles(EnumObstacletype.TILED_FLOOR);
 			}
@@ -1279,7 +1276,7 @@ Room.prototype.addFloorPatch = function(type) {
 	}
 }
 //	Pass tileset, then flag to indicate whether floor has transition tiles to be placed at exits *inside* the room - or outside
-Room.prototype.addFloor = function(floorTiles, innerTransitions, outerTransitions) {
+Room.prototype.addFloor = function(floorTiles, innerTransitions, outerTransitions, sequential) {
 	if(innerTransitions) {																			//	Transitions to basic floor happen *within* room
 		for(var i = 0; i < this.height; i++) {
 			for(var j = 0; j < this.width; j++) {
@@ -1306,15 +1303,35 @@ Room.prototype.addFloor = function(floorTiles, innerTransitions, outerTransition
 	} else if(outerTransitions) {																	//	Transitions to basic floor happen *outside* room (placeholder)
 
 	} else {																						//	Basic floor tile without transitions
-		for(var i = 0; i < this.height; i++) {
-			for(var j = 0; j < this.width; j++) {
-				var rand = Math.floor(session.prng.nextFloat() * floorTiles.length);
-				level.overlayArray[this.origin.y+i][this.origin.x+j] = floorTiles[rand];
+		//	If tiles need to be laid in a specific order from top to bottom...
+		if(sequential) {
+			for(var i = 0; i < this.height; i++) {
+				for(var j = 0; j < this.width; j++) {
+					if(i % 3 === 0) {
+						level.overlayArray[this.origin.y+i][this.origin.x+j] = floorTiles[0];
+					} else if(i % 3 === 1) {
+						level.overlayArray[this.origin.y+i][this.origin.x+j] = floorTiles[1];
+					} else {
+						level.overlayArray[this.origin.y+i][this.origin.x+j] = floorTiles[2];
+					}
+				}
+			}
+		} else {
+			for(var i = 0; i < this.height; i++) {
+				for(var j = 0; j < this.width; j++) {
+					var rand = Math.floor(session.prng.nextFloat() * floorTiles.length);
+					level.overlayArray[this.origin.y+i][this.origin.x+j] = floorTiles[rand];
+				}
 			}
 		}
+		//	Add transitions
 		for(var i = this.origin.x; i < this.origin.x + this.width; i++) {
 			if(level.terrainArray[this.origin.y + this.height][i] === 0) {
-				level.overlayArray[this.origin.y + this.height][i] = floorTiles[rand];
+				if(sequential) {
+					level.overlayArray[this.origin.y + this.height][i] = floorTiles[this.height % 3];
+				} else {
+					level.overlayArray[this.origin.y + this.height][i] = floorTiles[rand];
+				}
 			}
 			if(level.terrainArray[this.origin.y + this.height + 1][i] === 0 && level.terrainArray[this.origin.y + this.height + 1][i - 1] === 1  
 			&& level.terrainArray[this.origin.y + this.height + 1][i + 1] === 1) {

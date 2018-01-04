@@ -545,9 +545,14 @@ var creatureWeapons = [
 		name: 'Squark Knife',
 		currentSprite: { x: 8, y: 6},
 		use: function(direction) {
-			this.vars.hidden = true;
-			this.shoot(direction, this.projectile, true);
-			return false;
+			if(getPlayerDistance(this.holder) < TILE_SIZE * 1.5) {
+				this.swipe(direction);
+				return this.attack;
+			} else {
+				this.vars.hidden = true;
+				this.shoot(direction, this.projectile, true);
+				return false;
+			}
 		},
 		reset: function() {
 			delete this.vars.rotation;
@@ -575,7 +580,7 @@ var creatureWeapons = [
 			],
 			restingDrawOffset: {
 				x: TILE_SIZE * -3/16,
-				y: TILE_SIZE * -2/16
+				y: TILE_SIZE * -1/16
 			},
 			attackDrawOffset: {
 				x: TILE_SIZE * -3/16,
@@ -583,7 +588,17 @@ var creatureWeapons = [
 			}
 		},
 		attack: {
-			type: EnumAttack.ARROW
+			reach: TILE_SIZE,							//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 1 * Math.PI / 4,						//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		},
 		projectile: EnumCreatureProjectile.SQUARK_KNIFE
 	},
@@ -778,6 +793,8 @@ var creatureProjectiles = [
 
 spinOffProjectile = function(projectile, spinFactor) {
 	projectile.vars.spinOff = 0;
+	projectile.vars.spinOff += Math.random() * spinFactor;
+	projectile.vars.spinOff -= Math.random() * spinFactor;
 	projectile.vars.spinOff += Math.random() * spinFactor;
 	projectile.vars.spinOff -= Math.random() * spinFactor;
 }

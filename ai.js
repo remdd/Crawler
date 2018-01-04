@@ -75,7 +75,6 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.SKELTON: {
-				creature.movement.bounceOff = true;
 				if(creature.weapon) {
 					creature.weapon.vars.hidden = false;													//	Show weapon for Ambush Skeltons once they have animated
 				}
@@ -85,7 +84,6 @@ setAiAction = function(creature) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveTowardsPlayer(creature, 300, 350, 2);
-								creature.movement.bounceOff = false;
 								creature.ai.nextAction = 1;
 							} else {
 								ai.moveRandomVector(creature, 300, 350, 2);
@@ -133,14 +131,12 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.SKELTON_ARCHER: {
-				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
 						if(getPlayerDistance(creature) < TILE_SIZE * 8 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveAwayFromPlayer(creature, 300, 350, 1);
-								creature.movement.bounceOff = false;
 								creature.ai.nextAction = 1;
 							} else {
 								ai.moveRandomVector(creature, 300, 350, 2);
@@ -219,14 +215,12 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.MUMI: {
-				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
 						if(getPlayerDistance(creature) < TILE_SIZE * 3.5 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveTowardsPlayer(creature, 300, 350, 1.5);
-								creature.movement.bounceOff = false;
 								creature.ai.nextAction = 1;
 							} else {
 								ai.moveRandomVector(creature, 300, 350, 1.5);
@@ -309,13 +303,11 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.CAMP_VAMP: {
-				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
 						creature.weapon.vars.hidden = false;											//	Redisplay dagger if hidden while flying
 						if(getPlayerDistance(creature) < TILE_SIZE * 6 && creature.hasClearPathToPlayer()) {
 							ai.moveTowardsPlayer(creature, 300, 350, 2);
-							creature.movement.bounceOff = false;
 							creature.ai.nextAction = 1;
 						} else {
 							var action = Math.floor(Math.random() * 3);
@@ -527,7 +519,7 @@ setAiAction = function(creature) {
 			case EnumAi.URK_SHAMAN: {
 				switch(creature.ai.nextAction) {
 					case 0: {
-						if(getPlayerDistance(creature) < TILE_SIZE * 8 && creature.hasClearPathToPlayer()) {
+						if(getPlayerDistance(creature) < TILE_SIZE * 10 && creature.hasClearPathToPlayer()) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveAwayFromPlayer(creature, 300, 350, 1);
@@ -547,30 +539,16 @@ setAiAction = function(creature) {
 					}
 					case 1: {
 						var direction = getPlayerCompassDirection(creature);
-						ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, Math.PI / 8);					//	...attack in player's compass direction...
-						creature.ai.nextAction = 4;
+						ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, 0);
+						creature.ai.nextAction = 3;
 						break;
 					}
 					case 2: {
-						ai.rest(creature, 1000, 500);
+						ai.moveAwayFromPlayer(creature, 300, 350, 2);
 						creature.ai.nextAction = 0;
 						break;
 					}
 					case 3: {
-						var rand = Math.floor(Math.random() * 3);
-						if(rand < 1) {
-							ai.moveAwayFromPlayer(creature, 500, 500, 2);									//	...move away from player for 0.5 - 1s, at 2x speed
-							creature.ai.nextAction = 0;
-						} else if(rand < 2) {
-							ai.moveRandomVector(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
-							creature.ai.nextAction = 0;
-						} else {
-							ai.rest(creature, 200, 0);
-							creature.ai.nextAction = 1;
-						}
-						break;
-					}
-					case 4: {
 						ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);
 						creature.ai.nextAction = 0;
 						break;
@@ -822,7 +800,6 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.BLUE_SQUARK: {
-				creature.movement.bounceOff = true;
 				switch(creature.ai.nextAction) {
 					case 0: {
 						if(getPlayerDistance(creature) < TILE_SIZE * 2 && creature.hasClearPathToPlayer()) {
@@ -837,7 +814,6 @@ setAiAction = function(creature) {
 							var action = Math.floor(Math.random() * 4)
 							if(action < 3) {
 								ai.moveAwayFromPlayer(creature, 300, 350, 1);
-								creature.movement.bounceOff = false;
 								creature.ai.nextAction = 1;
 							} else {
 								ai.moveRandomVector(creature, 300, 350, 1);
