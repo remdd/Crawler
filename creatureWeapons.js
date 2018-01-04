@@ -287,7 +287,8 @@ var creatureWeapons = [
 		name: 'Bone Crossbow',
 		currentSprite: { x: 2, y: 7},
 		use: function(direction) {
-			this.shoot(direction, this.projectile);
+			this.shoot(direction, this.projectile, true);
+			return false;
 		},
 		reset: function() {
 			delete this.vars.rotation;
@@ -545,7 +546,8 @@ var creatureWeapons = [
 		currentSprite: { x: 8, y: 6},
 		use: function(direction) {
 			this.vars.hidden = true;
-			this.shoot(direction, this.projectile);
+			this.shoot(direction, this.projectile, true);
+			return false;
 		},
 		reset: function() {
 			delete this.vars.rotation;
@@ -584,6 +586,68 @@ var creatureWeapons = [
 			type: EnumAttack.ARROW
 		},
 		projectile: EnumCreatureProjectile.SQUARK_KNIFE
+	},
+	{
+		name: "Urk Shaman's Staff",
+		currentSprite: { x: 8, y: 7},
+		use: function(direction) {
+			if(getPlayerDistance(this.holder) < TILE_SIZE * 1.5) {
+				this.chop(direction);
+				return this.attack;
+			} else {
+				var fireballs = Math.floor(Math.random() * 4) + 1;
+				for(var i = 0; i < fireballs; i++) {
+					this.shoot(direction, this.projectile, false, true);
+				}
+				return false;
+			}
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 500,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true,
+			displayTime: 1000,
+			aimTime: 100
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 8, y: 7 },							//	Right facing
+				{ x: 8.5, y: 7 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -10/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 14/16,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 1 * Math.PI / 4,						//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		},
+		projectile: EnumCreatureProjectile.URK_SHAMAN_FIREBALL
 	}
 ];
 
@@ -596,8 +660,9 @@ var creatureProjectiles = [
 			drawOffset: { x: 0, y: 0},
 			displayTime: 800,
 			damagePlayer: true,
-			damageCreatures: false,
-			rotation: 0
+			damageCreatures: true,
+			rotation: 0,
+			sticky: true
 		},
 		sprite: { 
 			size: { x:1, y:0.5 },
@@ -631,8 +696,9 @@ var creatureProjectiles = [
 			drawOffset: { x: 0, y: 0},
 			displayTime: 800,
 			damagePlayer: true,
-			damageCreatures: false,
-			rotation: Math.PI / 2
+			damageCreatures: true,
+			rotation: Math.PI / 2,
+			sticky: true
 		},
 		sprite: { 
 			size: { x:0.5, y:1 },
@@ -658,7 +724,60 @@ var creatureProjectiles = [
 		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+	},
+	{
+		name: 'Urk Shaman Fireball',
+		currentSprite: { x: 9, y: 6 },
+		vars: { 
+			drawOffset: { x: 0, y: 0},
+			displayTime: 1000,
+			damagePlayer: true,
+			damageCreatures: false,
+			animated: true,
+			animation: 0,
+			explodeOnImpact: true,
+			rotation: -Math.PI / 2,
+			spinFactor: 0.1
+		},
+		sprite: { 
+			size: { x:0.5, y:1 },
+			spriteSheet: monsterSprites,
+			y_padding: 1,
+			frames: [
+				{ x: 9, y: 6 },
+				{ x: 9.5, y: 6 },
+				{ x: 10, y: 6 },
+				{ x: 10.5, y: 6 },
+				{ x: 11, y: 6 },
+				{ x: 11.5, y: 6 },
+				{ x: -1, y: -1 }
+			],
+			animations: [
+				[ 200, [50, 100, 150, 200], [0, 1, 2, 3] ],						//	In flight
+				[ 1500, [150, 300, 1500], [4, 5, 6] ]								//	Explosion
+			]
+		},
+		position: { x: 0, y: 0 },
+		box: {
+			width: 4,
+			height: 4,
+			type: EnumBoxtype.PROJECTILE
+		},
+		movement: {
+			speed: 2.5,
+			bounceOff: false
+		},
+		damage: function(target) {
+			target.inflictDamage(1);
+		},
+		type: EnumAttack.FIREBALL,
+		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 	}
 
 ];
 
+spinOffProjectile = function(projectile, spinFactor) {
+	projectile.vars.spinOff = 0;
+	projectile.vars.spinOff += Math.random() * spinFactor;
+	projectile.vars.spinOff -= Math.random() * spinFactor;
+}

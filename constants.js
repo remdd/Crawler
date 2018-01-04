@@ -21,13 +21,15 @@ var EnumState = {
 
 var EnumColor = {
 	NORMAL: 0,
-	PURPLE: 1
+	PURPLE: 1,
+	GREEN: 2
 }
 
 var EnumAttack = { 
 	SWIPE: 0,
 	STAB: 1,
-	ARROW: 2
+	ARROW: 2,
+	FIREBALL: 3
 }
 
 var EnumCreature = {
@@ -37,7 +39,7 @@ var EnumCreature = {
 	GREEN_SLUDGIE: 4,
 	CAMP_VAMP: 5,
 	URK: 6,
-	URK_SHAMAN: 7,
+	URK_WARRIOR: 7,
 	HULKING_URK: 8,
 	KOB: 9,
 	MUMI: 10,
@@ -47,6 +49,7 @@ var EnumCreature = {
 	ZOMBI_MASTER: 14,
 	AIR_ELEMENTAL: 15,
 	URK_VETERAN: 16,
+	URK_SHAMAN: 17,
 
 	BOSS_CAMP_VAMP: 105,
 	BOSS_URK_SHAMAN: 107,
@@ -63,7 +66,7 @@ var EnumAi = {
 	GREEN_SLUDGIE: 4,
 	CAMP_VAMP: 5,
 	URK: 6,
-	URK_SHAMAN: 7,
+	URK_WARRIOR: 7,
 	SKELTON_ARCHER: 8,
 	HULKING_URK: 9,
 	MUMI: 10,
@@ -72,7 +75,8 @@ var EnumAi = {
 	ZOMBI_MASTER: 13,
 	KOB: 14,
 	BLUE_SQUARK: 15,
-	URK_VETERAN: 16
+	URK_VETERAN: 16,
+	URK_SHAMAN: 17
 }
 
 var EnumCreatureWeapon = {
@@ -86,26 +90,31 @@ var EnumCreatureWeapon = {
 	KOB_MACE: 8,
 	ZOMBI_BITE: 9,
 	ZOMBI_MASTER_STAFF: 10,
-	SQUARK_KNIFE: 11
+	SQUARK_KNIFE: 11,
+	URK_SHAMAN_STAFF: 12
 }
 
 var EnumCreatureProjectile = {
 	BONE_ARROW: 1,
-	SQUARK_KNIFE: 2
+	SQUARK_KNIFE: 2,
+	URK_SHAMAN_FIREBALL: 3
 }
 
 var EnumPickup = {
 	HEALTH_HEART: 1,
 	EXIT_KEY: 2,
-	PURPLE_MUSHROOM: 3
+	PURPLE_MUSHROOM: 3,
+	GREEN_MUSHROOM: 4
 }
 
-var	EnumLodetype = {
-	IRON: 1,
-	BONE: 2,
-	ACID: 3,
-	CRYSTAL: 4,
-	SHADOW: 5
+var	EnumLode = {
+	NONE: 0,
+	ACID: 1,
+	CRYSTAL: 2,
+	SHADOW: 3,
+	FIRE: 4,
+	WATER: 5,
+	LIGHTNING: 6
 }
 
 var EnumBoxtype = {

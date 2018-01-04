@@ -122,19 +122,70 @@ var pickupTemplates = [
 			this.vars.collected = true;
 			return true;
 		}
+	},
+	{
+		name: 'Green Mushroom',
+		type: EnumPickup.GREEN_MUSHROOM,
+		currentSprite: {x:5,y:4},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 5, y: 4 },
+				{ x: 5.5, y: 4 },		
+				{ x: 5, y: 4.5 },
+				{ x: 5.5, y: 4.5 }		
+			],
+			animations: [
+				[ 3000, [2700, 2800, 2900, 3000], [0, 1, 2, 3] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		movement: {
+			moving: true,
+			direction: 0,
+			speed: 0,
+			deceleration: 0.01,
+			bounceOff: true
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				player.effects.push(new Effect(EnumPickup.GREEN_MUSHROOM));
+				console.log(this);
+				game.pickups.splice(game.pickups.indexOf(this), 1);
+			}
+			this.vars.collected = true;
+			return true;
+		}
 	}
 ];
 
-var count = 0;
-
-
 function Effect(type) {
 	this.applied = false;
-	count++;
 	switch(type) {
+		case EnumPickup.GREEN_MUSHROOM: {
+			this.color = EnumColor.GREEN;
+					this.name = "Placeholder";
+					this.message1 = "Mmmmm... a *green* mushroom.";
+					this.message2 = "";
+					this.message3 = "";
+					this.apply = function() {
+					};
+					this.remove = function() {
+					}
+			break;
+		}
 		case EnumPickup.PURPLE_MUSHROOM: {
 			this.color = EnumColor.PURPLE;
-			var rand = Math.floor(Math.random() * 6);
+			var rand = Math.floor(Math.random() * 7);
 			console.log("rand: " + rand);
 			switch(rand) {
 				case 0: {

@@ -114,6 +114,15 @@ function colorPlayer(color) {
 			}
 			break;
 		}
+		case EnumColor.GREEN: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 6; j++) {
+					player.sprite.frames[j+i*6].x = j+10;
+					player.sprite.frames[j+i*6].y = i+2;
+				}
+			}
+			break;
+		}
 		default: {
 			for(var i = 0; i < 2; i++) {
 				for(var j = 0; j < 6; j++) {

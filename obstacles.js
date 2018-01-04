@@ -921,7 +921,10 @@ Obstacle = function(type, room, y, x, modifier) {
 		}
 	}
 	this.offsetPosition();
-	level.obstacles.push(this);
+	//	If object was successfully placed, add it to the obstacles array
+	if(this.grid.x !== 0 & this.grid.y !== 0) {
+		level.obstacles.push(this);
+	}
 }
 
 Obstacle.prototype.offsetPosition = function() {

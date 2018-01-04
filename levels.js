@@ -48,17 +48,22 @@ var levelGen = {
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
-					level.playerStart = {y: this.origin.y, x: this.origin.x};
+					// level.playerStart = {y: this.origin.y, x: this.origin.x};
 					// new Obstacle(EnumObstacle.MONOLITH, null, level.playerStart.y + 1, level.playerStart.x + 1);
-					this.addCreature(EnumCreature.URK_VETERAN);
-					this.addCreature(EnumCreature.HULKING_URK);
-					// this.addCreature(EnumCreature.GREEN_GOBLIN);
+					// this.addCreature(EnumCreature.URK_SHAMAN);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
-					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
+					level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
 					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
-					levelGen.bossRooms[1](this);
+					levelGen.bossRooms[rand](this);
+				};
+				level.bossDrop = function() {
+					var exitKey = new Pickup(pickupTemplates[EnumPickup.EXIT_KEY], this.grid.x, this.grid.y);
+					exitKey.position.x = this.position.x;
+					exitKey.position.y = this.position.y + 2;
+					exitKey.movement.speed = 1;
+					exitKey.movement.direction = getPlayerDirection(this) + Math.PI;
 				};
 				level.exitRoomContents = function() {
 					new Obstacle(EnumObstacle.EXIT_STAIRS, null, this.origin.y + 1, this.origin.x + 1);
@@ -75,12 +80,13 @@ var levelGen = {
 					EnumCreature.KOB,
 					EnumCreature.SNEAKY_SKELTON,
 					EnumCreature.BLUE_SQUARK,
-					EnumCreature.MUMI
+					EnumCreature.MUMI,
+					EnumCreature.URK_WARRIOR
 				];
 				level.rareCreatures = [
 					EnumCreature.MINI_GHOST,
 					EnumCreature.BLUE_SQUARK,
-					EnumCreature.URK_SHAMAN,
+					EnumCreature.URK_VETERAN,
 					EnumCreature.ZOMBI
 				];
 				level.randomRoomRange = 10;			//	Sets range of possible random room contents for generator
@@ -385,6 +391,14 @@ var levelGen = {
 		var startRoom = new Room(startPosY, startPosX, startSizeY, startSizeX, 'start', level.startRoomContents);
 		var bossRoom = new Room(bossPosY, bossPosX, bossSizeY, bossSizeX, 'boss', level.bossRoomContents);
 		var exitRoom = new Room(exitPosY, exitPosX, exitSizeY, exitSizeX, 'exit', level.exitRoomContents);
+		level.bossRoom = {
+			origin: {
+				y: bossPosY,
+				x: bossPosX
+			},
+			height: bossSizeY,
+			width: bossSizeX
+		}
 	},
 
 	addBasicOverlays: function() {
@@ -814,7 +828,7 @@ levelGen.bossRooms = [
 		// Add boss and other creatures
 		room.addCreature(level.boss);
 		var rand = Math.floor(session.prng.nextFloat() * 3) + 3		//	From 3 - 5
-		for(var i = 0; i < 15; i++) {
+		for(var i = 0; i < 5; i++) {
 			room.addCreature(EnumCreature.ZOMBI);
 		}	
 	},
@@ -842,32 +856,42 @@ levelGen.bossRooms = [
 		}
 		var rand = Math.floor(session.prng.nextFloat() * 3);
 		if(rand < 2) {
-			new Obstacle(EnumObstacle.BARREL, room);
+			new Obstacle(EnumObstacle.SPIT, room);
 		}
-		var rand = Math.floor(session.prng.nextFloat() * 3);
-		if(rand < 2) {
-			new Obstacle(EnumObstacle.SACK, room);
-		}
+		room.addStoreRoomObstacles(5);
+		room.addFloorDecor(5);
 
 		// Add boss and other creatures
 		room.addCreature(level.boss);
 		var totalCreatures = Math.floor(session.prng.nextFloat() * 3) + 4;
 		var rand = Math.floor(session.prng.nextFloat() * 4);	
 		if(rand < 2) {
-			room.addCreature(EnumCreature.HULKING_URK);
+			var rand2 = Math.floor(session.prng.nextFloat() * 2);
+			if(rand2 < 1) {
+				room.addCreature(EnumCreature.HULKING_URK);
+			} else {
+				room.addCreature(EnumCreature.URK_VETERAN);
+			}
 			totalCreatures--;
 		}	
 		var rand2 = Math.floor(session.prng.nextFloat() * 4);	
 		if(rand2 < 1) {
-			room.addCreature(EnumCreature.HULKING_URK);
+			var rand3 = Math.floor(session.prng.nextFloat() * 2);
+			if(rand3 < 1) {
+				room.addCreature(EnumCreature.HULKING_URK);
+			} else {
+				room.addCreature(EnumCreature.URK_VETERAN);
+			}
 			totalCreatures--;
 		}
 		for(var i = 0; i < totalCreatures; i++) {
-			var rand = Math.floor(session.prng.nextFloat() * 2);
+			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
 				room.addCreature(EnumCreature.URK);
-			} else {
+			} else if(rand < 2) {
 				room.addCreature(EnumCreature.GREEN_GOBLIN);
+			} else {
+				room.addCreature(EnumCreature.URK_WARRIOR);
 			}
 		}
 	}
@@ -1636,15 +1660,16 @@ Room.prototype.addCreature = function(creature) {
 	while(tries && retry) {
 		var randY = this.origin.y + Math.floor(session.prng.nextFloat() * (this.height - 2)) + 1;
 		var randX = this.origin.x + Math.floor(session.prng.nextFloat() * (this.width - 2)) + 1; 
-		if(			
-			//	Check that creatureArray is empty for this and all surrounding tiles...
-			level.creatureArray[randY-1][randX-1] === 0 && level.creatureArray[randY-1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
-			level.creatureArray[randY][randX-1] === 0 && level.creatureArray[randY][randX] === 0 && level.creatureArray[randY][randX+1] === 0 &&
-			level.creatureArray[randY+1][randX-1] === 0 && level.creatureArray[randY+1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
-			//	...and that obstacle array is clear...
-			level.obstacleArray[randY-1][randX-1] === undefined && level.obstacleArray[randY-1][randX] === undefined && level.obstacleArray[randY+1][randX+1] === undefined &&
-			level.obstacleArray[randY][randX-1] === undefined && level.obstacleArray[randY][randX] === undefined && level.obstacleArray[randY][randX+1] === undefined &&
-			level.obstacleArray[randY+1][randX-1] === undefined && level.obstacleArray[randY+1][randX] === undefined && level.obstacleArray[randY+1][randX+1] === undefined &&
+		if(		
+			level.creatureArray[randY][randX] === 0 && level.obstacleArray[randY][randX] === undefined &&
+			// //	Check that creatureArray is empty for this and all surrounding tiles...
+			// level.creatureArray[randY-1][randX-1] === 0 && level.creatureArray[randY-1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
+			// level.creatureArray[randY][randX-1] === 0 && level.creatureArray[randY][randX] === 0 && level.creatureArray[randY][randX+1] === 0 &&
+			// level.creatureArray[randY+1][randX-1] === 0 && level.creatureArray[randY+1][randX] === 0 && level.creatureArray[randY+1][randX+1] === 0 &&
+			// //	...and that obstacle array is clear...
+			// level.obstacleArray[randY-1][randX-1] === undefined && level.obstacleArray[randY-1][randX] === undefined && level.obstacleArray[randY+1][randX+1] === undefined &&
+			// level.obstacleArray[randY][randX-1] === undefined && level.obstacleArray[randY][randX] === undefined && level.obstacleArray[randY][randX+1] === undefined &&
+			// level.obstacleArray[randY+1][randX-1] === undefined && level.obstacleArray[randY+1][randX] === undefined && level.obstacleArray[randY+1][randX+1] === undefined &&
 			//	...and that this is not the player's location...
 			randX !== level.playerStart.x && randY !== level.playerStart.y
 		) {			//	If so, add creature to level.creatureArray

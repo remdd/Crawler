@@ -182,6 +182,11 @@ function setUpCreatures() {
 				creature.grid.x = j;
 				creature.grid.y = i;
 				creature.updateBox();
+				creature.type = level.creatureArray[i][j];
+				if(creature.type === level.boss && i >= level.bossRoom.origin.y && i <= level.bossRoom.origin.y + level.bossRoom.height &&
+				j >= level.bossRoom.origin.x && j <= level.bossRoom.origin.x + level.bossRoom.width) {
+					creature.deathDrop = level.bossDrop;
+				}
 				game.creatures.push(creature);
 			}
 		}
@@ -324,6 +329,10 @@ function Pickup(pickupTemplate) {
 	this.vars.background = true;
 	this.vars.animStart = performance.now();
 	this.vars.animation = 0;
+	this.vars.drawOffset = {
+		x: 0,
+		y: 4
+	}
 	this.currentSprite = pickupTemplate.currentSprite;
 	this.movement = {};
 	Object.assign(this.movement, pickupTemplate.movement);
@@ -366,16 +375,26 @@ Weapon.prototype.chop = function(direction) {
 		this.vars.rotation = direction + Math.PI/2 - this.attack.arc / 2;
 	}
 }
-Weapon.prototype.shoot = function(direction, projectile) {
+Weapon.prototype.shoot = function(direction, projectile, pointInDirection, pointRightAngle) {
 	this.vars.lastAttackTime = performance.now();
 	this.vars.endAttackAnimationTime = performance.now() + this.vars.animTime;
 	this.vars.lastAttackDirection = direction;
-	if(this.holder.vars.facingRight) {
-		this.currentSprite = this.sprite.frames[0];
-		this.vars.rotation = direction;
-	} else {
-		this.currentSprite = this.sprite.frames[1];
-		this.vars.rotation = direction + Math.PI;
+	if(pointInDirection) {
+		if(this.holder.vars.facingRight) {
+			this.currentSprite = this.sprite.frames[0];
+			this.vars.rotation = direction;
+		} else {
+			this.currentSprite = this.sprite.frames[1];
+			this.vars.rotation = direction + Math.PI;
+		}
+	} else if(pointRightAngle) {
+		if(this.holder.vars.facingRight) {
+			this.currentSprite = this.sprite.frames[0];
+			this.vars.rotation = Math.PI / 2;
+		} else {
+			this.currentSprite = this.sprite.frames[1];
+			this.vars.rotation = -Math.PI / 2;
+		}
 	}
 	new Projectile(creatureProjectiles[projectile], this.holder, direction);
 }
@@ -385,15 +404,21 @@ Projectile.prototype.constructor = Projectile;
 
 function Projectile(projectileTemplate, shooter, direction) {
 	Entity.apply(this, arguments);
-	this.vars = { 
-		shooter: shooter, 
-		drawOffset: { x: projectileTemplate.vars.drawOffset.x, y: projectileTemplate.vars.drawOffset.y }, 
-		rotation: direction + projectileTemplate.vars.rotation,
-		displayTime: projectileTemplate.vars.displayTime,
-		damagePlayer: projectileTemplate.vars.damagePlayer,
-		damageCreatures: projectileTemplate.vars.damageCreatures,
-		startY: shooter.grid.y
-	};
+	this.vars = {};
+	Object.assign(this.vars, projectileTemplate.vars);
+	this.vars.shooter = shooter; 
+	this.vars.drawOffset = { x: projectileTemplate.vars.drawOffset.x, y: projectileTemplate.vars.drawOffset.y };
+	this.vars.rotation = direction + projectileTemplate.vars.rotation;
+	this.vars.startY = shooter.grid.y;
+	this.vars.animStart = performance.now();
+	if(this.vars.expiry) {
+		this.expireTime = performance.now() + this.vars.expiry;
+	} else {
+		this.expireTime = performance.now() + 2000;
+	}
+	if(projectileTemplate.vars.spinFactor) {
+		spinOffProjectile(this, this.vars.spinFactor);
+	}
 	this.damage = projectileTemplate.damage;
 	this.currentSprite = projectileTemplate.currentSprite;
 	this.sprite = {};
@@ -407,19 +432,36 @@ function Projectile(projectileTemplate, shooter, direction) {
 
 function updateProjectiles() {
 	game.projectiles.forEach(function(projectile) {
-		if(performance.now() > projectile.deleteTime) {
+		//	If deleteTime has passed, splice the projectile from the projectile array
+		if(performance.now() > projectile.deleteTime || performance.now() > projectile.expireTime) {
 			game.projectiles.splice(game.projectiles.indexOf(projectile), 1);
 		} else {
+			//	If the projectile is animated, animate it
+			if(projectile.vars.animated) {
+				projectile.animate();
+			}
+			//	If the projectile has a spinOff value, apply it to its rotation and movement direction
+			if(projectile.vars.spinOff) {
+				projectile.vars.rotation += projectile.vars.spinOff;
+				projectile.movement.direction += projectile.vars.spinOff;				
+			}
+			//	Move the projectile
 			Creature.prototype.move.call(projectile, projectile.movement.direction, projectile.movement.speed);
+			//	If the projectile collides with something and deleteTime is not set, set it to 'displayTime' ms in the future
 			if(projectile.collidedWith && !projectile.deleteTime) {
 				projectile.deleteTime = performance.now() + projectile.vars.displayTime;
 			}
-			if(!projectile.stuckTo && projectile.collidedWith && projectile.collidedWith !== 1) {
+			//	If the projectile is sticky and is not yet stuck to something and has collided with something other than terrain, add it to the object's 'stuckProjectiles' array
+			if(projectile.vars.sticky && !projectile.stuckTo && projectile.collidedWith && projectile.collidedWith !== 1) {
 				if(projectile.collidedWith.stuckProjectiles === undefined) {
 					projectile.collidedWith.stuckProjectiles = [];
 				}
+				if(projectile.collidedWith === player && projectile.vars.damagePlayer) {
+					projectile.damage(projectile.collidedWith);
+				} else if(projectile.collidedWith.box.type === EnumBoxtype.CREATURE && projectile.vars.damageCreatures) {
+					projectile.damage(projectile.collidedWith);
+				}
 				projectile.stuckTo = projectile.collidedWith;
-				projectile.damage(projectile.stuckTo);
 				projectile.stuckOffset = {};
 				if(projectile.position.x > projectile.stuckTo.position.x) {
 					projectile.stuckOffset.x = projectile.position.x - projectile.stuckTo.position.x - 2;
@@ -432,8 +474,27 @@ function updateProjectiles() {
 					projectile.stuckOffset.y = projectile.position.y - projectile.stuckTo.position.y + 2;
 				}
 				projectile.collidedWith.stuckProjectiles.push(projectile);
-			} else if(!projectile.stuckTo && projectile.collidedWith && projectile.collidedWith === 1) {
+			//	Else if projectile is sticky and hits terrain, set it to have missed
+			} else if(projectile.vars.sticky && !projectile.stuckTo && projectile.collidedWith && projectile.collidedWith === 1) {
 				projectile.missed = true;
+			//	Else if projectile explodes on impact and collides with anything
+			} else if(projectile.vars.explodeOnImpact && !projectile.exploded && projectile.collidedWith) {
+				if(projectile.collidedWith !== 1) {
+					if(projectile.collidedWith === player && projectile.vars.damagePlayer) {
+						projectile.damage(projectile.collidedWith);
+					} else if(projectile.collidedWith.box.type === EnumBoxtype.CREATURE && projectile.vars.damageCreatures) {
+						projectile.damage(projectile.collidedWith);
+					}
+				}
+				projectile.exploded = true;
+				projectile.movement.speed = 0;
+				if(projectile.vars.animated) {
+					projectile.vars.animation = 1;
+					projectile.vars.animStart = performance.now();
+				}
+				if(projectile.vars.spinOff) {
+					projectile.vars.spinOff = 0;
+				}
 			}
 			if(projectile.stuckTo) {
 				projectile.movement.speed = 0;
@@ -489,20 +550,12 @@ function Creature(creatureTemplate) {
 			console.log("Dropping!");
 			var rand = Math.floor(Math.random() * session.vars.healthDropFrequency);
 			if(rand < 1) {
-				var exitKey = new Pickup(pickupTemplates[EnumPickup.PURPLE_MUSHROOM], this.grid.x, this.grid.y);
-				exitKey.position.x = this.position.x;
-				exitKey.position.y = this.position.y + 2;
-				exitKey.movement.speed = 1;
-				exitKey.movement.direction = getPlayerDirection(this) + Math.PI;
+				var heart = new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], this.grid.x, this.grid.y);
+				heart.position.x = this.position.x;
+				heart.position.y = this.position.y + 2;
+				heart.movement.speed = 1;
+				heart.movement.direction = getPlayerDirection(this) + Math.PI;
 			}
-			console.log(exitKey);
-			// if(rand < 1) {
-			// 	var heart = new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], this.grid.x, this.grid.y);
-			// 	heart.position.x = this.position.x;
-			// 	heart.position.y = this.position.y + 2;
-			// 	heart.movement.speed = 1;
-			// 	heart.movement.direction = getPlayerDirection(this) + Math.PI;
-			// }
 			console.log("Default death drop...");
 		}
 	}
@@ -530,12 +583,11 @@ Creature.prototype.attack = function(direction) {
 		this.setFacing(direction);
 		this.vars.lastAttackTime = performance.now();
 		this.weapon.vars.attacking = true;
-		if(this.weapon.attack.type === EnumAttack.SWIPE || this.weapon.attack.type === EnumAttack.STAB) {
+		//	Use weapon, and if it returns an attack object, create an attack with it
+		if(this.weapon.use(direction)) {
 			var attack = this.weapon.use(direction);
 			attack.attacker = this;
 			new Attack(attack, direction);
-		} else if(this.weapon.attack.type === EnumAttack.ARROW) {
-			this.weapon.use(direction);
 		}
 	}
 }
@@ -619,31 +671,31 @@ Creature.prototype.hasClearPathToPlayer = function() {
 	} else if(diffX === 0) {
 		for(var i = 0; i < diffY; i++) {
 			if(level.terrainArray[y1+i][x1] !== 0) {
-				console.log("Blocked vertically!");
+				// console.log("Blocked vertically!");
 				return false;
 			}
 		}
-		console.log("Clear path vertically");
+		// console.log("Clear path vertically");
 		return true;
 	} else if(diffY === 0) {
 		for(var i = 0; i < diffX; i++) {
 			if(level.terrainArray[y1][x1+i] !== 0) {
-				console.log("Blocked horizontally!");
+				// console.log("Blocked horizontally!");
 				return false;
 			}
 		}
-		console.log("Clear path horizontally");
+		// console.log("Clear path horizontally");
 		return true;
 	} else {
 		var diff = 0;
 		if(diffX === diffY) {
 			for(var i = 0; i < diffX; i++) {
 				if(level.terrainArray[y1+i][x1+i] !== 0) {
-					console.log("Blocked perfect diag!");
+					// console.log("Blocked perfect diag!");
 					return false;
 				}
 			}
-			console.log("Clear path perfect diag");
+			// console.log("Clear path perfect diag");
 			return true;
 		} else if(diffX >= diffY) {
 			var stepY = diffY / diffX;
@@ -654,31 +706,28 @@ Creature.prototype.hasClearPathToPlayer = function() {
 					incY++;
 				}
 				if(level.terrainArray[y1+incY][x1+i] !== 0) {
-					console.log("Blocked across diag!");
+					// console.log("Blocked across diag!");
 					return false;
 				}
 				diff += stepY;
 			}
-			console.log("Clear path across diag");
+			// console.log("Clear path across diag");
 			return true;
 		} else {
 			var stepX = diffX / diffY;
 			var incX = 0;
-			console.log(stepX);
 			for(var i = 0; i < diffY; i++) {
-				console.log(i);
-				console.log(diff);
 				if(diff > 0.5) {
 					diff--;
 					incX++;
 						}
 				if(level.terrainArray[y1+i][x1+incX] !== 0) {
-					console.log("Blocked down diag!");
+					// console.log("Blocked down diag!");
 					return false;
 				}
 				diff += stepX;
 			}
-			console.log("Clear path down diag");
+			// console.log("Clear path down diag");
 			return true;
 		}
 	}
@@ -876,6 +925,11 @@ function updateDrawables() {
 			game.drawables.push(obstacle);
 		}
 	});
+	game.pickups.forEach(function(pickup) {
+		if(inViewport(pickup.position.x, pickup.position.y)) {
+			game.drawables.push(pickup);
+		}
+	});
 	game.drawables.sort(function(a, b) {
 		return a.position.y-b.position.y;
 	});
@@ -885,7 +939,7 @@ function updateDrawables() {
 function updatePlayer() {
 	//	Assign current player animation
 	if(player.vars.dead) {
-		if(performance.now() > game.playerDeathTime + 3000) {
+		if(game.playerDeathTime && performance.now() > game.playerDeathTime + 3000) {
 			deathScreen();
 		} else {
 			if(player.vars.facingRight) {
@@ -942,8 +996,6 @@ function updatePlayer() {
 				console.log(player.effects[i].name);
 			}
 		}
-		console.log(player.effects);
-		console.log(count);
 	} else if(player.vars.color !== EnumColor.NORMAL) {
 		//	If effect array is empty, color the player normally
 		colorPlayer(EnumColor.NORMAL);
@@ -1062,6 +1114,10 @@ function resolveAttacks() {
 function resolveHit(attack, target) {
 	//	DAMAGE CALC GOES HERE
 	var damage = 1;
+
+
+
+
 	target.inflictDamage(damage);
 	// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 }
@@ -1088,7 +1144,7 @@ function checkTerrainCollision(obj, tryX, tryY) {
 	} else {
 		if(tryY > obj.position.y) {																						//	Else if obj is trying to move down...
 			if(obj.box.type === EnumBoxtype.PROJECTILE) {																//	...and is a projectile...
-				tryTerY = Math.floor(((tryY - obj.sprite.y_padding) / TILE_SIZE) + 8/16);								//	...set tryTerY.
+				tryTerY = Math.floor(tryY / TILE_SIZE);																	//	...set tryTerY.
 				if(tryTerY === obj.vars.startY) {																		//	If tryTerY is on same grid row as start,
 					okY = true;																							//	allow movement
 				} else {
@@ -1143,20 +1199,26 @@ function checkTerrainCollision(obj, tryX, tryY) {
 //	Collider Collision Manager - check for contact with active box colliders
 function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 	var returnCoords = { x: tryX, y: tryY, collidedWith: collidedWith };
+
+	//	Check for impact between obj and any nearbyCollider 
 	for(var i = 0; i < game.nearbyColliders.length; i++) {
+		var pass = false;
+		//	Check whether a collision check is required
+		if(
+			obj === game.nearbyColliders[i] ||
+			obj.vars.moveThroughColliders ||
+			game.nearbyColliders[i].vars.moveThroughColliders ||
+			game.nearbyColliders[i] === obj.vars.shooter ||
+			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE ||
+			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
+			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
+			game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].vars.dead
+		) {
+			pass = true;
+		}
 
-		if(game.nearbyColliders[i] !== obj && !game.nearbyColliders[i].vars.moveThroughColliders && 
-			!obj.vars.moveThroughColliders && game.nearbyColliders[i] !== obj.vars.shooter) {
-
-			//	Projectile nearbyColliders can pass through obstacle nearbyColliders
-			if(game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE && obj.box.type === EnumBoxtype.PROJECTILE) {
-				return returnCoords;
-			}
-			//	Creature colliders ignore pickups
-			if((game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE && obj.box.type === EnumBoxtype.PICKUP) ||
-			   (game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP && obj.box.type === EnumBoxtype.CREATURE)) {
-				return returnCoords;
-			}
+		//	If it is, perform collision check
+		if(!pass) {
 			if(obj.box.type === EnumBoxtype.PROJECTILE) {
 				var newTop = returnCoords.y - (obj.box.height / 2);
 				var newBtm = returnCoords.y + (obj.box.height / 2);
@@ -1175,19 +1237,19 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			var objR = game.nearbyColliders[i].box.bottomRight.x;
 
 			if(
-			//	Check if obj overlaps any corner of the collider...
-			(newTop <= objTop && newBtm >= objTop && newL <= objL && newR >= objL) ||
-			(newTop <= objTop && newBtm >= objTop && newL <= objR && newR >= objR) ||
-			(newTop <= objBtm && newBtm >= objBtm && newL <= objL && newR >= objL) ||
-			(newTop <= objBtm && newBtm >= objBtm && newL <= objR && newR >= objR) ||
-			//	...or if obj overlaps the top or bottom side of the collider...
-			(newTop <= objTop && newBtm >= objTop && newL >= objL && newR <= objR) ||
-			(newTop <= objBtm && newBtm >= objBtm && newL >= objL && newR <= objR) ||
-			//	...or if obj overlaps the left or right side of the collider...
-			(newTop >= objTop && newBtm <= objBtm && newL <= objL && newR >= objL) ||
-			(newTop >= objTop && newBtm <= objBtm && newL <= objR && newR >= objR) ||
-			//	...or falls fully inside the collider
-			(newTop >= objTop && newBtm <= objBtm && newL >= objL && newR <= objR)
+				//	Check if obj overlaps any corner of the collider...
+				(newTop <= objTop && newBtm >= objTop && newL <= objL && newR >= objL) ||
+				(newTop <= objTop && newBtm >= objTop && newL <= objR && newR >= objR) ||
+				(newTop <= objBtm && newBtm >= objBtm && newL <= objL && newR >= objL) ||
+				(newTop <= objBtm && newBtm >= objBtm && newL <= objR && newR >= objR) ||
+				//	...or if obj overlaps the top or bottom side of the collider...
+				(newTop <= objTop && newBtm >= objTop && newL >= objL && newR <= objR) ||
+				(newTop <= objBtm && newBtm >= objBtm && newL >= objL && newR <= objR) ||
+				//	...or if obj overlaps the left or right side of the collider...
+				(newTop >= objTop && newBtm <= objBtm && newL <= objL && newR >= objL) ||
+				(newTop >= objTop && newBtm <= objBtm && newL <= objR && newR >= objR) ||
+				//	...or falls fully inside the collider
+				(newTop >= objTop && newBtm <= objBtm && newL >= objL && newR <= objR)
 			) {
 				//	If player comes into contact with a collider dealing touch damage, execute its touchDamage function
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
@@ -1216,9 +1278,6 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 }
 
 function drawDrawables() {
-	game.pickups.forEach(function(pickup) {
-		drawOnCanvas(pickup, drawableCtx);
-	});
 	game.drawables.forEach(function(drawable) {
 		if(drawable.weapon && !drawable.weapon.vars.hidden && !drawable.weapon.vars.foreground) {
 			drawOnCanvas(drawable.weapon, drawableCtx);
@@ -1283,10 +1342,6 @@ function updateColliders() {
 					console.log("Collides with...");
 					console.log(creature.checkIfCollides());
 				}
-				// creature.grid.x = Math.floor(creature.position.x / TILE_SIZE);
-				// creature.grid.y = Math.floor(creature.position.y / TILE_SIZE);
-				// creature.position.x = creature.grid.x * TILE_SIZE + (TILE_SIZE / 2);
-				// creature.position.y = creature.grid.y * TILE_SIZE + (TILE_SIZE / 2);
 			}
 		} else {
 			game.nearbyColliders.push(creature);
@@ -1374,6 +1429,7 @@ function playerDeath() {
 }
 
 function deathScreen() {
+	MainLoop.stop();
 	$('.finalScoreSpan').text(session.score);
 	$.when($('canvas').fadeOut('slow')).then(function() {
 		$('#gameMenuDiv').fadeIn('slow', function() {
@@ -1533,18 +1589,18 @@ function start(newGame) {
 	});
 	// bgMusic.play();
 	$('#gameMenuDiv').fadeOut('slow', function() {
-		$('.gameMenuScreen').hide();
 		if(newGame) {
 			$('.finalScoreSpan').text('');
 			new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], player.grid.x + 1, player.grid.y + 1);
 		}
 		console.log("Starting game - level: " + level.levelNumber);
-		MainLoop.setUpdate(update).setDraw(draw).start();
 		drawMap();
 		$('canvas').fadeIn('slow', function() {
+			$('.gameMenuScreen').hide();
 			if(newGame) {
 				displayMessage(3000, "Clutching your trusty knife in your sweaty palms,", "you enter the Baron's dungeon...")
 			}
+			MainLoop.setUpdate(update).setDraw(draw).start();
 		});
 	});
 }

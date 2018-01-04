@@ -459,14 +459,15 @@ var creatureTemplates = [
 		}	
 	},
 	{
-		name: 'Urk Shaman',
+		name: 'Urk Warrior',
 		currentSprite: { x: 0, y: 14},
 		vars: {
-			speed: 0.5,
+			speed: 0.6,
 			maxHP: 5,
 			currentHP: 5,
 			restingWeaponAnimation: true,
-			score: 80
+			attackRate: 0.8,
+			score: 70
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -1177,6 +1178,7 @@ var creatureTemplates = [
 				{ x: 13, y: 12 },	//	Death facing R 1
 				{ x: 14, y: 12 },	//	Death facing R 2
 				{ x: 15, y: 12 },	//	Death facing R 3
+				{ x: 16, y: 12 },	//	Death facing R 4
 				{ x: 8, y: 13 },	//	Resting facing L 1
 				{ x: 9, y: 13 },	//	Resting facing L 2
 				{ x: 10, y: 13 },	//	Moving facing L 1
@@ -1184,15 +1186,16 @@ var creatureTemplates = [
 				{ x: 12, y: 13 },	//	Moving facing L 3
 				{ x: 13, y: 13 },	//	Death facing L 1
 				{ x: 14, y: 13 },	//	Death facing L 2
-				{ x: 15, y: 13 }	//	Death facing L 3
+				{ x: 15, y: 13 },	//	Death facing L 3
+				{ x: 16, y: 13 }	//	Death facing L 4
 			],
 			animations: [
 				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
-				[ 800, [500, 800], [ 8, 9] ],											//	Resting, facing L
+				[ 800, [500, 800], [ 9, 10] ],											//	Resting, facing L
 				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
-				[ 600, [150, 300, 450, 600], [ 10,11,12,9 ] ],							//	Moving, facing L
-				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
-				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
+				[ 600, [150, 300, 450, 600], [ 11,12,13,10 ] ],							//	Moving, facing L
+				[ 1200, [300, 600, 900, 1200], [5, 6, 7, 8 ] ],									//	Death, facing R
+				[ 1200, [300, 600, 900, 1200], [14,15,16,17] ]									//	Death, facing L
 			]
 		},
 		box: {
@@ -1237,6 +1240,94 @@ var creatureTemplates = [
 		},
 		addWeapon: function() {
 			return EnumCreatureWeapon.URK_SWORD;
+		}	
+	},
+	{
+		name: 'Urk Shaman',
+		currentSprite: { x: 8, y: 14},
+		vars: {
+			speed: 0.7,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: true,
+			attackRate: 0.5,
+			score: 250
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 4,
+			frames: [
+				{ x: 8, y: 14 },	//	Resting facing R 1
+				{ x: 9, y: 14 },	//	Resting facing R 2
+				{ x: 10, y: 14 },	//	Moving facing R 1
+				{ x: 11, y: 14 },	//	Moving facing R 2
+				{ x: 12, y: 14 },	//	Moving facing R 3
+				{ x: 13, y: 14 },	//	Death facing R 1
+				{ x: 14, y: 14 },	//	Death facing R 2
+				{ x: 15, y: 14 },	//	Death facing R 3
+				{ x: 16, y: 14 },	//	Death facing R 4
+				{ x: 8, y: 15 },	//	Resting facing L 1
+				{ x: 9, y: 15 },	//	Resting facing L 2
+				{ x: 10, y: 15 },	//	Moving facing L 1
+				{ x: 11, y: 15 },	//	Moving facing L 2
+				{ x: 12, y: 15 },	//	Moving facing L 3
+				{ x: 13, y: 15 },	//	Death facing L 1
+				{ x: 14, y: 15 },	//	Death facing L 2
+				{ x: 15, y: 15 },	//	Death facing L 3
+				{ x: 16, y: 15 }	//	Death facing L 4
+			],
+			animations: [
+				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
+				[ 800, [500, 800], [ 9, 10] ],											//	Resting, facing L
+				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [ 11,12,13,10 ] ],							//	Moving, facing L
+				[ 1200, [300, 600, 900, 1200], [5, 6, 7, 8 ] ],									//	Death, facing R
+				[ 1200, [300, 600, 900, 1200], [14,15,16,17] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 15,
+			type: EnumBoxtype.CREATURE
+		},
+		movement: {
+			moving: false,
+			direction: 0,
+			speed: 0,
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.URK_SHAMAN,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				var rand = Math.floor(Math.random() * 3);
+				if(rand < 1) {
+					urkGrunts.play('grunt5');
+				} else if(rand < 2) {
+					urkGrunts.play('grunt6');
+				} else {
+					urkGrunts.play('grunt7');
+				}
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			var rand = Math.floor(Math.random() * 2);
+			if(rand < 1) {
+				urkGrunts.play('death1');
+			} else {
+				urkGrunts.play('death2');
+			}
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.URK_SHAMAN_STAFF;
 		}	
 	}
 ];
