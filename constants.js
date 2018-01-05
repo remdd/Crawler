@@ -50,10 +50,7 @@ var EnumCreature = {
 	AIR_ELEMENTAL: 15,
 	URK_VETERAN: 16,
 	URK_SHAMAN: 17,
-
-	BOSS_CAMP_VAMP: 105,
-	BOSS_URK_SHAMAN: 107,
-	BOSS_ZOMBI_MASTER: 114
+	BLACK_KNIGHT: 18
 }
 
 var BossCreature = {
@@ -76,7 +73,8 @@ var EnumAi = {
 	KOB: 14,
 	BLUE_SQUARK: 15,
 	URK_VETERAN: 16,
-	URK_SHAMAN: 17
+	URK_SHAMAN: 17,
+	BLACK_KNIGHT: 18
 }
 
 var EnumCreatureWeapon = {
@@ -91,7 +89,8 @@ var EnumCreatureWeapon = {
 	ZOMBI_BITE: 9,
 	ZOMBI_MASTER_STAFF: 10,
 	SQUARK_KNIFE: 11,
-	URK_SHAMAN_STAFF: 12
+	URK_SHAMAN_STAFF: 12,
+	BLACK_KNIGHT_SWORD: 13
 }
 
 var EnumCreatureProjectile = {

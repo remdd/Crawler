@@ -38,13 +38,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 10,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 10
 		},
 		ai: {
 			type: EnumAi.GREEN_GOBLIN,
@@ -62,7 +56,6 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			// return EnumCreatureWeapon.URK_SWORD;
 			return EnumCreatureWeapon.GREEN_GOBLIN_CLAW;
 		}	
 	},
@@ -107,14 +100,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 8, 
-			height: 14,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0,
-			bounceOff: true
+			height: 14
 		},
 		ai: {
 			type: EnumAi.MINI_GHOST,
@@ -170,13 +156,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 8, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.SKELTON,
@@ -253,14 +233,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 14, 
-			height: 7,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0,
-			bounceOff: true
+			height: 7
 		},
 		ai: {
 			type: EnumAi.GREEN_SLUDGIE,
@@ -340,13 +313,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 8, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.CAMP_VAMP,
@@ -413,13 +380,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.URK,
@@ -498,13 +459,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 15,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 15
 		},
 		ai: {
 			type: EnumAi.URK,
@@ -598,14 +553,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 18, 
-			height: 24,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0,
-			bounceOff: true
+			height: 24
 		},
 		ai: {
 			type: EnumAi.HULKING_URK,
@@ -676,13 +624,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 14, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.KOB,
@@ -748,13 +690,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 8, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.MUMI,
@@ -820,13 +756,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 8, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.SNEAKY_SKELTON,
@@ -892,13 +822,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 16, 
-			height: 14,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 14
 		},
 		ai: {
 			type: EnumAi.BLUE_SQUARK,
@@ -970,13 +894,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.ZOMBI,
@@ -1061,13 +979,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 12, 
-			height: 16,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 16
 		},
 		ai: {
 			type: EnumAi.ZOMBI_MASTER,
@@ -1121,13 +1033,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 10, 
-			height: 25,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 25
 		},
 		ai: {
 			type: EnumAi.MINI_GHOST,
@@ -1167,6 +1073,7 @@ var creatureTemplates = [
 				{ x: 14, y: 12 },	//	Death facing R 2
 				{ x: 15, y: 12 },	//	Death facing R 3
 				{ x: 16, y: 12 },	//	Death facing R 4
+				
 				{ x: 8, y: 13 },	//	Resting facing L 1
 				{ x: 9, y: 13 },	//	Resting facing L 2
 				{ x: 10, y: 13 },	//	Moving facing L 1
@@ -1188,13 +1095,7 @@ var creatureTemplates = [
 		},
 		box: {
 			width: 12, 
-			height: 15,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 15
 		},
 		ai: {
 			type: EnumAi.URK_VETERAN,
@@ -1237,13 +1138,13 @@ var creatureTemplates = [
 			maxHP: 5,
 			currentHP: 5,
 			restingWeaponAnimation: true,
-			attackRate: 0.5,
+			attackRate: 1,
 			score: 250
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
 			size: { x: 1, y: 1 },
-			y_padding: 4,
+			y_padding: 2,
 			frames: [
 				{ x: 8, y: 14 },	//	Resting facing R 1
 				{ x: 9, y: 14 },	//	Resting facing R 2
@@ -1254,6 +1155,7 @@ var creatureTemplates = [
 				{ x: 14, y: 14 },	//	Death facing R 2
 				{ x: 15, y: 14 },	//	Death facing R 3
 				{ x: 16, y: 14 },	//	Death facing R 4
+
 				{ x: 8, y: 15 },	//	Resting facing L 1
 				{ x: 9, y: 15 },	//	Resting facing L 2
 				{ x: 10, y: 15 },	//	Moving facing L 1
@@ -1269,19 +1171,13 @@ var creatureTemplates = [
 				[ 800, [500, 800], [ 9, 10] ],											//	Resting, facing L
 				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
 				[ 600, [150, 300, 450, 600], [ 11,12,13,10 ] ],							//	Moving, facing L
-				[ 1200, [300, 600, 900, 1200], [5, 6, 7, 8 ] ],									//	Death, facing R
-				[ 1200, [300, 600, 900, 1200], [14,15,16,17] ]									//	Death, facing L
+				[ 1200, [300, 600, 900, 1200], [5, 6, 7, 8 ] ],							//	Death, facing R
+				[ 1200, [300, 600, 900, 1200], [14,15,16,17] ]							//	Death, facing L
 			]
 		},
 		box: {
 			width: 10, 
-			height: 15,
-			type: EnumBoxtype.CREATURE
-		},
-		movement: {
-			moving: false,
-			direction: 0,
-			speed: 0
+			height: 15
 		},
 		ai: {
 			type: EnumAi.URK_SHAMAN,
@@ -1314,6 +1210,78 @@ var creatureTemplates = [
 		},
 		addWeapon: function() {
 			return EnumCreatureWeapon.URK_SHAMAN_STAFF;
+		}	
+	},
+	{
+		name: 'Black Knight',
+		currentSprite: { x: 18, y: 2},
+		vars: {
+			speed: 1.2,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: true,
+			attackRate: 1,
+			score: 250
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 18, y: 2 },	//	Resting facing R 1
+				{ x: 19, y: 2 },	//	Resting facing R 2
+				{ x: 20, y: 2 },	//	Moving facing R 1
+				{ x: 21, y: 2 },	//	Moving facing R 2
+				{ x: 22, y: 2 },	//	Moving facing R 3
+				{ x: 23, y: 2 },	//	Moving facing R 4
+				{ x: 24, y: 2 },	//	Death facing R 1
+				{ x: 25, y: 2 },	//	Death facing R 2
+				{ x: 26, y: 2 },	//	Death facing R 3
+				{ x: 27, y: 2 },	//	Death facing R 4
+				{ x: 28, y: 2 },	//	Death facing R 5
+
+				{ x: 18, y: 4 },	//	Resting facing L 1
+				{ x: 19, y: 4 },	//	Resting facing L 2
+				{ x: 20, y: 4 },	//	Moving facing L 1
+				{ x: 21, y: 4 },	//	Moving facing L 2
+				{ x: 22, y: 4 },	//	Moving facing L 3
+				{ x: 23, y: 4 },	//	Moving facing L 4
+				{ x: 24, y: 4 },	//	Death facing L 1
+				{ x: 25, y: 4 },	//	Death facing L 2
+				{ x: 26, y: 4 },	//	Death facing L 3
+				{ x: 27, y: 4 },	//	Death facing L 4
+				{ x: 28, y: 4 }		//	Death facing L 5
+			],
+			animations: [
+				[ 400, [200, 400], [0, 1] ],								//	Resting, facing R
+				[ 400, [200, 400], [11, 12] ],								//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],				//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [13,14,15,16] ],				//	Moving, facing L
+				[ 1000, [200, 400, 600, 800, 1000], [6, 7, 8, 9, 10] ],		//	Death, facing R
+				[ 1000, [200, 400, 600, 800, 1000], [17,18,19,20,21] ]		//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 15
+		},
+		ai: {
+			type: EnumAi.MUMI,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BLACK_KNIGHT_SWORD;
 		}	
 	}
 ];

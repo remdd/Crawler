@@ -623,7 +623,7 @@ var creatureWeapons = [
 		},
 		vars: {
 			animTime: 500,								//	Length of time the weapon stays animated after attack
-			attackRate: 1000,							//	Time to rest after attack
+			attackRate: 1500,							//	Time to rest after attack
 			drawOffset: { x: 0, y: 0 },
 			foreground: true,
 			displayTime: 1000,
@@ -663,6 +663,68 @@ var creatureWeapons = [
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		},
 		projectile: EnumCreatureProjectile.URK_SHAMAN_FIREBALL
+	},
+	{
+		name: "Black Knight's Sword",
+		currentSprite: { x: 16, y: 4},
+		use: function(direction) {
+			console.log("Attacking!");
+			this.position.y -= 8;
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			this.position.y += 8;
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 400,								//	Length of time the weapon stays animated after attack
+			attackRate: 500,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 2
+			},
+			frames: [
+				{ x: 16, y: 4 },							//	Right facing
+				{ x: 16.5, y: 4 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -4/16,
+				y: TILE_SIZE * 3/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * -0/16,
+				y: TILE_SIZE * -8/16
+			},
+			attackPositionOffset: {
+				x: TILE_SIZE * 0/16,
+				y: TILE_SIZE * 8/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 26/16,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			color1: 'rgba(255,255,255,0)',
+			color2: 'rgb(70,0,160)',
+			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 1 * Math.PI / 2,
+			maxHits: 1,									//	Number of contact points per swipe that can successfully resolve as hits
+			attackPositionOffset: {
+				x: TILE_SIZE * 0/16,
+				y: TILE_SIZE * 8/16
+			}
+		}
 	}
 ];
 

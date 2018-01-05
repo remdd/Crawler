@@ -51,7 +51,7 @@ var playerTemplates = [
 			animations: [											//	Format: Loop time in ms, end time of each frame in ms, frame numbers
 				[ 1000, [600, 1000], [0, 1] ],						//	Resting, facing R
 				[ 1000, [600, 1000], [6, 7] ],						//	Resting, facing L
-				[ 400, [100, 200, 300, 400], [5, 4, 3, 2 ] ],		//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],		//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [8, 9, 10,11] ],		//	Moving, facing L
 				[ 1000, [67, 134, 200, 267, 334, 400, 467, 534, 600, 667, 734, 800, 867, 934, 1000 ], [ 12, 0, 12, 0, 12, 0, 12, 0, 12, 1, 13, 1, 13, 1, 13 ] ],	//	Resting Hitflash, facing R
 				[ 1000, [67, 134, 200, 267, 334, 400, 467, 534, 600, 667, 734, 800, 867, 934, 1000 ], [ 14, 6, 14, 6, 14, 6, 14, 6, 14, 7, 15, 7, 15, 7, 15 ] ],	//	Resting Hitflash, facing L

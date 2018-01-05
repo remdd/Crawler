@@ -174,6 +174,14 @@ Obstacle = function(type, room, y, x, modifier) {
 			this.closed = true;
 			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
 			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE,
+				x: this.grid.x * TILE_SIZE
+			}
 			this.interact = function() {
 				if(!this.open) {
 					this.open = true;

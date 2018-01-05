@@ -1,5 +1,10 @@
 var level;											//	Current level object, loaded from levels.js
 
+var master = {
+	interactDistance: 15,						//	Distance at which player can interact with interactables
+	healthDropFrequency: 10						//	Average number of default death drops per health heart drop
+}
+
 var session = {
 	seed: Math.floor(Math.random() * 1000000),		//	Holds level seed
 	seed: 617547,
@@ -7,10 +12,7 @@ var session = {
 	levelNumber: 0,									//	Initial level
 	loadingLevel: false,
 	score: 0,
-	vars: {
-		interactDistance: 15,						//	Distance at which player can interact with interactables
-		healthDropFrequency: 1						//	Average number of default death drops per health heart drop
-	}
+	vars: {}
 }
 
 session.prng = new Random(session.seed);
@@ -125,6 +127,7 @@ function addBackground() {
 
 function setUpLevel() {
 	level.obstacles.forEach(function(obstacle) {
+	obstacle.vars.drawY = obstacle.box.bottomRight.y - 2;
 		if(obstacle.box) {
 			game.colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
 		}
@@ -161,6 +164,8 @@ function setUpPlayer() {
 	player.weapon = new Weapon(playerWeapons[0], player);													//	Assign starting weapon
 	player.vars.lastAttackTime = 0;																			//	Initialize to zero
 	player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
+	player.movement.bounceOff = true;
+	player.box.type = EnumBoxtype.PLAYER;
 	player.weapon.reset();
 	player.updateGear();
 	player.items = [];
@@ -333,6 +338,7 @@ function Pickup(pickupTemplate) {
 		x: 0,
 		y: 4
 	}
+	this.vars.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
 	this.currentSprite = pickupTemplate.currentSprite;
 	this.movement = {};
 	Object.assign(this.movement, pickupTemplate.movement);
@@ -526,6 +532,7 @@ function Creature(creatureTemplate) {
 		this.vars.minFacingChangeTime = 200;					//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
 	}
 	this.vars.suspended = true;
+	this.box.type = EnumBoxtype.CREATURE;
 	this.ai = {};
 	Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
 	this.ai.startTime = 0;
@@ -533,7 +540,6 @@ function Creature(creatureTemplate) {
 	this.ai.action = 0;
 	this.ai.nextAction = 0;		
 	this.movement = {};
-	Object.assign(this.movement, creatureTemplate.movement);	//	Copy movement object for this creature template
 	this.movement.bounceRandom = true;
 	if(creatureTemplate.addWeapon) {
 		var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
@@ -576,6 +582,7 @@ Creature.prototype.move = function(direction, speed) {
 		x: Math.floor(this.position.x / TILE_SIZE),
 		y: Math.floor(this.position.y / TILE_SIZE),
 	}
+	this.vars.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
 	this.collidedWith = newCoords.collidedWith;
 	if(this.updateBox) {
 		this.updateBox();
@@ -607,7 +614,7 @@ Creature.prototype.aim = function(direction) {
 	}
 }
 Creature.prototype.setFacing = function(direction) {
-	if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
+	// if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
 		this.vars.lastFacingChangeTime = performance.now();
 		if(Math.cos(direction) >= 0) {
 			this.vars.facingRight = true;
@@ -624,7 +631,7 @@ Creature.prototype.setFacing = function(direction) {
 				this.vars.animation = EnumState.RESTING_R;
 			}
 		}
-	}
+	// }
 }
 Creature.prototype.kill = function() {
 	if(!this.vars.dead) {
@@ -781,7 +788,7 @@ Creature.prototype.checkIfCollides = function() {
 interact = function() {
 	level.obstacles.forEach(function(obstacle) {
 		if(inViewport(obstacle.grid.x * TILE_SIZE, obstacle.grid.y * TILE_SIZE) && obstacle.interact) {
-			if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < session.vars.interactDistance) {
+			if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < master.interactDistance) {
 				game.redrawObstaclesTo = performance.now() + obstacle.interact();
 			}
 		}
@@ -854,6 +861,10 @@ function drawAttack(attack) {
 		case(EnumAttack.SWIPE): {
 			var origin_x = attack.attacker.position.x - game.viewport_offset_x;
 			var origin_y = attack.attacker.position.y - game.viewport_offset_y;
+			if(attack.attackPositionOffset) {
+				origin_x += attack.attackPositionOffset.x;
+				origin_y += attack.attackPositionOffset.y;
+			}
 			attackCtx.moveTo(origin.x,origin.y);
 			attackCtx.beginPath();
 			attackCtx.arc(origin_x, origin_y, attack.reach, attack.direction - attack.arc / 2, attack.direction + attack.arc / 2);
@@ -934,7 +945,7 @@ function updateDrawables() {
 		}
 	});
 	game.drawables.sort(function(a, b) {
-		return a.position.y-b.position.y;
+		return a.vars.drawY-b.vars.drawY;
 	});
 }
 
@@ -1018,10 +1029,19 @@ Creature.prototype.updateGear = function() {
 		}
 		if(this.weapon.vars.attacking) {																				//	If *still* attacking...
 			this.weapon.vars.drawOffset.y = this.weapon.sprite.attackDrawOffset.y;										//	Set its y draw offset to the 'attacking' value...
+			if(this.weapon.sprite.attackPositionOffset) {
+				this.weapon.position.y += this.weapon.sprite.attackPositionOffset.y;
+			}
 			if(this.vars.facingRight) {
 				this.weapon.vars.drawOffset.x = this.weapon.sprite.attackDrawOffset.x;									//	...and the x offset +ve or -ve depending on facing.
+				if(this.weapon.sprite.attackPositionOffset) {
+					this.weapon.position.x += this.weapon.sprite.attackPositionOffset.x;
+				}
 			} else {
 				this.weapon.vars.drawOffset.x = -this.weapon.sprite.attackDrawOffset.x;
+				if(this.weapon.sprite.attackPositionOffset) {
+					this.weapon.position.x -= this.weapon.sprite.attackPositionOffset.x;
+				}
 			}
 		} else if(!this.weapon.vars.hidden) {
 			this.weapon.vars.drawOffset.y = this.weapon.sprite.restingDrawOffset.y;										//	If *not* attacking...
@@ -1168,7 +1188,7 @@ function checkTerrainCollision(obj, tryX, tryY) {
 			(level.terrainArray[tryTerY][tryTerLX] === undefined || level.terrainArray[tryTerY][tryTerLX] !== 0)) {			//	...or is impassable on the left.
 				returnCoords.y = obj.position.y;																			//	If so, set y to return unchanged...
 				returnCoords.collidedWith = 1;
-				if(obj.movement.bounceOff) {																				//	...and if obj bounces off...
+				if(obj.movement.bounceOff && obj !== player) {																				//	...and if obj bounces off...
 					obj.movement.direction = -obj.movement.direction;														//	...invert direction...
 					if(obj.setFacing) {
 						obj.setFacing(obj.movement.direction);
@@ -1189,8 +1209,9 @@ function checkTerrainCollision(obj, tryX, tryY) {
 		if(!okY) {
 			returnCoords.collidedWith = 1;
 		}
-		if(obj.movement.bounceOff) {
-			obj.movement.direction = obj.movement.direction + Math.PI;
+		if(obj.movement.bounceOff && obj !== player) {
+			obj.movement.direction = -obj.movement.direction;
+			// obj.movement.direction = obj.movement.direction + Math.PI;
 		} else if(obj.movement.bounceRandom) {
 			var rand = Math.floor(Math.random() * 4);
 			if(rand < 1) {
@@ -1282,8 +1303,9 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 					returnCoords.collidedWith = game.nearbyColliders[i];
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
-					if(obj.movement.bounceOff) {
-						obj.movement.direction = obj.movement.direction + Math.PI;
+					if(obj.movement.bounceOff && obj !== player) {
+						obj.movement.direction = -obj.movement.direction;
+						// obj.movement.direction = obj.movement.direction + Math.PI;
 					} else if(obj.movement.bounceRandom) {
 						var rand = Math.floor(Math.random() * 4);
 						if(rand < 1) {
@@ -1296,7 +1318,7 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 							obj.movement.direction = 3 * Math.PI / 2;
 						}
 					}
-					if(obj.setFacing) {
+					if(obj.setFacing && obj !== player) {
 						obj.setFacing(obj.movement.direction);
 					}
 				}
@@ -1419,18 +1441,30 @@ function drawDebugCanvas() {
 		var debug = { x: projectile.position.x, y: projectile.position.y, color: 'orange'};
 		game.debugs.push(debug);
 	});
-	game.colliders.forEach(function(collider) {
-		var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
+	// game.colliders.forEach(function(collider) {
+	// 	var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
+	// 	game.debugs.push(debug);
+	// 	var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
+	// 	game.debugs.push(debug2);
+	// });
+	// game.attacks.forEach(function(attack) {
+	// 	attack.contactPoints.forEach(function(contactPoint) {
+	// 		var debug = { x: contactPoint.x, y: contactPoint.y, color: 'green'};
+	// 		game.debugs.push(debug);
+	// 	});
+	// });
+	level.obstacles.forEach(function(obstacle) {
+		var debug = { x: obstacle.position.x, y: obstacle.position.y, color: 'pink'};
 		game.debugs.push(debug);
-		var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
+		var debug2 = { x: obstacle.position.x, y: obstacle.vars.drawY, color: 'blue'};
 		game.debugs.push(debug2);
 	});
-	game.attacks.forEach(function(attack) {
-		attack.contactPoints.forEach(function(contactPoint) {
-			var debug = { x: contactPoint.x, y: contactPoint.y, color: 'green'};
-			game.debugs.push(debug);
-		});
-	});
+	// game.creatures.forEach(function(creature) {
+	// 	if(creature.weapon) {
+	// 		var debug = { x: creature.weapon.position.x, y: creature.weapon.position.y, color: 'green'};
+	// 		game.debugs.push(debug);
+	// 	}
+	// });
 	game.debugs.forEach(function(debug) {
 		debugCtx.strokeStyle = debug.color;
 		debugCtx.strokeRect(debug.x - game.viewport_offset_x, debug.y - game.viewport_offset_y, 1, 1);
@@ -1589,6 +1623,7 @@ function start(newGame) {
 		startSound.play();
 		session.levelNumber = 0;
 		session.score = 0;
+		session.vars.healthDropFrequency = master.healthDropFrequency;
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
 		// session.prng = new Random(617547);

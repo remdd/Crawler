@@ -17,55 +17,46 @@ var levelGen = {
 
 	loadLevel: function(levelNumber) {
 		level.levelNumber = levelNumber;
-		// session.prng = prng;
+		level.bossDrop = function() {
+			var exitKey = new Pickup(pickupTemplates[EnumPickup.EXIT_KEY], this.grid.x, this.grid.y);
+			exitKey.position.x = this.position.x;
+			exitKey.position.y = this.position.y + 2;
+			exitKey.movement.speed = 1;
+			exitKey.movement.direction = getPlayerDirection(this) + Math.PI;
+		};
+		level.img = document.getElementById('dungeon1Tiles');
+		level.obstacleImg = document.getElementById('obstacleSprites');
+		level.floorDecorImg = document.getElementById('floorDecorSprites');
+		level.tiles = levelTilesets[0];
+		level.obstacleTiles = obstacleTiles[0];
+		level.floorDecorTiles = floorDecorTiles;
 		switch(levelNumber) {
 			case 0: 
-			case 1:
-			case 2: 
-			case 3:
-			case 4:
 			{
 				level.height = 70;
 				level.width = 70;
-				level.img = document.getElementById('dungeon1Tiles');
-				level.obstacleImg = document.getElementById('obstacleSprites');
-				level.floorDecorImg = document.getElementById('floorDecorSprites');
-				level.tiles = levelTilesets[0];
-				level.obstacleTiles = obstacleTiles[0];
-				level.floorDecorTiles = floorDecorTiles;
 				level.roomTypes = [
 					EnumRoomtype.BASIC_ROOM,
 					EnumRoomtype.BASIC_ROOM,
 					EnumRoomtype.BASIC_ROOM,
 					EnumRoomtype.LIGHT_FLOOR_PATCH, 
+					EnumRoomtype.LIGHT_FLOOR_PATCH, 
 					EnumRoomtype.MUD_POOL,
 					EnumRoomtype.COBBLES,
 					EnumRoomtype.GREY_STONE,
 					EnumRoomtype.SQUARE_TILE,
-					EnumRoomtype.PARQUET_FLOOR,
-					EnumRoomtype.PLANK_FLOOR,
-					EnumRoomtype.PAVED_FLOOR
+					EnumRoomtype.PARQUET_FLOOR
 				];
 				level.startRoomContents = function() {
 					console.log("Adding start room contents");
 					// level.playerStart = {y: this.origin.y, x: this.origin.x};
-					this.addCreature(EnumCreature.HULKING_URK);
-					// this.addCreature(EnumCreature.SKELTON);
-					// this.addCreature(EnumCreature.SKELTON);
-					// new Obstacle(EnumObstacle.BARRELSx3, null, level.playerStart.y + 1, level.playerStart.x + 1);
+					this.addCreature(EnumCreature.BLACK_KNIGHT);
 				};
 				level.bossRooms = [0, 1, 2];						//	Camp Vamp, Zombi Master, Urk Nest
 				level.bossRoomContents = function() {
 					// level.playerStart = {y: this.origin.y + 1, x: this.origin.x + 1};
 					var rand = Math.floor(session.prng.nextFloat() * level.bossRooms.length);
 					levelGen.bossRooms[rand](this);
-				};
-				level.bossDrop = function() {
-					var exitKey = new Pickup(pickupTemplates[EnumPickup.EXIT_KEY], this.grid.x, this.grid.y);
-					exitKey.position.x = this.position.x;
-					exitKey.position.y = this.position.y + 2;
-					exitKey.movement.speed = 1;
-					exitKey.movement.direction = getPlayerDirection(this) + Math.PI;
 				};
 				level.exitRoomContents = function() {
 					new Obstacle(EnumObstacle.EXIT_STAIRS, null, this.origin.y + 1, this.origin.x + 1);
@@ -95,6 +86,13 @@ var levelGen = {
 				level.randomRoomBaseline = 0;				//	Set baseline room number to be used by generator - higher values start from 
 				break;
 			}
+			case 1:
+			{
+
+			}
+			case 2: 
+			case 3:
+			case 4:
 			default: {
 				break;
 			}
@@ -714,37 +712,18 @@ var levelGen = {
 
 //	Boss rooms
 levelGen.bossRooms = [
+
 	//	Camp Vamp's dining room
 	function(room) {
 		level.boss = EnumCreature.CAMP_VAMP;
 		console.log("Adding Camp Vamp boss room");
-
-		//	Remove any existing obstacles apart from doors
-		for(var i = level.obstacles.length - 1; i >= 0; i--) {
-			if(	level.obstacles[i].grid.y >= room.origin.y && level.obstacles[i].grid.y <= room.origin.y + room.height && 
-				level.obstacles[i].grid.x >= room.origin.x && level.obstacles[i].grid.x <= room.origin.x + room.width
-				&& level.obstacles[i].type !== EnumObstacle.DOOR
-			) {
-				console.log("Deleting obstacle...");
-				level.obstacles.splice(i, 1);
-			}
-		}
-		//	Remove any existing decor **********************************Need to remove existing tall decor too********************************
-		for(var i = level.decor.length - 1; i >= 0; i--) {
-			if(	level.decor[i].grid.y >= room.origin.y && level.decor[i].grid.y <= room.origin.y + room.height && 
-				level.decor[i].grid.x >= room.origin.x && level.decor[i].grid.x <= room.origin.x + room.width
-			) {
-				console.log("Deleting decor...");
-				level.decor.splice(i, 1);
-			}
-		}
+		room.removeExistingContents();
 
 		//	Add special obstacles - dining table & chairs - ***** needs a min room height of 8 and width of 6
 		var rand = Math.floor(session.prng.nextFloat() * (room.height - 6 - 2));			//	6: total height of table & chairs, 2: to ensure a space either side
 		var diningRoom_y = room.origin.y + 1 + rand;
 		var rand2 = Math.floor(session.prng.nextFloat() * (room.width - 4 - 2));			//	4: total width of table & chairs, 2: to ensure a space either side
 		var diningRoom_x = room.origin.x + 1 + rand2;
-
 
 		new Obstacle(EnumObstacle.DINING_TABLE, null, diningRoom_y + 1, diningRoom_x + 1);
 		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 0, diningRoom_x + 2, 3);
@@ -753,11 +732,11 @@ levelGen.bossRooms = [
 		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 0, 1);
 		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 2, diningRoom_x + 3, 2);
 		new Obstacle(EnumObstacle.DINING_CHAIR, null, diningRoom_y + 4, diningRoom_x + 3, 2);
-
 		new Obstacle(EnumObstacle.COFFIN, room);
 
-		//	Add tiled floor
+		//	Add tiled floor and decor
 		room.addFloor(level.tiles.tiledFloor, null, null, true);
+		room.addFloorDecor(1, [EnumDecortype.BONES, EnumDecortype.SPLATS, EnumDecortype.FILTH]);
 
 		//	Add columns on facing wall spaces
 		for(var i = room.origin.x; i < room.origin.x + room.width; i++) {
@@ -774,30 +753,24 @@ levelGen.bossRooms = [
 			}
 		}
 
-		room.addFloorDecor(1, [EnumDecortype.BONES, EnumDecortype.SPLATS, EnumDecortype.FILTH]);
-
 		// Add boss and other creatures
 		room.addCreature(level.boss);
-		var rand = Math.floor(session.prng.nextFloat() * 3) + 3		//	From 3 - 5
-		for(var i = 0; i < rand; i++) {
+		var extraCreatures = 4 + level.levelNumber;
+		var rand = Math.floor(session.prng.nextFloat() * 2);
+		if(rand < 1) {
+			room.addCreature(EnumCreature.MUMI);
+			extraCreatures -= 2;
+		}
+		for(var i = 0; i < extraCreatures; i++) {
 			room.addCreature(EnumCreature.SKELTON);
 		}	
 	},
+
 	//	Zombi Master's lair
 	function(room) {
 		level.boss = EnumCreature.ZOMBI_MASTER;
 		console.log("Adding Zombi Master boss room");
-
-		//	Remove any existing obstacles apart from doors
-		for(var i = level.obstacles.length - 1; i >= 0; i--) {
-			if(	level.obstacles[i].grid.y >= room.origin.y && level.obstacles[i].grid.y <= room.origin.y + room.height && 
-				level.obstacles[i].grid.x >= room.origin.x && level.obstacles[i].grid.x <= room.origin.x + room.width
-				&& level.obstacles[i].type !== EnumObstacle.DOOR
-			) {
-				console.log("Deleting obstacle...");
-				level.obstacles.splice(i, 1);
-			}
-		}
+		room.removeExistingContents();
 
 		//	Add special obstacles 
 		new Obstacle(EnumObstacle.ZOMBI_MASTER_DESK, room);
@@ -813,6 +786,7 @@ levelGen.bossRooms = [
 			new Obstacle(EnumObstacle.BLOOD_BUCKET, room);
 		}
 
+		//	Add room wall and floor decor
 		room.addWallDecor(false, 2);
 		var rand2 = Math.floor(session.prng.nextFloat() * 2);
 		if(rand2 < 1) {
@@ -824,8 +798,8 @@ levelGen.bossRooms = [
 
 		// Add boss and other creatures
 		room.addCreature(level.boss);
-		var rand = Math.floor(session.prng.nextFloat() * 3) + 3		//	From 3 - 5
-		for(var i = 0; i < 5; i++) {
+		var zombis = 5 + level.levelNumber;
+		for(var i = 0; i < zombis; i++) {
 			room.addCreature(EnumCreature.ZOMBI);
 		}	
 	},
@@ -833,18 +807,7 @@ levelGen.bossRooms = [
 	function(room) {
 		level.boss = EnumCreature.URK_SHAMAN;
 		console.log("Adding Urk Nest boss room");
-
-		//	Remove any existing obstacles apart from doors
-		for(var i = level.obstacles.length - 1; i >= 0; i--) {
-			if(	level.obstacles[i].grid.y >= room.origin.y && level.obstacles[i].grid.y <= room.origin.y + room.height && 
-				level.obstacles[i].grid.x >= room.origin.x && level.obstacles[i].grid.x <= room.origin.x + room.width
-				&& level.obstacles[i].type !== EnumObstacle.DOOR
-			) {
-				console.log("Deleting obstacle...");
-				level.obstacles.splice(i, 1);
-			}
-		}
-		room.addFloorPatch(EnumFloorpatch.MUD_POOL);
+		room.removeExistingContents();
 
 		//	Add special obstacles
 		var rand = Math.floor(session.prng.nextFloat() * 3);
@@ -855,40 +818,31 @@ levelGen.bossRooms = [
 		if(rand < 2) {
 			new Obstacle(EnumObstacle.SPIT, room);
 		}
+		//	Add room floor and decor
+		room.addFloorPatch(EnumFloorpatch.MUD_POOL);
 		room.addStoreRoomObstacles(5);
 		room.addFloorDecor(5);
 
 		// Add boss and other creatures
 		room.addCreature(level.boss);
-		var totalCreatures = Math.floor(session.prng.nextFloat() * 3) + 4;
-		var rand = Math.floor(session.prng.nextFloat() * 4);	
-		if(rand < 2) {
-			var rand2 = Math.floor(session.prng.nextFloat() * 2);
-			if(rand2 < 1) {
+		var extraToughCreatures = 1 + level.levelNumber;
+		var extraWeakCreatures = 3;
+		for(var i = 0; i < extraToughCreatures; i++) {
+			var rand = Math.floor(session.prng.nextFloat() * 2);
+			if(rand < 1) {
 				room.addCreature(EnumCreature.HULKING_URK);
 			} else {
 				room.addCreature(EnumCreature.URK_VETERAN);
 			}
-			totalCreatures--;
-		}	
-		var rand2 = Math.floor(session.prng.nextFloat() * 4);	
-		if(rand2 < 1) {
-			var rand3 = Math.floor(session.prng.nextFloat() * 2);
-			if(rand3 < 1) {
-				room.addCreature(EnumCreature.HULKING_URK);
-			} else {
-				room.addCreature(EnumCreature.URK_VETERAN);
-			}
-			totalCreatures--;
 		}
-		for(var i = 0; i < totalCreatures; i++) {
+		for(var i = 0; i < extraWeakCreatures; i++) {
 			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
 				room.addCreature(EnumCreature.URK);
 			} else if(rand < 2) {
-				room.addCreature(EnumCreature.GREEN_GOBLIN);
-			} else {
 				room.addCreature(EnumCreature.URK_WARRIOR);
+			} else {
+				room.addCreature(EnumCreature.GREEN_GOBLIN);
 			}
 		}
 	}
@@ -1727,6 +1681,28 @@ Room.prototype.addFloorDecor = function(decorFactor, decorTypes) {
 		}
 	}
 }
+Room.prototype.removeExistingContents = function() {
+	//	Remove any existing obstacles apart from doors
+	for(var i = level.obstacles.length - 1; i >= 0; i--) {
+		if(	level.obstacles[i].grid.y >= this.origin.y && level.obstacles[i].grid.y <= this.origin.y + this.height && 
+			level.obstacles[i].grid.x >= this.origin.x && level.obstacles[i].grid.x <= this.origin.x + this.width
+			&& level.obstacles[i].type !== EnumObstacle.DOOR
+		) {
+			console.log("Deleting obstacle...");
+			level.obstacles.splice(i, 1);
+		}
+	}
+	//	Remove any existing decor **********************************Need to remove existing tall decor too********************************
+	for(var i = level.decor.length - 1; i >= 0; i--) {
+		if(	level.decor[i].grid.y >= this.origin.y && level.decor[i].grid.y <= this.origin.y + this.height && 
+			level.decor[i].grid.x >= this.origin.x && level.decor[i].grid.x <= this.origin.x + this.width
+		) {
+			console.log("Deleting decor...");
+			level.decor.splice(i, 1);
+		}
+	}
+}
+
 
 Decor = function(spriteY, spriteX, gridY, gridX, offsetY, offsetX) {
 	this.grid = {

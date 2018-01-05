@@ -118,7 +118,7 @@ setAiAction = function(creature) {
 							ai.moveRandomVector(creature, 500, 500, 2);										//	...move away from player for 0.5 - 1s, at 2x speed
 							creature.ai.nextAction = 0;
 						} else {
-							ai.rest(creature, 200, 0);
+							ai.rest(creature, 500, 0);
 							creature.ai.nextAction = 1;
 						}
 						break;
@@ -604,6 +604,7 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 4: {																//	Bezerk!
+						creature.movement.bounceOff = true;
 						creature.vars.bezerkAttacks = Math.floor(Math.random() * 5) + 5;
 						creature.weapon.vars.attackRate = 200;
 						creature.weapon.vars.animTime = 150;
@@ -635,6 +636,7 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 7: {																//	Exhausted...
+						creature.movement.bounceOff = false;
 						if(creature.vars.facingRight) {
 							animation = 8;
 						} else {
