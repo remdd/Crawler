@@ -707,6 +707,7 @@ var creatureWeapons = [
 		},
 		attack: {
 			reach: TILE_SIZE * 26/16,					//	Reach of attack from centre of player object position
+			baseDamage: 2,
 			criticalMax: 3,
 			damagePlayer: true,
 			damageCreatures: false,

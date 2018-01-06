@@ -726,10 +726,10 @@ function Effect(type) {
 					this.message2 = "You feel woozy...";
 					this.message3 = "";
 					this.apply = function() {
-						player.vars.speed = player.vars.speed * 0.6;
+						player.vars.speed = player.vars.speed * 0.75;
 					};
 					this.remove = function() {
-						player.vars.speed = player.vars.speed / 0.6;
+						player.vars.speed = player.vars.speed / 0.75;
 					}
 					break;
 				}

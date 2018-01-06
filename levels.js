@@ -10,7 +10,9 @@ var levelGen = {
 		floorDecorFrequency: 30,			//	Base frequency of floor decor
 		deadEndFactor: 0.5,					//	Fraction of dead ends that get filled in is 1 divided by this number
 		addCreatureAttempts: 20,
-		addObstacleAttempts: 20
+		addObstacleAttempts: 20,
+		minimumCreatureCount: 30,
+		basicItemFrequency: 1
 	},
 	earlyBossRooms: [
 		EnumCreature.URK_SHAMAN,
@@ -45,6 +47,21 @@ var levelGen = {
 		EnumCreature.URK_VETERAN,
 		EnumCreature.ZOMBI
 	],
+	startingCommonItems: [
+		EnumItem.HEALTH_HEART,
+		EnumItem.HEALTH_HEART,
+		EnumItem.HEALTH_HEART,
+		EnumItem.GREEN_MUSHROOM
+	],
+	startingSpecialItems: [
+		EnumItem.BASIC_SWORD,
+		EnumItem.BASIC_SWORD,
+		EnumItem.BASIC_SWORD,
+		EnumItem.CRYSTAL_KNIFE,
+		EnumItem.WATER_KNIFE,
+		EnumItem.CRYSTAL_HELMET,
+		EnumItem.WATER_HELMET
+	],
 	randomRoomRange: 10,					//	Sets range of possible random room contents for generator
 	randomRoomBaseline: 0				//	Set baseline room number to be used by generator - higher values start from 
 }
@@ -66,7 +83,8 @@ levelGen.loadLevel = function(levelNumber) {
 	level.tiles = levelTilesets[0];
 	level.obstacleTiles = obstacleTiles[0];
 	level.floorDecorTiles = floorDecorTiles;
-	//	If the first level is being loaded, reset the earlyBossRoom & creature arrays
+	level.creatureCount = 0;
+	//	If the first level is being loaded, reset the session variables to starting values
 	if(level.levelNumber === 1) {
 		sessionVars = Object.create({});
 		sessionVars.earlyBossRooms = [];
@@ -78,8 +96,14 @@ levelGen.loadLevel = function(levelNumber) {
 		sessionVars.uncommonCreatures = levelGen.startingUncommonCreatures.slice();
 		sessionVars.rareCreatures = [];
 		sessionVars.rareCreatures = levelGen.startingRareCreatures.slice();
+		sessionVars.commonItems = [];
+		sessionVars.commonItems = levelGen.startingCommonItems.slice();
+		sessionVars.specialItems = [];
+		sessionVars.specialItems = levelGen.startingSpecialItems.slice();
 		sessionVars.randomRoomRange = levelGen.randomRoomRange;
 		sessionVars.randomRoomBaseline = levelGen.randomRoomBaseline;
+		sessionVars.minimumCreatureCount = levelGen.vars.minimumCreatureCount;
+		sessionVars.basicItemFrequency = levelGen.vars.basicItemFrequency;
 	}
 	level.commonCreatures = [];
 	level.commonCreatures = sessionVars.commonCreatures.slice();
@@ -87,6 +111,10 @@ levelGen.loadLevel = function(levelNumber) {
 	level.uncommonCreatures = sessionVars.uncommonCreatures.slice();
 	level.rareCreatures = [];
 	level.rareCreatures = sessionVars.rareCreatures.slice();
+	level.commonItems = [];
+	level.commonItems = sessionVars.commonItems.slice();
+	level.specialItems = [];
+	level.specialItems = sessionVars.specialItems.slice();
 	level.randomRoomRange = sessionVars.randomRoomRange;
 	level.randomRoomBaseline = sessionVars.randomRoomBaseline;
 
@@ -102,6 +130,8 @@ levelGen.loadLevel = function(levelNumber) {
 			level.bossSizeMax = 9;
 			level.bossSizeRand = 0;
 			sessionVars.rareCreatures.push(EnumCreature.BLACK_KNIGHT);
+			sessionVars.specialItems.push(EnumItem.SHADOW_KNIFE);
+			sessionVars.specialItems.push(EnumItem.SHADOW_HELMET);
 			break;
 		}
 		case EnumCreature.URK_SHAMAN: {
@@ -111,6 +141,8 @@ levelGen.loadLevel = function(levelNumber) {
 			level.bossSizeRand = 6;
 			sessionVars.uncommonCreatures.push(EnumCreature.URK_VETERAN);
 			sessionVars.rareCreatures.push(EnumCreature.URK_SHAMAN);
+			sessionVars.specialItems.push(EnumItem.FIRE_KNIFE);
+			sessionVars.specialItems.push(EnumItem.FIRE_HELMET);
 			break;
 		}
 		case EnumCreature.ZOMBI_MASTER: {
@@ -118,6 +150,8 @@ levelGen.loadLevel = function(levelNumber) {
 			level.bossSizeMin = 8;
 			level.bossSizeMax = 12;
 			level.bossSizeRand = 5;
+			sessionVars.specialItems.push(EnumItem.ACID_KNIFE);
+			sessionVars.specialItems.push(EnumItem.ACID_HELMET);
 			break;
 		}
 		case EnumCreature.CAMP_VAMP: {
@@ -127,6 +161,8 @@ levelGen.loadLevel = function(levelNumber) {
 			level.bossSizeRand = 3;
 			sessionVars.uncommonCreatures.push(EnumCreature.MUMI);
 			sessionVars.rareCreatures.push(EnumCreature.CAMP_VAMP);
+			sessionVars.specialItems.push(EnumItem.LIGHTNING_KNIFE);
+			sessionVars.specialItems.push(EnumItem.LIGHTNING_HELMET);
 			break;
 		}
 	}
@@ -134,7 +170,9 @@ levelGen.loadLevel = function(levelNumber) {
 	level.roomTypes = sessionVars.roomTypes.slice();
 	//	Add boss room setup function
 	level.bossRoomContents = function() {
+		// level.playerStart = {y: this.origin.y, x: this.origin.x};
 		levelGen.bossRooms[level.bossRoomNumber](this);
+		// levelGen.bossRooms[3](this);
 	};
 	level.exitRoomContents = function() {
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
@@ -149,30 +187,60 @@ levelGen.loadLevel = function(levelNumber) {
 		case 1: {
 			level.height = 70;
 			level.width = 70;
+			var rand = Math.floor(session.prng.nextFloat() * 2);
+			if(rand < 1) {
+				level.specialItemCount = 0;
+			} else {
+				level.specialItemCount = 1;
+			}
 			sessionVars.uncommonCreatures.push(EnumCreature.SNEAKY_SKELTON);
 			level.startRoomContents = function() {
 				console.log("Adding start room contents");
-				// level.playerStart = {y: this.origin.y, x: this.origin.x};
-				// this.addCreature(EnumCreature.BLACK_KNIGHT);
-				// new Obstacle(EnumObstacle.DRAGON_STATUE, null, this.origin.y + 1, this.origin.x + 1);
 			};
 			break;
 		}
 		case 2: {
 			level.height = 70;
 			level.width = 85;
+			sessionVars.minimumCreatureCount = 40;
 			sessionVars.uncommonCreatures.push(EnumCreature.KOB);
+			var rand = Math.floor(session.prng.nextFloat() * 3);
+			if(rand < 1) {
+				level.specialItemCount = 0;
+			} else if(rand < 2) {
+				level.specialItemCount = 1;
+			} else {
+				level.specialItemCount = 2;
+			}
 			break;
 		}
 		case 3: {
 			level.height = 85;
 			level.width = 85;
+			sessionVars.minimumCreatureCount = 45;
 			sessionVars.uncommonCreatures.push(EnumCreature.BLUE_SQUARK);
+			var rand = Math.floor(session.prng.nextFloat() * 3);
+			if(rand < 1) {
+				level.specialItemCount = 0;
+			} else if(rand < 2) {
+				level.specialItemCount = 1;
+			} else {
+				level.specialItemCount = 2;
+			}
 			break;
 		}
 		case 4: {
 			level.height = 100;
 			level.width = 85;
+			sessionVars.minimumCreatureCount = 50;
+			var rand = Math.floor(session.prng.nextFloat() * 3);
+			if(rand < 1) {
+				level.specialItemCount = 0;
+			} else if(rand < 2) {
+				level.specialItemCount = 1;
+			} else {
+				level.specialItemCount = 2;
+			}
 			break;
 		}
 		case 5: {
@@ -214,6 +282,9 @@ levelGen.generateLevel = function() {
 	});
 	//	Add a smattering of extra random creatures
 	this.addRandomCreatures();
+	for(var i = 0; i < level.specialItemCount; i++) {
+		this.addSpecialItem();
+	}
 },
 
 levelGen.fillOutMap = function() {
@@ -358,6 +429,9 @@ levelGen.fillOutMap = function() {
 	} else if(level.fillArray[level.exit.y][level.exit.x] !== 2) {
 		console.log("Invalid level - no connection to exit room, clearing...");
 		level.validLevel = false;
+	} else if(level.rooms.length < 16) {
+		console.log("Invalid level - not enough rooms...");
+		level.validLevel = false;
 	} else {
 		// Fill in any areas not connected to the main network
 		this.fillInUnreaachableAreas();
@@ -486,6 +560,14 @@ levelGen.setupEssentialRooms = function() {
 		},
 		height: bossSizeY,
 		width: bossSizeX
+	},
+	level.startRoom = {
+		origin: {
+			y: startPosY,
+			x: startPosX
+		},
+		height: startSizeY,
+		width: startSizeX
 	}
 };
 
@@ -793,7 +875,56 @@ levelGen.checkForCorridorStart = function(y, x) {
 };
 
 levelGen.addRandomCreatures = function() {
+	console.log(level.creatureCount + " creatures - minimum is " + sessionVars.minimumCreatureCount);
+	while(level.creatureCount < sessionVars.minimumCreatureCount) {
+		//	Add extra creatures in ratio 4 common to 1 uncommon
+		var rarity = Math.floor(session.prng.nextFloat() * 5);
+		if(rarity < 1) {
+			var rand = Math.floor(session.prng.nextFloat() * sessionVars.uncommonCreatures.length);
+			var creature = sessionVars.uncommonCreatures[rand];
+		} else {
+			var rand = Math.floor(session.prng.nextFloat() * sessionVars.commonCreatures.length);
+			var creature = sessionVars.commonCreatures[rand];
+		}
+		var retry = true;
+		while(retry) {
+			var randY = Math.floor(session.prng.nextFloat() * (level.terrainArray.length));
+			var randX = Math.floor(session.prng.nextFloat() * (level.terrainArray[0].length));
+			if(		
+				//	Check that creature array and obstacle array are clear, and that position is not in the player start room
+				level.terrainArray[randY][randX] === 0 && level.creatureArray[randY][randX] === 0 && level.obstacleArray[randY][randX] === undefined &&
+				!(randY >= level.startRoom.origin.y && randY <= level.startRoom.origin.y + level.startRoom.height &&
+				randX >= level.startRoom.origin.x && randX <= level.startRoom.origin.x + level.startRoom.width)
+			) {			//	If so, add creature to level.creatureArray
+				level.creatureArray[randY][randX] = creature;
+				level.creatureCount++;
+				retry = false;
+				console.log("Adding extra creature...");
+			}
+		}
+	}
 };
+
+levelGen.addSpecialItem = function() {
+	var item = Math.floor(session.prng.nextFloat() * level.specialItems.length);
+	var retry = true;
+	var tries = levelGen.vars.addCreatureAttempts;
+	while(tries && retry) {
+		var randY = Math.floor(session.prng.nextFloat() * (level.terrainArray.length));
+		var randX = Math.floor(session.prng.nextFloat() * (level.terrainArray[0].length));
+		if(		
+			//	Check that creature array and obstacle array are clear, and that position is not within 5 tiles of the player start room
+			level.terrainArray[randY][randX] === 0 && level.obstacleArray[randY][randX] === undefined &&
+			!(randY >= level.startRoom.origin.y - 5 && randY <= level.startRoom.origin.y + level.startRoom.height + 5 &&
+			randX >= level.startRoom.origin.x - 5 && randX <= level.startRoom.origin.x + level.startRoom.width + 5)
+		) {
+			level.itemArray[randY][randX] = level.specialItems[item];
+			console.log("Adding special item! " + item);
+			retry = false;
+		}
+		tries--;
+	}
+}
 
 //	Boss rooms
 levelGen.bossRooms = [
@@ -1500,6 +1631,11 @@ Room.prototype.generateRoomContents = function() {
 		var rand = Math.floor(session.prng.nextFloat() * level.randomRoomRange) + level.randomRoomBaseline;
 		switch(rand) {
 			case 0: case 1: case 2: {
+				var rand = Math.floor(session.prng.nextFloat() * sessionVars.basicItemFrequency);
+				if(rand < 1) {
+					var item = Math.floor(session.prng.nextFloat() * level.commonItems.length);
+					this.addItem(level.commonItems[item]);
+				}
 				//	Empty room
 				break; 
 			} case 3: case 4: {
@@ -1752,6 +1888,24 @@ Room.prototype.addCreature = function(creature) {
 			randX !== level.playerStart.x && randY !== level.playerStart.y
 		) {			//	If so, add creature to level.creatureArray
 			level.creatureArray[randY][randX] = creature;
+			level.creatureCount++;
+			retry = false;
+		}
+		tries--;
+	}
+}
+Room.prototype.addItem = function(item) {
+	tries = levelGen.vars.addCreatureAttempts;
+	var retry = true;
+	while(tries && retry) {
+		var randY = this.origin.y + Math.floor(session.prng.nextFloat() * (this.height - 2)) + 1;
+		var randX = this.origin.x + Math.floor(session.prng.nextFloat() * (this.width - 2)) + 1; 
+		if(		
+			level.itemArray[randY][randX] === undefined && level.obstacleArray[randY][randX] === undefined &&
+			randX !== level.playerStart.x && randY !== level.playerStart.y
+		) {
+			level.itemArray[randY][randX] = item;
+			console.log("Adding item! " + item);
 			retry = false;
 		}
 		tries--;

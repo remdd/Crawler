@@ -867,6 +867,94 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.BLACK_KNIGHT: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						//	Next action not specified
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 2 && creature.hasClearPathToPlayer()) {						//	If player is within 3x attack reach...
+							var action = Math.floor(Math.random() * 2);
+							var direction = getPlayerDirection(creature);
+							if(action < 1) {
+								ai.moveTowardsPlayer(creature, 100, 100, 2);
+								creature.ai.nextAction = 3;
+							} else {
+								ai.attack(creature, 0, creature.weapon.vars.attackRate * creature.vars.attackRate, direction, Math.PI / 8);	//	...attack in player's general direction...
+								var rand = Math.floor(Math.random() * 2);
+								if(rand < 1) {
+									creature.ai.nextAction = 0;
+								} else {
+									creature.ai.nextAction = 1;
+								}
+							}
+						} else if(getPlayerDistance(creature) < creature.weapon.attack.reach * 5 && creature.hasClearPathToPlayer()) {
+							var rand = Math.floor(Math.random() * 2);
+							var direction;
+							if(rand < 1) {
+								direction = getPlayerDirection(creature) + Math.PI / 4;
+							} else {
+								direction = getPlayerDirection(creature) - Math.PI / 4;
+							}
+							ai.moveInDirection(creature, 250, 250, 1.5, direction);
+						} else {
+							var action = Math.floor(Math.random() * 4);												//	Otherwise, randomly choose to...
+							if(action < 2) {
+								ai.rest(creature, 500, 250);														//	...rest...
+							} else if(action < 3) {
+								ai.moveTowardsPlayer(creature, 250, 250, 1);
+							} else {
+								ai.moveRandomVector(creature, 1500, 100, 1);										//	...or move in a random direction.
+							}
+							creature.ai.nextAction = 0;
+						}
+						break;
+					}
+					case 1: {
+						ai.rest(creature, 500, 250);																//	...rest for 250 - 750ms
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 2: {
+						delete creature.weapon.vars.rotation;
+						creature.weapon.vars.endAttackAnimationTime = performance.now() - 1;
+						creature.weapon.vars.attacking = false;
+						creature.weapon.sprite.attackPositionOffset.y = TILE_SIZE * 8/16;
+						ai.moveAwayFromPlayer(creature, 250, 250, 1.5);												//	...move away from player for 250-500ms, at 1.5x speed
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						var direction = getPlayerDirection(creature);
+						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
+						var rand = Math.floor(Math.random() * 5);
+						if(rand < 1) {
+							creature.ai.nextAction = 0;
+						} else if(rand < 3) {
+							creature.ai.nextAction = 2;
+						} else {
+							creature.ai.nextAction = 4;
+						}
+						break;
+					}
+					case 4: {
+						ai.rest(creature, 500, 1750);			
+						creature.weapon.vars.attacking = true;
+						creature.weapon.vars.endAttackAnimationTime = performance.now() + 3000;
+						creature.weapon.sprite.attackPositionOffset.y = TILE_SIZE * 12/16;
+						if(creature.vars.facingRight) {
+							creature.weapon.vars.rotation = Math.PI / 2;
+						} else {
+							creature.weapon.vars.rotation = 3 * Math.PI / 2;
+						}
+						creature.ai.nextAction = 2;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
 			default: {
 				break;
 			}

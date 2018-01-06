@@ -277,8 +277,8 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 10 },
 		vars: {
 			speed: 0.7,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 7,
+			currentHP: 7,
 			restingWeaponAnimation: true,
 			minFacingChangeTime: 50,
 			transformStartTime: 0,
@@ -335,6 +335,9 @@ var creatureTemplates = [
 		box: {
 			width: 8, 
 			height: 16
+		},
+		movement: {
+			bounceOff: true
 		},
 		ai: {
 			type: EnumAi.CAMP_VAMP,
@@ -401,6 +404,9 @@ var creatureTemplates = [
 				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
 				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
 			]
+		},
+		movement: {
+			bounceOff: true
 		},
 		box: {
 			width: 10, 
@@ -487,6 +493,9 @@ var creatureTemplates = [
 		box: {
 			width: 10, 
 			height: 15
+		},
+		movement: {
+			bounceOff: true
 		},
 		ai: {
 			type: EnumAi.URK,
@@ -983,8 +992,8 @@ var creatureTemplates = [
 		currentSprite: { x: 21, y: 0},
 		vars: {
 			speed: 0.8,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 7,
+			currentHP: 7,
 			restingWeaponAnimation: true,
 			score: 250
 		},
@@ -1192,8 +1201,8 @@ var creatureTemplates = [
 		currentSprite: { x: 8, y: 14},
 		vars: {
 			speed: 0.7,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 7,
+			currentHP: 7,
 			restingWeaponAnimation: true,
 			attackRate: 1,
 			score: 200
@@ -1277,8 +1286,8 @@ var creatureTemplates = [
 		currentSprite: { x: 18, y: 2},
 		vars: {
 			speed: 1,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 7,
+			currentHP: 7,
 			restingWeaponAnimation: true,
 			attackRate: 1,
 			score: 300
@@ -1326,7 +1335,7 @@ var creatureTemplates = [
 			height: 15
 		},
 		ai: {
-			type: EnumAi.URK_VETERAN,
+			type: EnumAi.BLACK_KNIGHT,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;

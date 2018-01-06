@@ -2,7 +2,7 @@ var level;											//	Current level object, loaded from levels.js
 
 var master = {
 	interactDistance: 15,							//	Distance at which player can interact with interactables
-	defaultDropFrequency: 8,						//	Average number of default death drops per pickup drop
+	defaultDropFrequency: 7,						//	Average number of default death drops per pickup drop
 	defaultMushroomFactor: 60000,					//	Multiplier for default mushroom effect duration
 	defaultMushroomMin: 20000,						//	Base minimum default mushroom effect duration
 	dropFrequency: [
@@ -142,6 +142,15 @@ function setUpLevel() {
 			game.colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
 		}
 	});
+	for(var i = 0; i < level.terrainArray.length; i++) {
+		for(var j = 0; j < level.terrainArray[0].length; j++) {
+			if(level.itemArray[i][j] !== undefined) {
+				var item = new Item(itemTemplates[level.itemArray[i][j]], j, i);
+				item.position.x = j * TILE_SIZE + TILE_SIZE / 2;
+				item.position.y = i * TILE_SIZE + TILE_SIZE / 2;
+			}
+		}
+	}
 }
 
 function drawOverlays() {											
@@ -191,13 +200,13 @@ function setUpPlayer() {
 			$('#exitkeyimg').fadeIn('slow');
 		}
 	}
-	new Item(itemTemplates[EnumItem.CRYSTAL_SWORD], player.grid.x-1,player.grid.y);
-	new Item(itemTemplates[EnumItem.ACID_HELMET], player.grid.x+1,player.grid.y+1);
-	new Item(itemTemplates[EnumItem.CRYSTAL_HELMET], player.grid.x+1,player.grid.y+2);
-	new Item(itemTemplates[EnumItem.SHADOW_HELMET], player.grid.x+1,player.grid.y+3);
-	new Item(itemTemplates[EnumItem.FIRE_HELMET], player.grid.x+2,player.grid.y+1);
-	new Item(itemTemplates[EnumItem.WATER_HELMET], player.grid.x+2,player.grid.y+2);
-	new Item(itemTemplates[EnumItem.LIGHTNING_HELMET], player.grid.x+2,player.grid.y+3);
+	// new Item(itemTemplates[EnumItem.CRYSTAL_SWORD], player.grid.x-1,player.grid.y);
+	// new Item(itemTemplates[EnumItem.ACID_HELMET], player.grid.x+1,player.grid.y+1);
+	// new Item(itemTemplates[EnumItem.CRYSTAL_HELMET], player.grid.x+1,player.grid.y+2);
+	// new Item(itemTemplates[EnumItem.SHADOW_HELMET], player.grid.x+1,player.grid.y+3);
+	// new Item(itemTemplates[EnumItem.FIRE_HELMET], player.grid.x+2,player.grid.y+1);
+	// new Item(itemTemplates[EnumItem.WATER_HELMET], player.grid.x+2,player.grid.y+2);
+	// new Item(itemTemplates[EnumItem.LIGHTNING_HELMET], player.grid.x+2,player.grid.y+3);
 }
 
 function setUpCreatures() {
@@ -1172,9 +1181,9 @@ function updatePlayer() {
 			deathScreen();
 		} else {
 			if(player.vars.facingRight) {
-				player.vars.animation = 8;
+				player.vars.animation = EnumState.DYING_R;
 			} else {
-				player.vars.animation = 9;
+				player.vars.animation = EnumState.DYING_L;
 			}
 		}
 	} else {
@@ -1315,6 +1324,32 @@ Creature.prototype.updateGear = function() {
 					this.helmet.vars.drawOffset.y += 0;
 				} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][3]) {
 					this.helmet.vars.drawOffset.y += 1;
+				}
+			} else if(this.vars.animation === EnumState.DYING_R) {
+				if(this.vars.pointInAnimLoop < this.sprite.animations[8][1][0]) {
+					this.helmet.vars.drawOffset.y += 0;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[8][1][1]) {
+					this.helmet.vars.drawOffset.y += 1;
+					this.helmet.vars.drawOffset.x += 1;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[8][1][2]) {
+					this.helmet.vars.drawOffset.y += 2;
+					this.helmet.vars.drawOffset.x += 2;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[8][1][3]) {
+					this.helmet.vars.drawOffset.y += 5;
+					this.helmet.vars.drawOffset.x += 3;
+				}
+			} else if(this.vars.animation === EnumState.DYING_L) {
+				if(this.vars.pointInAnimLoop < this.sprite.animations[9][1][0]) {
+					this.helmet.vars.drawOffset.y += 0;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[9][1][1]) {
+					this.helmet.vars.drawOffset.y += 1;
+					this.helmet.vars.drawOffset.x -= 1;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[9][1][2]) {
+					this.helmet.vars.drawOffset.y += 2;
+					this.helmet.vars.drawOffset.x -= 2;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[9][1][3]) {
+					this.helmet.vars.drawOffset.y += 5;
+					this.helmet.vars.drawOffset.x -= 3;
 				}
 			}
 		}
@@ -2005,6 +2040,7 @@ function initializeLevel() {
 		rooms: [],
 		decor: [],
 		corridors: [],
+		creatureCount: 0,
 		playerStart: {
 			x: 0,
 			y: 0
