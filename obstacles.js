@@ -1,4 +1,4 @@
-Obstacle = function(type, room, y, x, modifier) {
+Obstacle = function(type, room, y, x, modifier, noOffset) {
 	if(type === undefined) {
 		debugger;
 	}
@@ -24,8 +24,15 @@ Obstacle = function(type, room, y, x, modifier) {
 		case EnumObstacle.SACKx2:
 		case EnumObstacle.NARROW_SHELVES:
 		case EnumObstacle.MONOLITH:
+		case EnumObstacle.WARRIOR_STATUE:
+		case EnumObstacle.STONE_PILLAR:
 		{
 			this.sprite.size = {y: 2, x: 1}
+			break;
+		}
+		case EnumObstacle.DRAGON_STATUE:
+		{
+			this.sprite.size = {y:2, x: 1.5}
 			break;
 		}
 		case EnumObstacle.WELL:
@@ -48,7 +55,11 @@ Obstacle = function(type, room, y, x, modifier) {
 			break;
 		}
 		case EnumObstacle.DINING_TABLE: {
-			this.sprite.size = {x: 3, y: 4}
+			this.sprite.size = {y: 4, x: 3}
+			break;
+		}
+		case EnumObstacle.BLACK_KNIGHT_STATUE: {
+			this.sprite.size = {y: 3, x: 2}
 			break;
 		}
 		default: {
@@ -103,6 +114,7 @@ Obstacle = function(type, room, y, x, modifier) {
 		case EnumObstacle.SACKx2:
 		case EnumObstacle.NARROW_SHELVES:
 		case EnumObstacle.MONOLITH:
+		case EnumObstacle.WARRIOR_STATUE:
 		{
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			break;
@@ -116,6 +128,7 @@ Obstacle = function(type, room, y, x, modifier) {
 		case EnumObstacle.SWORD_TABLE:
 		case EnumObstacle.WIDE_SHELVES:
 		case EnumObstacle.EXIT_STAIRS:
+		case EnumObstacle.DRAGON_STATUE:
 		{
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			level.obstacleArray[this.grid.y][this.grid.x+1] = 1;
@@ -134,6 +147,14 @@ Obstacle = function(type, room, y, x, modifier) {
 		}
 		case EnumObstacle.DINING_TABLE: {
 			for(var i = 0; i < 4; i++) {
+				for(var j = 0; j < 2; j++) {
+					level.obstacleArray[this.grid.y+i][this.grid.x+j] = 1;
+				}
+			}
+			break;
+		}
+		case EnumObstacle.BLACK_KNIGHT_STATUE: {
+			for(var i = 0; i < 3; i++) {
 				for(var j = 0; j < 2; j++) {
 					level.obstacleArray[this.grid.y+i][this.grid.x+j] = 1;
 				}
@@ -174,12 +195,8 @@ Obstacle = function(type, room, y, x, modifier) {
 			this.closed = true;
 			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
 			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
-			this.box.topLeft = {
-				y: this.grid.y * TILE_SIZE,
-				x: this.grid.x * TILE_SIZE
-			}
 			this.box.bottomRight = {
-				y: this.grid.y * TILE_SIZE + TILE_SIZE,
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 1.2,
 				x: this.grid.x * TILE_SIZE
 			}
 			this.interact = function() {
@@ -215,6 +232,7 @@ Obstacle = function(type, room, y, x, modifier) {
 						hasKey = true;
 					}
 				}
+				// hasKey = true;
 				if(!this.open && hasKey) {
 					displayMessage(3000, "Your key unlocks the trapdoor!");
 					this.open = true;
@@ -239,6 +257,7 @@ Obstacle = function(type, room, y, x, modifier) {
 				y: TILE_SIZE,
 				x: 0
 			}
+			this.vars.drawY = 1;
 			this.position = {
 				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
 				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
@@ -923,12 +942,134 @@ Obstacle = function(type, room, y, x, modifier) {
 			}
 			break;
 		}
+		case EnumObstacle.WARRIOR_STATUE: {
+			if(!modifier) {
+				modifier = Math.floor(session.prng.nextFloat() * 2) + 1;
+			}
+			if(modifier < 2) {
+				this.currentSprite = level.obstacleTiles[45];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 18,
+					x: this.grid.x * TILE_SIZE + 5
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 22,
+					x: this.grid.x * TILE_SIZE + 12
+				}
+			} else {
+				this.currentSprite = level.obstacleTiles[46];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 18,
+					x: this.grid.x * TILE_SIZE + 0
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 22,
+					x: this.grid.x * TILE_SIZE + 7
+				}
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			break;
+		}
+		case EnumObstacle.DRAGON_STATUE: {
+			if(!modifier) {
+				modifier = Math.floor(session.prng.nextFloat() * 2) + 1;
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			if(modifier < 2) {
+				this.currentSprite = level.obstacleTiles[47];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 18,
+					x: this.grid.x * TILE_SIZE + 0
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 24,
+					x: this.grid.x * TILE_SIZE + 12
+				}
+			} else {
+				this.currentSprite = level.obstacleTiles[48];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 18,
+					x: this.grid.x * TILE_SIZE + 4
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 24,
+					x: this.grid.x * TILE_SIZE + 16
+				}
+			}
+			break;
+		}
+		case EnumObstacle.BLACK_KNIGHT_STATUE: {
+			this.currentSprite = level.obstacleTiles[52];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 34,
+				x: this.grid.x * TILE_SIZE + 0
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 42,
+				x: this.grid.x * TILE_SIZE + 16
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE * 3/2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			break;
+		}
+		case EnumObstacle.STONE_PILLAR: {
+			if(!modifier) {
+				modifier = Math.floor(session.prng.nextFloat() * 3) + 1;
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			if(modifier < 2) {
+				this.currentSprite = level.obstacleTiles[49];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 20,
+					x: this.grid.x * TILE_SIZE + 0
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 25,
+					x: this.grid.x * TILE_SIZE + 11
+				}
+			} else if(modifier < 3) {
+				this.currentSprite = level.obstacleTiles[50];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 14,
+					x: this.grid.x * TILE_SIZE + 0
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 19,
+					x: this.grid.x * TILE_SIZE + 14
+				}
+			} else {
+				this.currentSprite = level.obstacleTiles[51];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 20,
+					x: this.grid.x * TILE_SIZE + 0
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 25,
+					x: this.grid.x * TILE_SIZE + 9
+				}
+			}
+			console.log(this);
+			break;
+		}
 
 		default: {
 			break;
 		}
 	}
-	this.offsetPosition();
+	if(!noOffset) {
+		this.offsetPosition();
+	}
 	//	If object was successfully placed, add it to the obstacles array
 	if(this.grid.x !== 0 & this.grid.y !== 0) {
 		level.obstacles.push(this);

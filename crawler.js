@@ -1,15 +1,23 @@
 var level;											//	Current level object, loaded from levels.js
 
 var master = {
-	interactDistance: 15,						//	Distance at which player can interact with interactables
-	healthDropFrequency: 10						//	Average number of default death drops per health heart drop
+	interactDistance: 15,							//	Distance at which player can interact with interactables
+	defaultDropFrequency: 8,						//	Average number of default death drops per pickup drop
+	defaultMushroomFactor: 60000,					//	Multiplier for default mushroom effect duration
+	defaultMushroomMin: 20000,						//	Base minimum default mushroom effect duration
+	dropFrequency: [
+		[EnumItem.HEALTH_HEART, 5],
+		[EnumItem.PURPLE_MUSHROOM, 2],
+		[EnumItem.GREEN_MUSHROOM, 1]
+	],
+	debugs: false
 }
 
 var session = {
 	seed: Math.floor(Math.random() * 1000000),		//	Holds level seed
 	seed: 617547,
 	focused: true,									//	Track whether browser tab is focused by user
-	levelNumber: 0,									//	Initial level
+	levelNumber: 1,									//	Initial level
 	loadingLevel: false,
 	score: 0,
 	vars: {}
@@ -27,7 +35,7 @@ var game = {
 	projectiles: [],						//	Holds projectiles currently present in game
 	colliders: [],							//	Holds *all* collision boxes currently present in game - player, creatures, obstacles etc
 	nearbyColliders: [],					//	Holds any colliders near to the player for collision detection every tick
-	pickups: [],							//	Holds any contact-collected pickups
+	items: [],								//	Holds any contact-collected pickups and items
 	debugs: [],								//	Holds any objects to be passed to debug canvas
 	drawables: [],							//	Holds 
 	drawOnTop: []							//	Holds drawables to be drawn on top of canvas
@@ -127,7 +135,9 @@ function addBackground() {
 
 function setUpLevel() {
 	level.obstacles.forEach(function(obstacle) {
-	obstacle.vars.drawY = obstacle.box.bottomRight.y - 2;
+		if(!obstacle.vars.drawY) {
+			obstacle.vars.drawY = obstacle.box.bottomRight.y;
+		}
 		if(obstacle.box) {
 			game.colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
 		}
@@ -174,6 +184,9 @@ function setUpPlayer() {
 	player.addItem = function(item) {
 		player.items.push(item);
 		console.log(player.items);
+		if(item.name === "Exit Key") {
+			$('#exitkeyimg').fadeIn('slow');
+		}
 	}
 }
 
@@ -325,12 +338,12 @@ Entity.prototype.getGridOffsetFromPlayer = function() {
 }
 
 //	Assign Entity prototype
-Pickup.prototype = Object.create(Entity.prototype);
-Pickup.prototype.constructor = Pickup;
+Item.prototype = Object.create(Entity.prototype);
+Item.prototype.constructor = Item;
 
-function Pickup(pickupTemplate) {
+function Item(itemTemplate) {
 	Entity.apply(this, arguments);
-	this.pickup = pickupTemplate.pickup;
+	this.pickup = itemTemplate.pickup;
 	this.vars.background = true;
 	this.vars.animStart = performance.now();
 	this.vars.animation = 0;
@@ -339,10 +352,10 @@ function Pickup(pickupTemplate) {
 		y: 4
 	}
 	this.vars.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
-	this.currentSprite = pickupTemplate.currentSprite;
+	this.currentSprite = itemTemplate.currentSprite;
 	this.movement = {};
-	Object.assign(this.movement, pickupTemplate.movement);
-	game.pickups.push(this);
+	Object.assign(this.movement, itemTemplate.movement);
+	game.items.push(this);
 }
 
 //	Assign Entity prototype
@@ -540,6 +553,9 @@ function Creature(creatureTemplate) {
 	this.ai.action = 0;
 	this.ai.nextAction = 0;		
 	this.movement = {};
+	if(creatureTemplate.movement) {
+		Object.assign(this.movement, creatureTemplate.movement);
+	}
 	this.movement.bounceRandom = true;
 	if(creatureTemplate.addWeapon) {
 		var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
@@ -557,15 +573,28 @@ function Creature(creatureTemplate) {
 	} else {
 		this.deathDrop = function() {
 			console.log("Dropping!");
-			var rand = Math.floor(Math.random() * session.vars.healthDropFrequency);
+			//	First use the overall default death drop frequency to determine whether a drop is created.
+			var rand = Math.floor(Math.random() * session.vars.defaultDropFrequency);
 			if(rand < 1) {
-				var heart = new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], this.grid.x, this.grid.y);
-				heart.position.x = this.position.x;
-				heart.position.y = this.position.y + 2;
-				heart.movement.speed = 1;
-				heart.movement.direction = getPlayerDirection(this) + Math.PI;
+				//	If it is, add up the individual drop frequencies of the various drop types in the master array
+				var dropFrequencySum = 0;
+				var dropTypes = cloneArray(session.vars.dropFrequency);
+				dropTypes.forEach(function(droptype) {
+					dropFrequencySum += droptype[1];
+				});
+				//	Then pick a random number between 0 and the frequency sum, and loop the drop types until that number is reached
+				var rand2 = Math.floor(Math.random() * dropFrequencySum);
+				while(rand2 > dropTypes[0][1]) {
+					rand2 -= dropTypes[0][1];
+					dropTypes.splice(0, 1);
+				}
+				//	When the type is identified, create a new item of that type and boost it away from the player
+				var item = new Item(itemTemplates[dropTypes[0][0]], this.grid.x, this.grid.y);
+				item.position.x = this.position.x;
+				item.position.y = this.position.y + 2;
+				item.movement.speed = 1;
+				item.movement.direction = getPlayerDirection(this) + Math.PI;
 			}
-			console.log("Default death drop...");
 		}
 	}
 	this.inflictDamage = creatureTemplate.inflictDamage;		//	Set damage response function from template
@@ -582,7 +611,7 @@ Creature.prototype.move = function(direction, speed) {
 		x: Math.floor(this.position.x / TILE_SIZE),
 		y: Math.floor(this.position.y / TILE_SIZE),
 	}
-	this.vars.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
+	this.vars.drawY = this.box.bottomRight.y;
 	this.collidedWith = newCoords.collidedWith;
 	if(this.updateBox) {
 		this.updateBox();
@@ -614,7 +643,7 @@ Creature.prototype.aim = function(direction) {
 	}
 }
 Creature.prototype.setFacing = function(direction) {
-	// if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
+	if(performance.now() > this.vars.lastFacingChangeTime + this.vars.minFacingChangeTime) {
 		this.vars.lastFacingChangeTime = performance.now();
 		if(Math.cos(direction) >= 0) {
 			this.vars.facingRight = true;
@@ -631,7 +660,7 @@ Creature.prototype.setFacing = function(direction) {
 				this.vars.animation = EnumState.RESTING_R;
 			}
 		}
-	// }
+	}
 }
 Creature.prototype.kill = function() {
 	if(!this.vars.dead) {
@@ -676,36 +705,42 @@ Creature.prototype.hasClearPathToPlayer = function() {
 	}
 	var diffX = x2 - x1;
 	var diffY = y2 - y1;
-	if(Math.abs(diffX) <= 1 && Math.abs(diffY) <= 1) {				//	If grid squares are adjacent, return clear
-		return true;
+	// if(Math.abs(diffX) <= 1 && Math.abs(diffY) <= 1) {				//	If grid squares are adjacent, return clear
+	// 	return true;
+	if(
+		(level.terrainArray[player.grid.y+1][player.grid.x] === 2 && this.grid.y > player.grid.y) ||
+		(level.terrainArray[player.grid.y-1][player.grid.x] === 2 && this.grid.y < player.grid.y)
+	) {
+		console.log("Blocked by a door!");
+		return false;
 	} else if(diffX === 0) {
 		for(var i = 0; i < diffY; i++) {
 			if(level.terrainArray[y1+i][x1] !== 0) {
-				// console.log("Blocked vertically!");
+				console.log("Blocked vertically!");
 				return false;
 			}
 		}
-		// console.log("Clear path vertically");
+		console.log("Clear path vertically");
 		return true;
 	} else if(diffY === 0) {
 		for(var i = 0; i < diffX; i++) {
 			if(level.terrainArray[y1][x1+i] !== 0) {
-				// console.log("Blocked horizontally!");
+				console.log("Blocked horizontally!");
 				return false;
 			}
 		}
-		// console.log("Clear path horizontally");
+		console.log("Clear path horizontally");
 		return true;
 	} else {
 		var diff = 0;
 		if(diffX === diffY) {
 			for(var i = 0; i < diffX; i++) {
 				if(level.terrainArray[y1+i][x1+i] !== 0) {
-					// console.log("Blocked perfect diag!");
+					console.log("Blocked perfect diag!");
 					return false;
 				}
 			}
-			// console.log("Clear path perfect diag");
+			console.log("Clear path perfect diag");
 			return true;
 		} else if(diffX >= diffY) {
 			var stepY = diffY / diffX;
@@ -716,12 +751,12 @@ Creature.prototype.hasClearPathToPlayer = function() {
 					incY++;
 				}
 				if(level.terrainArray[y1+incY][x1+i] !== 0) {
-					// console.log("Blocked across diag!");
+					console.log("Blocked across diag!");
 					return false;
 				}
 				diff += stepY;
 			}
-			// console.log("Clear path across diag");
+			console.log("Clear path across diag");
 			return true;
 		} else {
 			var stepX = diffX / diffY;
@@ -732,12 +767,12 @@ Creature.prototype.hasClearPathToPlayer = function() {
 					incX++;
 						}
 				if(level.terrainArray[y1+i][x1+incX] !== 0) {
-					// console.log("Blocked down diag!");
+					console.log("Blocked down diag!");
 					return false;
 				}
 				diff += stepX;
 			}
-			// console.log("Clear path down diag");
+			console.log("Clear path down diag");
 			return true;
 		}
 	}
@@ -939,9 +974,9 @@ function updateDrawables() {
 			game.drawables.push(obstacle);
 		}
 	});
-	game.pickups.forEach(function(pickup) {
-		if(inViewport(pickup.position.x, pickup.position.y)) {
-			game.drawables.push(pickup);
+	game.items.forEach(function(item) {
+		if(inViewport(item.position.x, item.position.y)) {
+			game.drawables.push(item);
 		}
 	});
 	game.drawables.sort(function(a, b) {
@@ -1210,7 +1245,7 @@ function checkTerrainCollision(obj, tryX, tryY) {
 			returnCoords.collidedWith = 1;
 		}
 		if(obj.movement.bounceOff && obj !== player) {
-			obj.movement.direction = -obj.movement.direction;
+			obj.movement.direction += Math.PI;
 			// obj.movement.direction = obj.movement.direction + Math.PI;
 		} else if(obj.movement.bounceRandom) {
 			var rand = Math.floor(Math.random() * 4);
@@ -1304,8 +1339,7 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 					returnCoords.x = obj.position.x;
 					returnCoords.y = obj.position.y;
 					if(obj.movement.bounceOff && obj !== player) {
-						obj.movement.direction = -obj.movement.direction;
-						// obj.movement.direction = obj.movement.direction + Math.PI;
+						obj.movement.direction = obj.movement.direction + Math.PI;
 					} else if(obj.movement.bounceRandom) {
 						var rand = Math.floor(Math.random() * 4);
 						if(rand < 1) {
@@ -1369,15 +1403,15 @@ function updateObstacles() {
 	});
 }
 
-function updatePickups() {
-	game.pickups.forEach(function(pickup) {
-		if(pickup.movement.speed > 0) {
-			Creature.prototype.move.call(pickup, pickup.movement.direction, pickup.movement.speed);
-			if(pickup.movement.deceleration) {
-				pickup.movement.speed -= pickup.movement.deceleration;
+function updateItems() {
+	game.items.forEach(function(item) {
+		if(item.movement.speed > 0) {
+			Creature.prototype.move.call(item, item.movement.direction, item.movement.speed);
+			if(item.movement.deceleration) {
+				item.movement.speed -= item.movement.deceleration;
 			}
 		}
-		pickup.animate();
+		item.animate();
 	});
 }
 
@@ -1404,10 +1438,10 @@ function updateColliders() {
 			game.nearbyColliders.push(obstacle);
 		}
 	});
-	game.pickups.forEach(function(pickup) {
-		var offset = Creature.prototype.getGridOffsetFromPlayer.call(pickup);
+	game.items.forEach(function(item) {
+		var offset = Creature.prototype.getGridOffsetFromPlayer.call(item);
 		if(offset.x <= CANVAS_WIDTH / TILE_SIZE + 3 || offset.y <= CANVAS_HEIGHT / TILE_SIZE + 3) {
-			game.nearbyColliders.push(pickup);
+			game.nearbyColliders.push(item);
 		}
 	});
 	// console.log(nearbyColliders);
@@ -1454,11 +1488,17 @@ function drawDebugCanvas() {
 	// 	});
 	// });
 	level.obstacles.forEach(function(obstacle) {
-		var debug = { x: obstacle.position.x, y: obstacle.position.y, color: 'pink'};
-		game.debugs.push(debug);
+		// var debug = { x: obstacle.position.x, y: obstacle.position.y, color: 'pink'};
+		// game.debugs.push(debug);
 		var debug2 = { x: obstacle.position.x, y: obstacle.vars.drawY, color: 'blue'};
 		game.debugs.push(debug2);
 	});
+	game.creatures.forEach(function(creature) {
+		var debug = {x:creature.position.x, y:creature.vars.drawY, color: 'red'}
+		game.debugs.push(debug);
+	});
+	var debug = {x:player.position.x, y:player.vars.drawY, color: 'orange'}
+	game.debugs.push(debug);
 	// game.creatures.forEach(function(creature) {
 	// 	if(creature.weapon) {
 	// 		var debug = { x: creature.weapon.position.x, y: creature.weapon.position.y, color: 'green'};
@@ -1496,7 +1536,9 @@ function deathScreen() {
 	$('.finalScoreSpan').text(session.score);
 	$.when($('canvas').fadeOut('slow')).then(function() {
 		$('#gameMenuDiv').fadeIn('slow', function() {
-			$('#deathScreen').fadeIn('slow');
+			$('#deathScreen').fadeIn('slow', function() {
+				clearCanvases();
+			});
 		});
 	});
 }
@@ -1509,7 +1551,7 @@ function update(delta) {
 	updateCreatures();
 	updateAttacks();
 	updateObstacles();
-	updatePickups();
+	updateItems();
 	updateProjectiles();
 	updateDrawables();
 	updateInterface();
@@ -1517,18 +1559,30 @@ function update(delta) {
 
 //	Master game draw function
 function draw(interpolationPercentage) {
-	if(game.redrawBackground || game.redrawObstaclesTo > performance.now()) {
+	// if(game.redrawBackground || game.redrawObstaclesTo > performance.now()) {
 		bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 		drawOverlays();
 		drawDecor();
-	}
+	// }
 	drawableCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	drawDrawables();
 	attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	drawAttacks();
-	// debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-	// drawDebugCanvas();
+	if(master.debugs) {
+		debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+		drawDebugCanvas();
+	}
 	$('#fps').text("FPS: " + MainLoop.getFPS().toFixed(4));
+}
+
+function clearCanvases() {
+	$('#exitkeyimg').hide();
+	bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	drawableCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	if(master.debugs) {
+		debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	}
 }
 
 function startScreen() {
@@ -1551,10 +1605,11 @@ $('.startBtn').click(function() {
 function endLevel() {
 	$('#messageDiv').fadeOut('fast');
 	$.when($('canvas').fadeOut('slow')).then(function() {
-		$('#completedLevelSpan').text(session.levelNumber + 1);
-		$('#nextLevelSpan').text(session.levelNumber + 2);
+		$('#completedLevelSpan').text(session.levelNumber);
+		$('#nextLevelSpan').text(session.levelNumber + 1);
 		$('#gameMenuDiv').fadeIn('slow', function() {
 			$('#endLevelScreen').fadeIn('slow');
+			clearCanvases();
 			MainLoop.stop();
 			session.loadingLevel = false;
 			session.levelNumber++;
@@ -1578,7 +1633,7 @@ function initializeGame() {
 	game.creatures.length = 0;
 	game.attacks.length = 0;
 	game.projectiles.length = 0;
-	game.pickups.length = 0;
+	game.items.length = 0;
 	game.colliders.length = 0;
 	game.nearbyColliders.length = 0;
 	game.debugs.length = 0;
@@ -1595,6 +1650,7 @@ function initializeLevel() {
 		creatureArray: [],
 		obstacleArray: [],
 		overlayArray: [],
+		itemArray: [],
 		fillArray: [],
 		obstacles: [],
 		rooms: [],
@@ -1621,9 +1677,13 @@ function initializeLevel() {
 function start(newGame) {
 	if(newGame) {
 		startSound.play();
-		session.levelNumber = 0;
+		session.levelNumber = 1;
 		session.score = 0;
-		session.vars.healthDropFrequency = master.healthDropFrequency;
+		session.vars.defaultDropFrequency = master.defaultDropFrequency;
+		session.vars.defaultMushroomMin = master.defaultMushroomMin;
+		session.vars.defaultMushroomFactor = master.defaultMushroomFactor;
+		session.vars.dropFrequency = cloneArray(master.dropFrequency);
+		console.log(session.vars.dropFrequency);
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
 		// session.prng = new Random(617547);
@@ -1655,7 +1715,6 @@ function start(newGame) {
 	$('#gameMenuDiv').fadeOut('slow', function() {
 		if(newGame) {
 			$('.finalScoreSpan').text('');
-			new Pickup(pickupTemplates[EnumPickup.HEALTH_HEART], player.grid.x + 1, player.grid.y + 1);
 		}
 		console.log("Starting game - level: " + level.levelNumber);
 		drawMap();

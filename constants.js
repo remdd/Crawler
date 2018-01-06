@@ -53,9 +53,6 @@ var EnumCreature = {
 	BLACK_KNIGHT: 18
 }
 
-var BossCreature = {
-}
-
 var EnumAi = {
 	GREEN_GOBLIN: 1,
 	MINI_GHOST: 2,
@@ -99,7 +96,7 @@ var EnumCreatureProjectile = {
 	URK_SHAMAN_FIREBALL: 3
 }
 
-var EnumPickup = {
+var EnumItem = {
 	HEALTH_HEART: 1,
 	EXIT_KEY: 2,
 	PURPLE_MUSHROOM: 3,
@@ -181,7 +178,11 @@ var EnumObstacle = {
 	RUBBLE: 35,
 	SKULL_SPIKE: 36,
 	FLAG_SPIKE: 37,
-	MONOLITH: 38
+	MONOLITH: 38,
+	WARRIOR_STATUE: 39,
+	DRAGON_STATUE: 40,
+	STONE_PILLAR: 41,
+	BLACK_KNIGHT_STATUE: 42
 }
 
 var EnumDecortype = {
@@ -226,3 +227,17 @@ interfaceCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel a
 interfaceCtx.font = "10pt dpcomic";
 interfaceCtx.fillStyle = "white";
 interfaceCanvas.appendTo('body');
+
+//	Deep clone an array of objects
+function cloneArray(existingArray) {
+   var newObj = (existingArray instanceof Array) ? [] : {};
+   for (i in existingArray) {
+      if (i == 'clone') continue;
+      if (existingArray[i] && typeof existingArray[i] == "object") {
+         newObj[i] = cloneArray(existingArray[i]);
+      } else {
+         newObj[i] = existingArray[i]
+      }
+   }
+   return newObj;
+}

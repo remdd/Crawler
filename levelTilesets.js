@@ -156,7 +156,6 @@ var obstacleTiles = [
 		{y:1,x:12},	//	24	Split Sack
 		{y:2,x:12},	//	25	Water Butt
 		{y:3,x:12},	//	26	Grain Barrel
-
 		{y:0,x:4},	//	27	Wooden chair - R facing
 		{y:1,x:4},	//	28	Wooden chair - L facing
 		{y:0,x:2},	//	29	Wooden bench - vertical
@@ -167,7 +166,6 @@ var obstacleTiles = [
 		{y:2,x:13},	//	34	Narrow shelves 1
 		{y:2,x:14},	//	35	Wide shelves 1
 		{y:0,x:15},	//	36	Narrow shelves 1
-
 		{y:1,x:0},	//	37	Rubble pile 1
 		{y:1,x:1},	//	38	Rubble pile 2
 		{y:1,x:2},	//	39	Stone lump
@@ -175,7 +173,15 @@ var obstacleTiles = [
 		{y:4,x:1.5},//	41	Skull spike L
 		{y:5,x:1},	//	42	Flag spike R
 		{y:5,x:1.5},//	43	Flag spike L
-		{y:2,x:11}	//	44	Monolith
+		{y:2,x:11},	//	44	Monolith
+		{y:6,x:0},	//	45	Warrior statue L
+		{y:6,x:1},	//	46	Warrior statue R
+		{y:8,x:0},	//	47	Dragon statue L
+		{y:8,x:1.5},//	48	Dragon statue R
+		{y:6,x:2},	//	49	Stone Pillar 1
+		{y:8,x:3},	//	50	Stone Pillar 2
+		{y:8,x:4},	//	51	Stone Pillar 3
+		{y:8,x:5}	//	52	Black Knight statue
 	]
 ];
 
@@ -223,3 +229,11 @@ var floorDecorTiles = [
 		{y:5,x:0, maxOffset: {y:8,x:3}}
 	]
 ];
+
+var uniqueFloorDecor = [
+	[	//	Black Knight's carpet
+		{y:13,x:0},
+		{y:14,x:0},
+		{y:15,x:0}
+	]
+]

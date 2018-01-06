@@ -1,5 +1,7 @@
 var creatureTemplates = [
 	{},			//	Template 0 is not used - indicates no creature!
+
+	//	1	GREEN GOBLIN
 	{
 		name: 'Green Goblin',
 		currentSprite: { x: 0, y: 0},
@@ -7,7 +9,7 @@ var creatureTemplates = [
 			speed: 0.6,
 			maxHP: 3,
 			currentHP: 3,
-			score: 50
+			score: 45
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -43,6 +45,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.GREEN_GOBLIN,
 		},
+		movement: {
+			bounceOff: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -59,6 +64,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.GREEN_GOBLIN_CLAW;
 		}	
 	},
+
+	//	2	MINI GHOST
 	{
 		name: 'Mini Ghost',
 		currentSprite: { x: 0, y: 2},
@@ -115,6 +122,8 @@ var creatureTemplates = [
 			this.kill();
 		}
 	},
+
+	//	3	SKELTON
 	{
 		name: 'Skelton',
 		currentSprite: { x: 3, y: 4 },
@@ -203,6 +212,8 @@ var creatureTemplates = [
 			}
 		}
 	},
+
+	//	4	GREEN SLUDGIE
 	{
 		name: 'Green Sludgie',
 		currentSprite: { x: 3, y: 4 },
@@ -238,6 +249,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.GREEN_SLUDGIE,
 		},
+		movement: {
+			bounceOff: true
+		},
 		touchDamage: function() {
 			return 1;
 		},
@@ -251,6 +265,8 @@ var creatureTemplates = [
 			this.kill();
 		}
 	},
+
+	//	5	CAMP VAMP
 	{
 		name: 'Camp Vamp',
 		currentSprite: { x: 0, y: 10 },
@@ -337,6 +353,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.VAMP_DAGGER;
 		}
 	},
+
+	//	6	URK
 	{
 		name: 'Urk',
 		currentSprite: { x: 0, y: 12},
@@ -415,6 +433,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.URK_SWORD;
 		}	
 	},
+
+	//	7	URK WARRIOR
 	{
 		name: 'Urk Warrior',
 		currentSprite: { x: 0, y: 14},
@@ -494,6 +514,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.URK_SWORD;
 		}	
 	},
+
+	//	8	HULKING URK
 	{
 		name: 'Hulking Urk',
 		currentSprite: { x: 0, y: 16},
@@ -581,6 +603,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.HULKING_URK_HAMMA;
 		}	
 	},
+
+	//	9	KOB
 	{
 		name: 'Kob',
 		currentSprite: { x: 0, y: 20},
@@ -645,6 +669,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.KOB_MACE;
 		}	
 	},
+
+	//	10	MUMI
 	{
 		name: 'Mumi',
 		currentSprite: { x: 7, y: 4 },
@@ -653,7 +679,7 @@ var creatureTemplates = [
 			maxHP: 5,
 			currentHP: 5,
 			restingWeaponAnimation: false,
-			score: 100
+			score: 110
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -711,6 +737,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.BONE_SWORD;
 		}
 	},
+
+	//	11	SNEAKY SKELTON
 	{
 		name: 'Sneaky Skelton',
 		currentSprite: { x: 6, y: 4 },
@@ -777,6 +805,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.BONE_SWORD;
 		}
 	},
+
+	//	12	BLUE SQUARK
 	{
 		name: 'Blue Squark',
 		currentSprite: { x: 9, y: 2},
@@ -785,7 +815,7 @@ var creatureTemplates = [
 			maxHP: 4,
 			currentHP: 4,
 			restingWeaponAnimation: true,
-			score: 100
+			score: 125
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -843,6 +873,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.SQUARK_KNIFE;
 		}	
 	},
+
+	//	13	ZOMBI
 	{
 		name: 'Zombi',
 		currentSprite: { x: 12, y: 0},
@@ -930,6 +962,8 @@ var creatureTemplates = [
 			}
 		}
 	},
+
+	//	14	ZOMBI MASTER
 	{
 		name: 'Zombi Master',
 		currentSprite: { x: 21, y: 0},
@@ -938,7 +972,7 @@ var creatureTemplates = [
 			maxHP: 5,
 			currentHP: 5,
 			restingWeaponAnimation: true,
-			score: 300
+			score: 250
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -997,6 +1031,8 @@ var creatureTemplates = [
 			this.kill();
 		}
 	},
+
+	//	15	AIR ELEMENTAL
 	{
 		name: 'Air Elemental',
 		currentSprite: { x: 8, y: 20},
@@ -1048,6 +1084,8 @@ var creatureTemplates = [
 			this.kill();
 		}
 	},
+
+	//	16	URK VETERAN
 	{
 		name: 'Urk Veteran',
 		currentSprite: { x: 8, y: 12},
@@ -1057,7 +1095,7 @@ var creatureTemplates = [
 			currentHP: 6,
 			restingWeaponAnimation: true,
 			attackRate: 0.5,
-			score: 100
+			score: 130
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -1130,6 +1168,8 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.URK_SWORD;
 		}	
 	},
+
+	//	17	URK SHAMAN
 	{
 		name: 'Urk Shaman',
 		currentSprite: { x: 8, y: 14},
@@ -1139,7 +1179,7 @@ var creatureTemplates = [
 			currentHP: 5,
 			restingWeaponAnimation: true,
 			attackRate: 1,
-			score: 250
+			score: 200
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -1212,16 +1252,18 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.URK_SHAMAN_STAFF;
 		}	
 	},
+
+	//	18	BLACK KNIGHT
 	{
 		name: 'Black Knight',
 		currentSprite: { x: 18, y: 2},
 		vars: {
-			speed: 1.2,
+			speed: 1,
 			maxHP: 5,
 			currentHP: 5,
 			restingWeaponAnimation: true,
 			attackRate: 1,
-			score: 250
+			score: 300
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -1266,7 +1308,7 @@ var creatureTemplates = [
 			height: 15
 		},
 		ai: {
-			type: EnumAi.MUMI,
+			type: EnumAi.URK_VETERAN,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
