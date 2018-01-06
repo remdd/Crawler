@@ -4,6 +4,7 @@ var creatureWeapons = [
 		//	1
 	{
 		name: 'Green Goblin Claw',
+		lode: EnumLode.CLAW,
 		currentSprite: { x: -1, y: -1},
 		use: function(direction) {
 			if(this.holder.vars.facingRight) {
@@ -55,8 +56,6 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,102,0,0)',
-			color2: '#ff944d',
 			swipeThickness: 0.85,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 4,							//	90 degree swipe
@@ -66,6 +65,7 @@ var creatureWeapons = [
 		//	2
 	{
 		name: 'Bone Sword',
+		lode: EnumLode.BONE,
 		currentSprite: { x: 0, y: 6},
 		use: function(direction) {
 			this.swipe(direction);
@@ -107,8 +107,6 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -118,6 +116,7 @@ var creatureWeapons = [
 		//	3
 	{
 		name: 'Bone Axe',
+		lode: EnumLode.BONE,
 		currentSprite: { x: 1, y: 6},
 		use: function(direction) {
 			this.chop(direction);
@@ -155,12 +154,11 @@ var creatureWeapons = [
 		},
 		attack: {
 			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			criticalMax: 2,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 50,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -170,6 +168,7 @@ var creatureWeapons = [
 		//	4
 	{
 		name: 'Vamp Dagger',
+		lode: EnumLode.LIGHTNING,
 		currentSprite: { x: 4, y: 6},
 		use: function(direction) {
 			this.swipe(direction);
@@ -207,12 +206,11 @@ var creatureWeapons = [
 		},
 		attack: {
 			reach: TILE_SIZE,						//	Reach of attack from centre of player object position
+			criticalMax: 3,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 200,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -223,6 +221,7 @@ var creatureWeapons = [
 	{
 
 		name: 'Urk Sword',
+		lode: EnumLode.IRON,
 		currentSprite: { x: 2, y: 7},
 		use: function(direction) {
 			var rand = Math.floor(Math.random() * 4);
@@ -274,8 +273,6 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 150,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 2,							//	90 degree swipe
@@ -285,6 +282,7 @@ var creatureWeapons = [
 		//	6
 	{
 		name: 'Bone Crossbow',
+		lode: EnumLode.BONE,
 		currentSprite: { x: 2, y: 7},
 		use: function(direction) {
 			this.shoot(direction, this.projectile, true);
@@ -330,6 +328,7 @@ var creatureWeapons = [
 		//	7
 	{
 		name: 'Hulking Urk Hamma',
+		lode: EnumLode.IRON,
 		currentSprite: { x: 5, y: 6},
 		use: function(direction) {
 			this.chop(direction);
@@ -367,12 +366,11 @@ var creatureWeapons = [
 		},
 		attack: {
 			reach: TILE_SIZE * 28/16,					//	Reach of attack from centre of player object position
+			baseDamage: 2,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 200,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: 3* Math.PI / 4,							//	90 degree swipe
@@ -382,6 +380,7 @@ var creatureWeapons = [
 		//	8
 	{
 		name: 'Kob Mace',
+		lode: EnumLode.IRON,
 		currentSprite: { x: 7, y: 6},
 		use: function(direction) {
 			this.chop(direction);
@@ -423,8 +422,6 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: 1 * Math.PI / 4,							//	90 degree swipe
@@ -433,6 +430,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Zombi Bite',
+		lode: EnumLode.BITE,
 		currentSprite: { x: -1, y: -1},
 		use: function(direction) {
 			if(this.holder.vars.facingRight) {
@@ -481,8 +479,6 @@ var creatureWeapons = [
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,102,0,0)',
-			color2: '#ff944d',
 			swipeThickness: 0.85,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: Math.PI / 4,							//	90 degree swipe
@@ -491,6 +487,7 @@ var creatureWeapons = [
 	},
 	{
 		name: "Zombi Master's Staff",
+		lode: EnumLode.ACID,
 		currentSprite: { x: 7, y: 7},
 		use: function(direction) {
 			this.chop(direction);
@@ -528,13 +525,12 @@ var creatureWeapons = [
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 14/16,					//	Reach of attack from centre of player object position
+			reach: TILE_SIZE * 18/16,					//	Reach of attack from centre of player object position
+			criticalMax: 3,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: 1 * Math.PI / 4,							//	90 degree swipe
@@ -543,6 +539,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Squark Knife',
+		lode: EnumLode.WATER,
 		currentSprite: { x: 8, y: 6},
 		use: function(direction) {
 			if(getPlayerDistance(this.holder) < TILE_SIZE * 1.5) {
@@ -589,12 +586,11 @@ var creatureWeapons = [
 		},
 		attack: {
 			reach: TILE_SIZE,							//	Reach of attack from centre of player object position
+			criticalMax: 2,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: 1 * Math.PI / 4,						//	90 degree swipe
@@ -604,6 +600,7 @@ var creatureWeapons = [
 	},
 	{
 		name: "Urk Shaman's Staff",
+		lode: EnumLode.FIRE,
 		currentSprite: { x: 8, y: 7},
 		use: function(direction) {
 			if(getPlayerDistance(this.holder) < TILE_SIZE * 1.5) {
@@ -650,13 +647,12 @@ var creatureWeapons = [
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 14/16,					//	Reach of attack from centre of player object position
+			reach: TILE_SIZE * 18/16,					//	Reach of attack from centre of player object position
+			criticalMax: 3,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
 			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: 1 * Math.PI / 4,						//	90 degree swipe
@@ -666,6 +662,7 @@ var creatureWeapons = [
 	},
 	{
 		name: "Black Knight's Sword",
+		lode: EnumLode.SHADOW,
 		currentSprite: { x: 16, y: 4},
 		use: function(direction) {
 			console.log("Attacking!");
@@ -710,13 +707,12 @@ var creatureWeapons = [
 		},
 		attack: {
 			reach: TILE_SIZE * 26/16,					//	Reach of attack from centre of player object position
+			criticalMax: 3,
 			damagePlayer: true,
 			damageCreatures: false,
 			type: EnumAttack.SWIPE,
 			displayTime: 100,
-			color1: 'rgba(255,255,255,0)',
-			color2: 'rgb(70,0,160)',
-			swipeThickness: 0.8,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
 			lifespan: 1,
 			arc: 1 * Math.PI / 2,
 			maxHits: 1,									//	Number of contact points per swipe that can successfully resolve as hits
@@ -732,6 +728,7 @@ var creatureProjectiles = [
 	{},
 	{
 		name: 'Bone Arrow',
+		lode: EnumLode.BONE,
 		currentSprite: { x: 4, y: 7 },
 		vars: { 
 			drawOffset: { x: 0, y: 0},
@@ -768,6 +765,7 @@ var creatureProjectiles = [
 	},
 	{
 		name: 'Thrown Squark Knife',
+		lode: EnumLode.WATER,
 		currentSprite: { x: 8, y: 6 },
 		vars: { 
 			drawOffset: { x: 0, y: 0},
@@ -804,6 +802,7 @@ var creatureProjectiles = [
 	},
 	{
 		name: 'Urk Shaman Fireball',
+		lode: EnumLode.FIRE,
 		currentSprite: { x: 9, y: 6 },
 		vars: { 
 			drawOffset: { x: 0, y: 0},

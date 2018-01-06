@@ -37,7 +37,7 @@ var game = {
 	nearbyColliders: [],					//	Holds any colliders near to the player for collision detection every tick
 	items: [],								//	Holds any contact-collected pickups and items
 	debugs: [],								//	Holds any objects to be passed to debug canvas
-	drawables: [],							//	Holds 
+	drawables: [],							//	Holds creatures, obstacles or players to be drawn on canvas
 	drawOnTop: []							//	Holds drawables to be drawn on top of canvas
 }
 
@@ -171,7 +171,9 @@ function setUpPlayer() {
 	player = {};
 	var playerType = 0;																						//	Set playerType template
 	player = new Creature(playerTemplates[playerType], level.playerStart.x, level.playerStart.y);			//	Construct player from playerType
-	player.weapon = new Weapon(playerWeapons[0], player);													//	Assign starting weapon
+	player.weapon = new Weapon(playerWeapons[EnumPlayerWeapon.KNIFE], player);								//	Assign starting weapon
+	player.weapon.type = EnumPlayerWeapon.KNIFE;
+	player.weapon.setUpLode(EnumLode.IRON);
 	player.vars.lastAttackTime = 0;																			//	Initialize to zero
 	player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
 	player.movement.bounceOff = true;
@@ -179,6 +181,7 @@ function setUpPlayer() {
 	player.weapon.reset();
 	player.updateGear();
 	player.items = [];
+	player.helmet = undefined;
 	player.effects = [];
 	$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
 	player.addItem = function(item) {
@@ -188,6 +191,13 @@ function setUpPlayer() {
 			$('#exitkeyimg').fadeIn('slow');
 		}
 	}
+	new Item(itemTemplates[EnumItem.CRYSTAL_SWORD], player.grid.x-1,player.grid.y);
+	new Item(itemTemplates[EnumItem.ACID_HELMET], player.grid.x+1,player.grid.y+1);
+	new Item(itemTemplates[EnumItem.CRYSTAL_HELMET], player.grid.x+1,player.grid.y+2);
+	new Item(itemTemplates[EnumItem.SHADOW_HELMET], player.grid.x+1,player.grid.y+3);
+	new Item(itemTemplates[EnumItem.FIRE_HELMET], player.grid.x+2,player.grid.y+1);
+	new Item(itemTemplates[EnumItem.WATER_HELMET], player.grid.x+2,player.grid.y+2);
+	new Item(itemTemplates[EnumItem.LIGHTNING_HELMET], player.grid.x+2,player.grid.y+3);
 }
 
 function setUpCreatures() {
@@ -343,6 +353,7 @@ Item.prototype.constructor = Item;
 
 function Item(itemTemplate) {
 	Entity.apply(this, arguments);
+	this.dropTime = performance.now();
 	this.pickup = itemTemplate.pickup;
 	this.vars.background = true;
 	this.vars.animStart = performance.now();
@@ -353,9 +364,22 @@ function Item(itemTemplate) {
 	}
 	this.vars.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
 	this.currentSprite = itemTemplate.currentSprite;
+	if(itemTemplate.interact) {
+		this.interact = itemTemplate.interact;
+	}
 	this.movement = {};
-	Object.assign(this.movement, itemTemplate.movement);
+	this.movement.deceleration = 0.01;
+	this.movement.bounceOff = true;
 	game.items.push(this);
+}
+
+Helmet.prototype = Object.create(Entity.prototype);
+Helmet.prototype.constructor = Helmet;
+
+function Helmet(helmetTemplate) {
+	Entity.apply(this, arguments);
+	this.currentSprite = helmetTemplate.currentSprite;
+	this.lode = helmetTemplate.lode;
 }
 
 //	Assign Entity prototype
@@ -364,13 +388,13 @@ Weapon.prototype.constructor = Weapon;
 
 function Weapon(weaponTemplate, holder) {
 	Entity.apply(this, arguments);
-	// Object.assign(this, weaponTemplate);
 	this.currentSprite = weaponTemplate.currentSprite;
 	this.use = weaponTemplate.use;
 	this.reset = weaponTemplate.reset;
 	this.attack = weaponTemplate.attack;
 	this.projectile = weaponTemplate.projectile;
 	this.holder = holder;
+	this.lode = weaponTemplate.lode;
 	this.vars.attacking = false;
 }
 Weapon.prototype.swipe = function(direction) {
@@ -416,6 +440,153 @@ Weapon.prototype.shoot = function(direction, projectile, pointInDirection, point
 		}
 	}
 	new Projectile(creatureProjectiles[projectile], this.holder, direction);
+}
+Weapon.prototype.setUpLode = function(lode) {
+	if(lode) {
+		this.lode = lode;
+	}
+	switch(this.lode) {
+		case EnumLode.ACID: {
+			this.attack.color1 = 'rgba(150,255,150,0)';
+			this.attack.color2 = 'rgb(61,66,36)';
+			this.attack.lode = EnumLode.ACID;
+			break;
+		}
+		case EnumLode.CRYSTAL: {
+			this.attack.color1 = 'rgba(255,255,255,0)';
+			this.attack.color2 = 'rgb(200,200,230)';
+			this.attack.lode = EnumLode.CRYSTAL;
+			break;
+		}
+		case EnumLode.SHADOW: {
+			this.attack.color1 = 'rgba(70,75,85,0)';
+			this.attack.color2 = 'rgb(30,30,35)';
+			this.attack.lode = EnumLode.SHADOW;
+			break;
+		}
+		case EnumLode.FIRE: {
+			this.attack.color1 = 'rgba(90,15,30,0)';
+			this.attack.color2 = 'rgb(160,50,0)';
+			this.attack.lode = EnumLode.FIRE;
+			break;
+		}
+		case EnumLode.WATER: {
+			this.attack.color1 = 'rgba(115,210,235,0)';
+			this.attack.color2 = 'rgb(80,165,220)';
+			this.attack.lode = EnumLode.WATER;
+			break;
+		}
+		case EnumLode.LIGHTNING: {
+			this.attack.color1 = 'rgba(180,135,165,0)';
+			this.attack.color2 = 'rgb(120,75,110)';
+			this.attack.lode = EnumLode.LIGHTNING;
+			break;
+		}
+
+		case EnumLode.BONE: {
+			this.attack.color1 = 'rgba(255,255,255,0)';
+			this.attack.color2 = 'rgb(100,105,120)';
+			this.attack.lode = EnumLode.NONE;
+			break;
+		}
+		case EnumLode.CLAW: {
+			this.attack.color1 = 'rgba(255,255,255,0)';
+			this.attack.color2 = 'rgb(40,120,80)';
+			this.attack.lode = EnumLode.NONE;
+			break;
+		}
+		case EnumLode.BITE: {
+			this.attack.color1 = 'rgba(255,255,255,0)';
+			this.attack.color2 = 'rgb(170,95,50)';
+			this.attack.lode = EnumLode.NONE;
+			break;
+		}
+		case EnumLode.IRON: {
+			this.attack.color1 = 'rgba(255,255,255,0)';
+			this.attack.color2 = 'rgb(90,120,130)';
+			this.attack.lode = EnumLode.NONE;
+			break;
+		}
+		default : {
+			this.attack.color1 = 'rgba(255,255,255,0)';
+			this.attack.color2 = 'rgb(58,58,58)';
+			this.attack.lode = EnumLode.NONE;
+			break;
+		}
+	}
+	if(this.holder === player) {
+		this.setUpPlayerWeaponLode();
+	}
+}
+Weapon.prototype.setUpPlayerWeaponLode = function() {
+	switch(this.type) {
+		case EnumPlayerWeapon.KNIFE: {
+			switch(this.lode) {
+				case EnumLode.IRON: {
+					this.sprite.frames = [{x:0,y:4}, {x:0.5,y:4}];
+					break;
+				}
+				case EnumLode.ACID: {
+					this.sprite.frames = [{x:0,y:7}, {x:0.5,y:7}];
+					break;
+				}
+				case EnumLode.CRYSTAL: {
+					this.sprite.frames = [{x:1,y:7}, {x:1.5,y:7}];
+					break;
+				}
+				case EnumLode.SHADOW: {
+					this.sprite.frames = [{x:2,y:7}, {x:2.5,y:7}];
+					break;
+				}
+				case EnumLode.FIRE: {
+					this.sprite.frames = [{x:3,y:7}, {x:3.5,y:7}];
+					break;
+				}
+				case EnumLode.WATER: {
+					this.sprite.frames = [{x:4,y:7}, {x:4.5,y:7}];
+					break;
+				}
+				case EnumLode.LIGHTNING: {
+					this.sprite.frames = [{x:5,y:7}, {x:5.5,y:7}];
+					break;
+				}
+			}
+			break;
+		}
+		case EnumPlayerWeapon.SWORD: {
+			switch(this.lode) {
+				case EnumLode.IRON: {
+					this.sprite.frames = [{x:1,y:4}, {x:1.5,y:4}];
+					break;
+				}
+				case EnumLode.ACID: {
+					this.sprite.frames = [{x:6,y:7}, {x:6.5,y:7}];
+					break;
+				}
+				case EnumLode.CRYSTAL: {
+					this.sprite.frames = [{x:7,y:7}, {x:7.5,y:7}];
+					break;
+				}
+				case EnumLode.SHADOW: {
+					this.sprite.frames = [{x:8,y:7}, {x:8.5,y:7}];
+					break;
+				}
+				case EnumLode.FIRE: {
+					this.sprite.frames = [{x:9,y:7}, {x:9.5,y:7}];
+					break;
+				}
+				case EnumLode.WATER: {
+					this.sprite.frames = [{x:10,y:7}, {x:10.5,y:7}];
+					break;
+				}
+				case EnumLode.LIGHTNING: {
+					this.sprite.frames = [{x:11,y:7}, {x:11.5,y:7}];
+					break;
+				}
+			}
+			break;
+		}
+	}
 }
 
 Projectile.prototype = Object.create(Entity.prototype);
@@ -545,6 +716,7 @@ function Creature(creatureTemplate) {
 		this.vars.minFacingChangeTime = 200;					//	Minimum time to leave before allowing a change in facing direction (prevent 1 frame spins when trapped against walls)
 	}
 	this.vars.suspended = true;
+	this.lode = creatureTemplate.lode;
 	this.box.type = EnumBoxtype.CREATURE;
 	this.ai = {};
 	Object.assign(this.ai, creatureTemplate.ai);				//	Copy AI object for this creature template
@@ -559,6 +731,7 @@ function Creature(creatureTemplate) {
 	this.movement.bounceRandom = true;
 	if(creatureTemplate.addWeapon) {
 		var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
+		weapon.setUpLode();
 		this.weapon = weapon;
 	}
 	if(creatureTemplate.setAiType) {
@@ -611,10 +784,10 @@ Creature.prototype.move = function(direction, speed) {
 		x: Math.floor(this.position.x / TILE_SIZE),
 		y: Math.floor(this.position.y / TILE_SIZE),
 	}
-	this.vars.drawY = this.box.bottomRight.y;
 	this.collidedWith = newCoords.collidedWith;
 	if(this.updateBox) {
 		this.updateBox();
+		this.vars.drawY = this.box.bottomRight.y;
 	}
 }
 Creature.prototype.attack = function(direction) {
@@ -828,6 +1001,13 @@ interact = function() {
 			}
 		}
 	});
+	game.items.forEach(function(item) {
+		if(inViewport(item.position.x, item.position.y) && item.interact && performance.now() > item.dropTime + 500) {
+			if(getDistanceToPlayer(item.position.x, item.position.y) < master.interactDistance) {
+				item.interact();
+			}
+		}
+	})
 }
 
 function getDistanceToPlayer(x, y) {
@@ -1087,8 +1267,55 @@ Creature.prototype.updateGear = function() {
 				this.weapon.currentSprite = this.weapon.sprite.frames[1];
 				this.weapon.vars.drawOffset.x = -this.weapon.sprite.restingDrawOffset.x;								//	If facing left, set -ve offset x
 			}
-			if(this.vars.restingWeaponAnimation && this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
+			if(this !== player && this.vars.restingWeaponAnimation && this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
 				this.weapon.vars.drawOffset.y += 1;
+			} else if(this === player) {
+				if(this.vars.animation === EnumState.RESTING_L || this.vars.animation === EnumState.RESTING_R) {
+					if(this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
+						this.weapon.vars.drawOffset.y += 1;
+					}
+				} else if(this.vars.animation === EnumState.MOVING_L || this.vars.animation === EnumState.MOVING_R) {
+					if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][0]) {
+						this.weapon.vars.drawOffset.y += 0;
+					} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][1]) {
+						this.weapon.vars.drawOffset.y -= 1;
+					} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][2]) {
+						this.weapon.vars.drawOffset.y += 0;
+					} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][3]) {
+						this.weapon.vars.drawOffset.y += 1;
+					}
+				}
+			}
+		}
+	}
+	if(this.helmet) {
+		this.helmet.position.x = this.position.x;
+		this.helmet.position.y = this.position.y;
+		this.helmet.vars.drawOffset.y = this.helmet.sprite.restingDrawOffset.y;
+		if(this.vars.facingRight) {
+			this.helmet.currentSprite = this.helmet.sprite.frames[0];
+			this.helmet.vars.drawOffset.x = this.helmet.sprite.restingDrawOffset.x;
+		} else {
+			this.helmet.currentSprite = this.helmet.sprite.frames[1];
+			this.helmet.vars.drawOffset.x = -this.helmet.sprite.restingDrawOffset.x;
+		}
+		if(this !== player && this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
+			this.helmet.vars.drawOffset.y += 1;
+		} else if(this === player) {
+			if(this.vars.animation === EnumState.RESTING_L || this.vars.animation === EnumState.RESTING_R) {
+				if(this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
+					this.helmet.vars.drawOffset.y += 1;
+				}
+			} else if(this.vars.animation === EnumState.MOVING_L || this.vars.animation === EnumState.MOVING_R) {
+				if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][0]) {
+					this.helmet.vars.drawOffset.y += 0;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][1]) {
+					this.helmet.vars.drawOffset.y -= 1;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][2]) {
+					this.helmet.vars.drawOffset.y += 0;
+				} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][3]) {
+					this.helmet.vars.drawOffset.y += 1;
+				}
 			}
 		}
 	}
@@ -1172,12 +1399,122 @@ function resolveAttacks() {
 function resolveHit(attack, target) {
 	//	DAMAGE CALC GOES HERE
 	var damage = 1;
-
-
-
-
+	if(attack.baseDamage) {
+		damage = attack.baseDamage;
+	}
+	var criticalMax = 1;
+	if(attack.criticalMax) {
+		criticalMax = attack.criticalMax;
+	}
+	var criticalChance = 0;
+	//	Switch the *defender's* lode type
+	switch (target.lode) {
+		case EnumLode.NONE: {
+			criticalChance = 0.15;
+			break;
+		}
+		case EnumLode.ACID: {
+			switch(attack.lode) {
+				case EnumLode.FIRE: {
+					criticalChance = 0.4;
+					break;
+				}
+				case EnumLode.ACID:
+				case EnumLode.WATER:
+				case EnumLode.LIGHTNING: {
+					criticalChance = 0.15;
+					break;
+				}
+				default: {break;}
+			}
+		}
+		case EnumLode.CRYSTAL: {
+			switch(attack.lode) {
+				case EnumLode.ACID: {
+					criticalChance = 0.4;
+					break;
+				}
+				case EnumLode.CRYSTAL:
+				case EnumLode.LIGHTNING: {
+					criticalChance = 0.15;
+					break;
+				}
+				default: {break;}
+			}
+		}
+		case EnumLode.SHADOW: {
+			switch(attack.lode) {
+				case EnumLode.CRYSTAL: {
+					criticalChance = 0.4;
+					break;
+				}
+				case EnumLode.SHADOW:
+				case EnumLode.LIGHTNING: {
+					criticalChance = 0.15;
+					break;
+				}
+			}
+		}
+		case EnumLode.FIRE: {
+			switch(attack.lode) {
+				case EnumLode.WATER: {
+					criticalChance = 0.4;
+					break;
+				}
+				case EnumLode.SHADOW: {
+					criticalChance = 0.2;
+					break;
+				}
+				case EnumLode.FIRE: {
+					criticalChance = 0.15;
+					break;
+				}
+			}
+		}
+		case EnumLode.WATER: {
+			switch(attack.lode) {
+				case EnumLode.LIGHTNING: {
+					criticalChance = 0.4;
+					break;
+				}
+				case EnumLode.SHADOW: {
+					criticalChance = 0.2;
+					break;
+				}
+				case EnumLode.CRYSTAL:
+				case EnumLode.WATER: {
+					criticalChance = 0.15;
+					break;
+				}
+			}
+		}
+		case EnumLode.LIGHTNING: {
+			switch(attack.lode) {
+				case EnumLode.FIRE: {
+					criticalChance = 0.4;
+					break;
+				}
+				case EnumLode.SHADOW: {
+					criticalChance = 0.2;
+					break;
+				}
+				case EnumLode.LIGHTNING: {
+					criticalChance = 0.15;
+					break;
+				}
+			}
+		}
+	}
+	if(criticalChance > 0) {
+		var critRoll = Math.random();
+		if(critRoll < criticalChance) {
+			damage += Math.floor(Math.random() * criticalMax) + 1;
+			console.log("Critical hit! " + damage + " damage...");
+			critHitNoise.play();
+		}
+	}
 	target.inflictDamage(damage);
-	// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
+	console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 }
 
 function checkCollision(obj, tryX, tryY) {
@@ -1283,8 +1620,14 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			game.nearbyColliders[i] === obj.vars.shooter ||
 			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE ||
 			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
+			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.PLAYER ||
+			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
+			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.PROJECTILE ||
+			obj.box.type === EnumBoxtype.PLAYER && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
 			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
+			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
 			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
+			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
 			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.PROJECTILE ||
 			game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].vars.dead
 		) {
@@ -1368,6 +1711,9 @@ function drawDrawables() {
 			drawOnCanvas(drawable.weapon, drawableCtx);
 		}
 		drawOnCanvas(drawable, drawableCtx);
+		if(drawable.helmet) {
+			drawOnCanvas(drawable.helmet, drawableCtx);
+		}
 		if(drawable.weapon && !drawable.weapon.vars.hidden && drawable.weapon.vars.foreground) {
 			drawOnCanvas(drawable.weapon, drawableCtx);
 		}
@@ -1377,6 +1723,9 @@ function drawDrawables() {
 			drawOnCanvas(drawable.weapon, drawableCtx);
 		}
 		drawOnCanvas(drawable, drawableCtx);
+		if(drawable.helmet) {
+			drawOnCanvas(drawable.helmet, drawableCtx);
+		}
 		if(drawable.weapon && !drawable.weapon.vars.hidden && drawable.weapon.vars.foreground) {
 			drawOnCanvas(drawable.weapon, drawableCtx);
 		}
@@ -1559,11 +1908,11 @@ function update(delta) {
 
 //	Master game draw function
 function draw(interpolationPercentage) {
-	// if(game.redrawBackground || game.redrawObstaclesTo > performance.now()) {
+	if(game.redrawBackground || game.redrawObstaclesTo > performance.now()) {
 		bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 		drawOverlays();
 		drawDecor();
-	// }
+	}
 	drawableCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	drawDrawables();
 	attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);

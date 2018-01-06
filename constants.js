@@ -100,17 +100,63 @@ var EnumItem = {
 	HEALTH_HEART: 1,
 	EXIT_KEY: 2,
 	PURPLE_MUSHROOM: 3,
-	GREEN_MUSHROOM: 4
+	GREEN_MUSHROOM: 4,
+	ORANGE_MUSHROOM: 5,
+
+	BASIC_KNIFE: 6,
+	ACID_KNIFE: 7,
+	CRYSTAL_KNIFE: 8,
+	SHADOW_KNIFE: 9,
+	FIRE_KNIFE: 10,
+	WATER_KNIFE: 11,
+	LIGHTNING_KNIFE: 12,
+
+	BASIC_SWORD: 13,
+	ACID_SWORD: 14,
+	CRYSTAL_SWORD: 15,
+	SHADOW_SWORD: 16,
+	FIRE_SWORD: 17,
+	WATER_SWORD: 18,
+	LIGHTNING_SWORD: 19,
+
+	ACID_HELMET: 20,
+	CRYSTAL_HELMET: 21,
+	SHADOW_HELMET: 22,
+	FIRE_HELMET: 23,
+	WATER_HELMET: 24,
+	LIGHTNING_HELMET: 25
 }
 
-var	EnumLode = {
-	NONE: 0,
+var EnumPlayerWeapon = {
+	KNIFE: 1,
+	SWORD: 2
+}
+
+var EnumPlayerHelmet = {
 	ACID: 1,
 	CRYSTAL: 2,
 	SHADOW: 3,
 	FIRE: 4,
 	WATER: 5,
 	LIGHTNING: 6
+}
+
+var	EnumLode = {
+	NONE: 0,
+
+	//	Affect damage / criticals
+	ACID: 1,
+	CRYSTAL: 2,
+	SHADOW: 3,
+	FIRE: 4,
+	WATER: 5,
+	LIGHTNING: 6,
+
+	//	Affect colour only
+	BONE: 7,
+	CLAW: 8,
+	BITE: 9,
+	IRON: 10
 }
 
 var EnumBoxtype = {

@@ -4,6 +4,7 @@ var creatureTemplates = [
 	//	1	GREEN GOBLIN
 	{
 		name: 'Green Goblin',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 0, y: 0},
 		vars: {
 			speed: 0.6,
@@ -68,6 +69,7 @@ var creatureTemplates = [
 	//	2	MINI GHOST
 	{
 		name: 'Mini Ghost',
+		lode: EnumLode.SHADOW,
 		currentSprite: { x: 0, y: 2},
 		vars: {
 			speed: 0.2,
@@ -126,6 +128,7 @@ var creatureTemplates = [
 	//	3	SKELTON
 	{
 		name: 'Skelton',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 3, y: 4 },
 		vars: {
 			speed: 0.5,
@@ -216,6 +219,7 @@ var creatureTemplates = [
 	//	4	GREEN SLUDGIE
 	{
 		name: 'Green Sludgie',
+		lode: EnumLode.ACID,
 		currentSprite: { x: 3, y: 4 },
 		vars: {
 			speed: 2,
@@ -269,6 +273,7 @@ var creatureTemplates = [
 	//	5	CAMP VAMP
 	{
 		name: 'Camp Vamp',
+		lode: EnumLode.LIGHTNING,
 		currentSprite: { x: 0, y: 10 },
 		vars: {
 			speed: 0.7,
@@ -357,6 +362,7 @@ var creatureTemplates = [
 	//	6	URK
 	{
 		name: 'Urk',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 0, y: 12},
 		vars: {
 			speed: 0.5,
@@ -437,6 +443,7 @@ var creatureTemplates = [
 	//	7	URK WARRIOR
 	{
 		name: 'Urk Warrior',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 0, y: 14},
 		vars: {
 			speed: 0.6,
@@ -518,6 +525,7 @@ var creatureTemplates = [
 	//	8	HULKING URK
 	{
 		name: 'Hulking Urk',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 0, y: 16},
 		vars: {
 			speed: 0.4,
@@ -607,6 +615,7 @@ var creatureTemplates = [
 	//	9	KOB
 	{
 		name: 'Kob',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 0, y: 20},
 		vars: {
 			speed: 0.8,
@@ -673,6 +682,7 @@ var creatureTemplates = [
 	//	10	MUMI
 	{
 		name: 'Mumi',
+		lode: EnumLode.CRYSTAL,
 		currentSprite: { x: 7, y: 4 },
 		vars: {
 			speed: 0.8,
@@ -741,6 +751,7 @@ var creatureTemplates = [
 	//	11	SNEAKY SKELTON
 	{
 		name: 'Sneaky Skelton',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 6, y: 4 },
 		vars: {
 			speed: 0.5,
@@ -809,6 +820,7 @@ var creatureTemplates = [
 	//	12	BLUE SQUARK
 	{
 		name: 'Blue Squark',
+		lode: EnumLode.WATER,
 		currentSprite: { x: 9, y: 2},
 		vars: {
 			speed: 1,
@@ -877,6 +889,7 @@ var creatureTemplates = [
 	//	13	ZOMBI
 	{
 		name: 'Zombi',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 12, y: 0},
 		vars: {
 			speed: 0.4,
@@ -966,6 +979,7 @@ var creatureTemplates = [
 	//	14	ZOMBI MASTER
 	{
 		name: 'Zombi Master',
+		lode: EnumLode.ACID,
 		currentSprite: { x: 21, y: 0},
 		vars: {
 			speed: 0.8,
@@ -1035,6 +1049,7 @@ var creatureTemplates = [
 	//	15	AIR ELEMENTAL
 	{
 		name: 'Air Elemental',
+		lode: EnumLode.WATER,
 		currentSprite: { x: 8, y: 20},
 		vars: {
 			speed: 0.4,
@@ -1088,6 +1103,7 @@ var creatureTemplates = [
 	//	16	URK VETERAN
 	{
 		name: 'Urk Veteran',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 8, y: 12},
 		vars: {
 			speed: 0.5,
@@ -1172,6 +1188,7 @@ var creatureTemplates = [
 	//	17	URK SHAMAN
 	{
 		name: 'Urk Shaman',
+		lode: EnumLode.FIRE,
 		currentSprite: { x: 8, y: 14},
 		vars: {
 			speed: 0.7,
@@ -1256,6 +1273,7 @@ var creatureTemplates = [
 	//	18	BLACK KNIGHT
 	{
 		name: 'Black Knight',
+		lode: EnumLode.SHADOW,
 		currentSprite: { x: 18, y: 2},
 		vars: {
 			speed: 1,

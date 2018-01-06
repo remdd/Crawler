@@ -1,6 +1,7 @@
 var playerTemplates = [
 	{
 		name: 'Hero',
+		lode: EnumLode.NONE,
 		currentSprite: { x: 0, y: 0 },
 		vars: {
 			speed: 1.2,

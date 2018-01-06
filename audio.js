@@ -36,3 +36,14 @@ var skeltonNoises = new Howl({
 		death1: [4000, 1500]
 	}
 });
+
+var pickupNoise = new Howl({
+	src: ['snd/CS_VocoBitB_Hit-03.wav'],
+	volume: 0.5,
+});
+
+var critHitNoise = new Howl({
+	src: ['snd/CS_VocoBitA_Hit-06.wav'],
+	volume: 0.7,
+});
+

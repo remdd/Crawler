@@ -242,9 +242,8 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 					this.currentSprite = level.tiles.exitStairs[1];
 					return this.animTime;
 				} else if(!this.open) {
-					displayMessage(3000, "The trapdoor is locked!", "You need to find the exit key...");
+					displayMessage(3000, "The trapdoor is locked!", "You need to find the key...");
 				} else {
-					console.log("Ending level!");
 					endLevel();
 				}
 			}
