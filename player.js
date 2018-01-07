@@ -8,6 +8,8 @@ var playerTemplates = [
 			maxHP: 15,
 			currentHP: 15,
 			restingWeaponAnimation: true,
+			invulnerableTime: 1000,						//	Time that player remains immune after taking damage
+			invulnerableTo: 0,							//	Time at which player stops being invulnerable
 			attackRate: 1,
 			moving: false
 		},
@@ -49,16 +51,16 @@ var playerTemplates = [
 				{ x: 8, y: 1 },		//	30	Death 3 - facing L
 				{ x: 9, y: 1 }		//	31	Death 4 - facing L
 			],
-			animations: [											//	Format: Loop time in ms, end time of each frame in ms, frame numbers
-				[ 1000, [600, 1000], [0, 1] ],						//	Resting, facing R
-				[ 1000, [600, 1000], [6, 7] ],						//	Resting, facing L
-				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],		//	Moving, facing R
-				[ 400, [100, 200, 300, 400], [8, 9, 10,11] ],		//	Moving, facing L
+			animations: [													//	Format: Loop time in ms, end time of each frame in ms, frame numbers
+				[ 1000, [600, 1000], [0, 1] ],								//	Resting, facing R
+				[ 1000, [600, 1000], [6, 7] ],								//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],				//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [8, 9, 10,11] ],				//	Moving, facing L
 				[ 1000, [67, 134, 200, 267, 334, 400, 467, 534, 600, 667, 734, 800, 867, 934, 1000 ], [ 12, 0, 12, 0, 12, 0, 12, 0, 12, 1, 13, 1, 13, 1, 13 ] ],	//	Resting Hitflash, facing R
 				[ 1000, [67, 134, 200, 267, 334, 400, 467, 534, 600, 667, 734, 800, 867, 934, 1000 ], [ 14, 6, 14, 6, 14, 6, 14, 6, 14, 7, 15, 7, 15, 7, 15 ] ],	//	Resting Hitflash, facing L
-				[ 400, [100, 200, 300, 400], [5, 18, 3, 16] ],		//	Moving Hitflash, facing R
-				[ 400, [100, 200, 300, 400], [8, 21, 10,23] ],		//	Moving Hitflash, facing L
-				[ 50000, [500, 1000, 1500, 50000], [24, 25, 26, 27] ],	//	Death, facing R
+				[ 400, [100, 200, 300, 400], [2, 17, 4, 19] ],				//	Moving Hitflash, facing R
+				[ 400, [100, 200, 300, 400], [8, 21, 10,23] ],				//	Moving Hitflash, facing L
+				[ 50000, [500, 1000, 1500, 50000], [24, 25, 26, 27] ],		//	Death, facing R
 				[ 50000, [500, 1000, 1500, 50000], [28, 29, 30, 31] ]		//	Death, facing L
 			]
 		},
@@ -75,18 +77,21 @@ var playerTemplates = [
 			bounceOff: false
 		},
 		inflictDamage: function(damage) {
-			this.vars.currentHP -= damage;
-			$('.healthSpan').text(this.vars.currentHP + ' / ' + this.vars.maxHP);
-			if(this.vars.facingRight) {
-				this.vars.animation = EnumState.HITFLASH_R;
-			} else {
-				this.vars.animation = EnumState.HITFLASH_L;
+			if(performance.now() > this.vars.invulnerableTo) {
+				this.vars.currentHP -= damage;
+				this.vars.invulnerableTo = performance.now() + this.vars.invulnerableTime;
+				$('.healthSpan').text(this.vars.currentHP + ' / ' + this.vars.maxHP);
+				if(this.vars.facingRight) {
+					this.vars.animation = EnumState.HITFLASH_R;
+				} else {
+					this.vars.animation = EnumState.HITFLASH_L;
+				}
+				this.vars.lastDamageTime = performance.now();
+				if(this.vars.currentHP <= 0) {
+					this.deathResponse();
+				}
+				// console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
 			}
-			this.vars.lastDamageTime = performance.now();
-			if(this.vars.currentHP <= 0) {
-				this.deathResponse();
-			}
-			// console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
 		},
 		deathResponse: function() {	
 			playerDeath();

@@ -706,7 +706,7 @@ var creatureWeapons = [
 			}
 		},
 		attack: {
-			reach: TILE_SIZE * 26/16,					//	Reach of attack from centre of player object position
+			reach: TILE_SIZE * 24/16,					//	Reach of attack from centre of player object position
 			baseDamage: 2,
 			criticalMax: 3,
 			damagePlayer: true,
@@ -722,7 +722,112 @@ var creatureWeapons = [
 				y: TILE_SIZE * 8/16
 			}
 		}
+	},
+	{
+		name: 'Ogr Ax',
+		lode: EnumLode.FIRE,
+		currentSprite: { x: 12, y: 6},
+		use: function(direction) {
+			this.chop(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 800,								//	Length of time the weapon stays animated after attack
+			attackRate: 1500,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 1,
+				y: 2
+			},
+			frames: [
+				{ x: 12, y: 6 },						//	Right facing
+				{ x: 13, y: 6 }							//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -4/16,
+				y: TILE_SIZE * -6/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 3/16,
+				y: TILE_SIZE * -12/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 26/16,					//	Reach of attack from centre of player object position
+			baseDamage: 2,
+			criticalMax: 2,
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 200,
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 3* Math.PI / 4,						//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},
+	{
+		name: 'Ogr Sword',
+		lode: EnumLode.FIRE,
+		currentSprite: { x: 14, y: 6},
+		use: function(direction) {
+			this.chop(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 600,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 1,
+				y: 2
+			},
+			frames: [
+				{ x: 14, y: 6 },						//	Right facing
+				{ x: 15, y: 6 }							//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -6/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 3/16,
+				y: TILE_SIZE * -12/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 28/16,					//	Reach of attack from centre of player object position
+			baseDamage: 1,
+			criticalMax: 3,
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 200,
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 3* Math.PI / 4,						//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
 	}
+
 ];
 
 var creatureProjectiles = [
@@ -865,7 +970,6 @@ var creatureProjectiles = [
 		type: EnumAttack.FIREBALL,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 	}
-
 ];
 
 spinOffProjectile = function(projectile, spinFactor) {

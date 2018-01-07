@@ -195,6 +195,10 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.closed = true;
 			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
 			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 1.2,
+				x: this.grid.x * TILE_SIZE
+			}
 			this.box.bottomRight = {
 				y: this.grid.y * TILE_SIZE + TILE_SIZE * 1.2,
 				x: this.grid.x * TILE_SIZE
@@ -1058,7 +1062,6 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 					x: this.grid.x * TILE_SIZE + 9
 				}
 			}
-			console.log(this);
 			break;
 		}
 

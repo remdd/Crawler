@@ -430,10 +430,10 @@ levelGen.fillOutMap = function() {
 		debugger;
 	}
 	if(level.fillArray[level.bossStart.y][level.bossStart.x] !== 2) {
-		console.log("Invalid level - no connection to boss room, clearing...");
+		// console.log("Invalid level - no connection to boss room, clearing...");
 		level.validLevel = false;
 	} else if(level.fillArray[level.exit.y][level.exit.x] !== 2) {
-		console.log("Invalid level - no connection to exit room, clearing...");
+		// console.log("Invalid level - no connection to exit room, clearing...");
 		level.validLevel = false;
 	} else if(level.rooms.length < 16) {
 		console.log("Invalid level - not enough rooms...");
@@ -1333,7 +1333,7 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 			this.setupOverlays = function() {
 				this.addFloorPatch(EnumFloorpatch.PUDDLE);
 				this.addWallDecor(true);
-				this.addObstacles(EnumObstacletype.BASIC_ROOM);
+				this.addObstacles(EnumObstacletype.PUDDLE);
 			}
 			break;
 		}
@@ -1816,6 +1816,18 @@ Room.prototype.addObstacles = function(obstacleType) {
 			}
 			break;
 		}
+		case EnumObstacletype.PUDDLE: {
+			var rand = Math.floor(session.prng.nextFloat() * 10);
+			if(rand < 7) {
+				//	Empty room
+				this.addFloorDecor(3, [EnumDecortype.FILTH, EnumDecortype.PLANTS]);
+			} else if(rand < 10) {
+				//	WELL ROOM
+				this.addWellRoomObstacles();
+				this.addFloorDecor(3, [EnumDecortype.FILTH, EnumDecortype.PLANTS]);
+			}
+			break;
+		}
 		default: {
 			break;
 		}
@@ -1989,7 +2001,6 @@ Room.prototype.addFloorDecor = function(decorFactor, decorTypes) {
 				allowedDecor.push.apply(allowedDecor, level.floorDecorTiles[i]);
 			}
 		}
-		console.log(allowedDecor);
 	}	
 	for(var i = this.origin.y; i < this.origin.y + this.height; i++) {
 		for(var j = this.origin.x; j < this.origin.x + this.width; j++) {

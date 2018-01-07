@@ -61,10 +61,36 @@ setAiAction = function(creature) {
 			case EnumAi.MINI_GHOST: {
 				switch(creature.ai.nextAction) {
 					case 0: {
-						var action = Math.floor(Math.random() * 1);
-						if(action < 1) {
-							ai.moveRandomVector(creature, 2500, 300, 1);
+						creature.vars.touchDamage = true;
+						ai.moveRandomVector(creature, 2500, 300, 1);
+						break;
+					}
+					case 1: {				//	Fade out
+						creature.vars.invisible = true;
+						if(creature.vars.facingRight) {
+							ai.moveRandomVector(creature, 0, 500, 1, 6);
+						} else {
+							ai.moveRandomVector(creature, 0, 500, 1, 7);
 						}
+						creature.ai.nextAction = 2;
+						break;
+					}
+					case 2: {				//	Move while invisible
+						ai.moveRandomVector(creature, 0, 10000, 1, 10);
+						var rand = Math.floor(Math.random() * 10);
+						if(rand < 1) {
+							creature.ai.nextAction = 3;
+						}
+						break;
+					}
+					case 3: {
+						creature.vars.invisible = false;
+						if(creature.vars.facingRight) {
+							ai.moveRandomVector(creature, 0, 500, 1, 8);
+						} else {
+							ai.moveRandomVector(creature, 0, 500, 1, 9);
+						}
+						creature.ai.nextAction = 0;
 						break;
 					}
 					default: {

@@ -202,6 +202,7 @@ function setUpPlayer() {
 			$('#exitkeyimg').fadeIn('slow');
 		}
 	}
+	// player.lode = EnumLode.WATER;
 	// new Item(itemTemplates[EnumItem.CRYSTAL_SWORD], player.grid.x-1,player.grid.y);
 	// new Item(itemTemplates[EnumItem.ACID_HELMET], player.grid.x+1,player.grid.y+1);
 	// new Item(itemTemplates[EnumItem.CRYSTAL_HELMET], player.grid.x+1,player.grid.y+2);
@@ -212,6 +213,8 @@ function setUpPlayer() {
 }
 
 function setUpCreatures() {
+	console.log(player.grid);
+	level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.OGR;
 	for(var i = 0; i < level.creatureArray.length; i++) {
 		for(var j = 0; j < level.creatureArray[i].length; j++) {
 			if(level.creatureArray[i][j]) {
@@ -288,7 +291,7 @@ function Entity(entityTemplate, x, y) {
 	this.vars = {};
 	Object.assign(this.vars, entityTemplate.vars);				//	Copy vars object
 	this.vars.drawOffset = { x: 0, y: 0 };
-	this.vars.touchDamage = false;								//	Default - does not damage player on contact
+	// this.vars.touchDamage = false;								//	Default - does not damage player on contact
 	this.box = {};
 	this.box.topLeft = {}; this.box.bottomRight = {};
 	Object.assign(this.box, entityTemplate.box);				//	Copy box object
@@ -1206,7 +1209,7 @@ function updatePlayer() {
 		if(moving != player.vars.moving) { 
 			player.vars.animStart = performance.now();
 		}
-		if(performance.now() < player.vars.lastDamageTime + 1000) {						//	+ length of time to flash after taking damage
+		if(performance.now() < player.vars.invulnerableTo) {						//	+ length of time to flash after taking damage
 			if(!player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_R; }
 			else if(!player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.RESTING_HITFLASH_L; }
 			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_HITFLASH_R; }
@@ -1240,6 +1243,7 @@ function updatePlayer() {
 		//	If effect array is empty, color the player normally
 		colorPlayer(EnumColor.NORMAL);
 	}
+	player.vars.drawY = player.box.bottomRight.y
 
 	player.animate();
 	player.updateGear();
@@ -1456,129 +1460,138 @@ function resolveAttacks() {
 }
 
 function resolveHit(attack, target) {
-	//	DAMAGE CALC GOES HERE
-	var damage = 1;
-	if(attack.baseDamage) {
-		damage = attack.baseDamage;
+	resolve = true;
+	if(!attack) {
+		resolve = false;
+	} else if(attack.onlyDamage) {
+		if(!(attack.onlyDamage.includes(target.lode))) {
+			resolve = false;
+		}
 	}
-	var criticalMax = 1;
-	if(attack.criticalMax) {
-		criticalMax = attack.criticalMax;
-	}
-	var criticalChance = 0;
-	//	Switch the *defender's* lode type
-	switch (target.lode) {
-		case EnumLode.NONE: {
-			if(attack.lode === EnumLode.ACID || attack.lode === EnumLode.CRYSTAL || attack.lode === EnumLode.SHADOW ||
-				attack.lode === EnumLode.FIRE || attack.lode === EnumLode.WATER || attack.lode === EnumLode.LIGHTNING) {
-				criticalChance = 0.2;
-			} else {
-				criticalChance = 0.1;
-			}
-			break;
+	if(resolve) {
+		var damage = 1;
+		if(attack.baseDamage) {
+			damage = attack.baseDamage;
 		}
-		case EnumLode.ACID: {
-			switch(attack.lode) {
-				case EnumLode.FIRE: {
-					criticalChance = 0.4;
-					break;
-				}
-				case EnumLode.ACID:
-				case EnumLode.WATER:
-				case EnumLode.LIGHTNING: {
-					criticalChance = 0.15;
-					break;
-				}
-				default: {break;}
-			}
+		var criticalMax = 1;
+		if(attack.criticalMax) {
+			criticalMax = attack.criticalMax;
 		}
-		case EnumLode.CRYSTAL: {
-			switch(attack.lode) {
-				case EnumLode.ACID: {
-					criticalChance = 0.4;
-					break;
-				}
-				case EnumLode.CRYSTAL:
-				case EnumLode.LIGHTNING: {
-					criticalChance = 0.15;
-					break;
-				}
-				default: {break;}
-			}
-		}
-		case EnumLode.SHADOW: {
-			switch(attack.lode) {
-				case EnumLode.CRYSTAL: {
-					criticalChance = 0.4;
-					break;
-				}
-				case EnumLode.SHADOW:
-				case EnumLode.LIGHTNING: {
-					criticalChance = 0.15;
-					break;
-				}
-			}
-		}
-		case EnumLode.FIRE: {
-			switch(attack.lode) {
-				case EnumLode.WATER: {
-					criticalChance = 0.4;
-					break;
-				}
-				case EnumLode.SHADOW: {
+		var criticalChance = 0;
+		//	Switch the *defender's* lode type
+		switch (target.lode) {
+			case EnumLode.NONE: {
+				if(attack.lode === EnumLode.ACID || attack.lode === EnumLode.CRYSTAL || attack.lode === EnumLode.SHADOW ||
+					attack.lode === EnumLode.FIRE || attack.lode === EnumLode.WATER || attack.lode === EnumLode.LIGHTNING) {
 					criticalChance = 0.2;
-					break;
+				} else {
+					criticalChance = 0.1;
 				}
-				case EnumLode.FIRE: {
-					criticalChance = 0.15;
-					break;
+				break;
+			}
+			case EnumLode.ACID: {
+				switch(attack.lode) {
+					case EnumLode.FIRE: {
+						criticalChance = 0.4;
+						break;
+					}
+					case EnumLode.ACID:
+					case EnumLode.WATER:
+					case EnumLode.LIGHTNING: {
+						criticalChance = 0.15;
+						break;
+					}
+					default: {break;}
+				}
+			}
+			case EnumLode.CRYSTAL: {
+				switch(attack.lode) {
+					case EnumLode.ACID: {
+						criticalChance = 0.4;
+						break;
+					}
+					case EnumLode.CRYSTAL:
+					case EnumLode.LIGHTNING: {
+						criticalChance = 0.15;
+						break;
+					}
+					default: {break;}
+				}
+			}
+			case EnumLode.SHADOW: {
+				switch(attack.lode) {
+					case EnumLode.CRYSTAL: {
+						criticalChance = 0.4;
+						break;
+					}
+					case EnumLode.SHADOW:
+					case EnumLode.LIGHTNING: {
+						criticalChance = 0.15;
+						break;
+					}
+				}
+			}
+			case EnumLode.FIRE: {
+				switch(attack.lode) {
+					case EnumLode.WATER: {
+						criticalChance = 0.4;
+						break;
+					}
+					case EnumLode.SHADOW: {
+						criticalChance = 0.2;
+						break;
+					}
+					case EnumLode.FIRE: {
+						criticalChance = 0.15;
+						break;
+					}
+				}
+			}
+			case EnumLode.WATER: {
+				switch(attack.lode) {
+					case EnumLode.LIGHTNING: {
+						criticalChance = 0.4;
+						break;
+					}
+					case EnumLode.SHADOW: {
+						criticalChance = 0.2;
+						break;
+					}
+					case EnumLode.CRYSTAL:
+					case EnumLode.WATER: {
+						criticalChance = 0.15;
+						break;
+					}
+				}
+			}
+			case EnumLode.LIGHTNING: {
+				switch(attack.lode) {
+					case EnumLode.FIRE: {
+						criticalChance = 0.4;
+						break;
+					}
+					case EnumLode.SHADOW: {
+						criticalChance = 0.2;
+						break;
+					}
+					case EnumLode.LIGHTNING: {
+						criticalChance = 0.15;
+						break;
+					}
 				}
 			}
 		}
-		case EnumLode.WATER: {
-			switch(attack.lode) {
-				case EnumLode.LIGHTNING: {
-					criticalChance = 0.4;
-					break;
-				}
-				case EnumLode.SHADOW: {
-					criticalChance = 0.2;
-					break;
-				}
-				case EnumLode.CRYSTAL:
-				case EnumLode.WATER: {
-					criticalChance = 0.15;
-					break;
-				}
+		if(criticalChance > 0) {
+			var critRoll = Math.random();
+			if(critRoll < criticalChance) {
+				damage += Math.floor(Math.random() * criticalMax) + 1;
+				console.log("Critical hit! " + damage + " damage...");
+				critHitNoise.play();
 			}
 		}
-		case EnumLode.LIGHTNING: {
-			switch(attack.lode) {
-				case EnumLode.FIRE: {
-					criticalChance = 0.4;
-					break;
-				}
-				case EnumLode.SHADOW: {
-					criticalChance = 0.2;
-					break;
-				}
-				case EnumLode.LIGHTNING: {
-					criticalChance = 0.15;
-					break;
-				}
-			}
-		}
+		target.inflictDamage(damage, attack.lode);
+		// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 	}
-	if(criticalChance > 0) {
-		var critRoll = Math.random();
-		if(critRoll < criticalChance) {
-			damage += Math.floor(Math.random() * criticalMax) + 1;
-			console.log("Critical hit! " + damage + " damage...");
-			critHitNoise.play();
-		}
-	}
-	target.inflictDamage(damage);
-	// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 }
 
 function checkCollision(obj, tryX, tryY) {
@@ -1677,7 +1690,9 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 	for(var i = 0; i < game.nearbyColliders.length; i++) {
 		var pass = false;
 		//	Check whether a collision check is required
-		if(
+		if(obj.vars.moveThroughColliders && obj.vars.touchDamage && game.nearbyColliders[i].box.type === EnumBoxtype.PLAYER) {
+			pass = false;
+		} else if(
 			obj === game.nearbyColliders[i] ||
 			obj.vars.moveThroughColliders ||
 			game.nearbyColliders[i].vars.moveThroughColliders ||
@@ -1734,8 +1749,8 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			) {
 				//	If player comes into contact with a collider dealing touch damage, execute its touchDamage function
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
+					// debugger;
 					obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
-					player.vars.lastDamageTime = performance.now();
 					resolveHit(obj.touchDamage(), player);
 				}
 				//	If player comes into contact with a pickup, execute its pickup function
@@ -2132,6 +2147,7 @@ function start(newGame) {
 		}
 	});
 	// bgMusic.play();
+	game.scoreStartTime = performance.now();
 	$('#gameMenuDiv').fadeOut('slow', function() {
 		if(newGame) {
 			$('.finalScoreSpan').text('');
@@ -2139,7 +2155,6 @@ function start(newGame) {
 		console.log("Starting game - level: " + level.levelNumber);
 		drawMap();
 		$('canvas').fadeIn('slow', function() {
-			game.scoreStartTime = performance.now();
 			$('.gameMenuScreen').hide();
 			if(newGame) {
 				displayMessage(3000, "Clutching your trusty knife in your sweaty palms,", "you enter the Baron's dungeon...")
@@ -2155,7 +2170,9 @@ window.onfocus = function() {
 	// bgMusic.play();
 	MainLoop.start();
 	game.scoreStartTime = performance.now();
-	session.score -= 1;
+	if(!player.vars.dead) {
+		session.score -= 1;
+	}
 }
 window.onblur = function() {
 	session.focused = false;

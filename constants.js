@@ -52,7 +52,8 @@ var EnumCreature = {
 	AIR_ELEMENTAL: 15,
 	URK_VETERAN: 16,
 	URK_SHAMAN: 17,
-	BLACK_KNIGHT: 18
+	BLACK_KNIGHT: 18,
+	OGR: 19
 }
 
 var EnumAi = {
@@ -89,7 +90,9 @@ var EnumCreatureWeapon = {
 	ZOMBI_MASTER_STAFF: 10,
 	SQUARK_KNIFE: 11,
 	URK_SHAMAN_STAFF: 12,
-	BLACK_KNIGHT_SWORD: 13
+	BLACK_KNIGHT_SWORD: 13,
+	OGR_AX: 14,
+	OGR_SWORD: 15
 }
 
 var EnumCreatureProjectile = {
@@ -250,7 +253,8 @@ var EnumDecortype = {
 var EnumObstacletype = {
 	BASIC_ROOM: 0,
 	TILED_FLOOR: 1,
-	STONE_FLOOR: 2
+	STONE_FLOOR: 2,
+	PUDDLE: 3
 }
 
 var playerSprite = document.getElementById('playerSpriteImg');

@@ -73,11 +73,13 @@ var creatureTemplates = [
 		currentSprite: { x: 0, y: 2},
 		vars: {
 			speed: 0.2,
-			maxHP: 5,
-			currentHP: 5,
+			maxHP: 1,
+			currentHP: 1,
 			moveThroughColliders: true,
+			touchDamage: true,
+			invisible: false,
 			foreground: true,
-			score: 0
+			score: 100
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -96,7 +98,13 @@ var creatureTemplates = [
 				{ x: 3, y: 3 },
 				{ x: 4, y: 3 },
 				{ x: 5, y: 3 },
-				{ x: 0, y: 7 }			//	Empty frame!
+				{ x: 0, y: 7 },			//	Empty frame!
+				{ x: 6, y: 2 },
+				{ x: 7, y: 2 },
+				{ x: 8, y: 2 },
+				{ x: 6, y: 3 },
+				{ x: 7, y: 3 },
+				{ x: 8, y: 3 }
 			],
 			animations: [
 				[ 400, [100, 200, 300, 400], [1, 2, 1, 0] ],						//	Resting, facing R
@@ -104,7 +112,12 @@ var creatureTemplates = [
 				[ 400, [100, 200, 300, 400], [1, 2, 1, 0] ],						//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [4, 5, 4, 3] ],						//	Moving, facing L
 				[ 2000, [100, 200, 300, 400, 2000], [1, 6, 7, 8, 12] ],				//	Death, facing R
-				[ 2000, [100, 200, 300, 400, 2000], [4, 9, 10, 11, 12] ]			//	Death, facing L
+				[ 2000, [100, 200, 300, 400, 2000], [4, 9, 10, 11, 12] ],			//	Death, facing L
+				[ 600, [200, 400, 600], [13,14,15]],								//	Fade out, facing R
+				[ 600, [200, 400, 600], [16,17,18]],								//	Fade out, facing L
+				[ 600, [200, 400, 600], [15,14,13]],								//	Fade in, facing R
+				[ 600, [200, 400, 600], [18,17,16]],								//	Fade in, facing L
+				[ 1000, [1000], [12]]												//	Move while invisible
 			]
 		},
 		box: {
@@ -114,10 +127,29 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.MINI_GHOST,
 		},
-		inflictDamage: function(damage) {
-			this.vars.currentHP -= damage;
-			if(this.vars.currentHP <= 0) {
-				this.deathResponse();
+		touchDamage: function() {
+			if(!this.vars.invisible) {
+				var touchDamage = {
+					onlyDamage: [
+						EnumLode.WATER,
+						EnumLode.FIRE,
+						EnumLode.LIGHTNING,
+						EnumLode.ACID
+					],
+					baseDamage: 1,
+					lode: EnumLode.SHADOW
+				}
+				return touchDamage;
+			}
+		},
+		inflictDamage: function(damage, lode) {
+			if(lode !== EnumLode.CRYSTAL) {
+				this.ai.nextAction = 1;
+			} else {
+				this.vars.currentHP -= damage;
+				if(this.vars.currentHP <= 0) {
+					this.deathResponse();
+				}
 			}
 		},
 		deathResponse: function() {
@@ -1356,6 +1388,84 @@ var creatureTemplates = [
 		},
 		addWeapon: function() {
 			return EnumCreatureWeapon.BLACK_KNIGHT_SWORD;
-		}	
+		}
+	},
+	//	19	OGR
+	{
+		name: 'Ogr',
+		lode: EnumLode.WATER,
+		currentSprite: { x: 17, y: 12},
+		vars: {
+			speed: 0.6,
+			maxHP: 10,
+			currentHP: 10,
+			restingWeaponAnimation: true,
+			attackRate: 1,
+			score: 180
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1.5, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 17, y: 12 },	//	Resting facing R 1
+				{ x: 18.5, y: 12 },	//	Resting facing R 2
+				{ x: 20, y: 12 },	//	Moving facing R 1
+				{ x: 21.5, y: 12 },	//	Moving facing R 2
+				{ x: 23, y: 12 },	//	Moving facing R 3
+				{ x: 24.5, y: 12 },	//	Moving facing R 4
+				{ x: 26, y: 12 },	//	Death facing R 1
+				{ x: 27.5, y: 12 },	//	Death facing R 2
+				{ x: 29, y: 12 },	//	Death facing R 3
+				{ x: 30.5, y: 12 },	//	Death facing R 4
+
+				{ x: 17, y: 14 },	//	Resting facing L 1
+				{ x: 18.5, y: 14 },	//	Resting facing L 2
+				{ x: 20, y: 14 },	//	Moving facing L 1
+				{ x: 21.5, y: 14 },	//	Moving facing L 2
+				{ x: 23, y: 14 },	//	Moving facing L 3
+				{ x: 24.5, y: 14 },	//	Moving facing L 4
+				{ x: 26, y: 14 },	//	Death facing L 1
+				{ x: 27.5, y: 14 },	//	Death facing L 2
+				{ x: 29, y: 14 },	//	Death facing L 3
+				{ x: 30.5, y: 14 }	//	Death facing L 4
+			],
+			animations: [
+				[ 1000, [600, 1000], [0, 1] ],								//	Resting, facing R
+				[ 1000, [600, 1000], [10, 11] ],								//	Resting, facing L
+				[ 600, [150, 300, 450, 600], [2, 3, 4, 5 ] ],				//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [12,13,14,15] ],				//	Moving, facing L
+				[ 2500, [400, 1400, 2000, 2500], [6, 7, 8, 9] ],		//	Death, facing R
+				[ 2500, [400, 1400, 2000, 2500], [16,17,18,19] ]		//	Death, facing L
+			]
+		},
+		box: {
+			width: 12, 
+			height: 29
+		},
+		ai: {
+			type: EnumAi.URK_VETERAN,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			var rand = Math.floor(session.prng.nextFloat() * 2);
+			if(rand < 1) {
+				return EnumCreatureWeapon.OGR_AX;
+			} else {
+				return EnumCreatureWeapon.OGR_SWORD;
+			}
+		},
+
 	}
 ];
