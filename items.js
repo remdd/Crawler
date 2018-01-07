@@ -26,7 +26,8 @@ var itemTemplates = [
 			type: EnumBoxtype.PICKUP
 		},
 		pickup: function() {
-			if(player.vars.currentHP < player.vars.maxHP) {
+			if(player.vars.currentHP < player.vars.maxHP && !this.vars.collected) {
+				this.vars.collected = true;
 				pickupNoise.play();
 				console.log("Picking up health heart!");
 				player.addHealth(1);
@@ -61,11 +62,14 @@ var itemTemplates = [
 			type: EnumBoxtype.PICKUP
 		},
 		pickup: function() {
-			pickupNoise.play();
-			console.log("Picking up exit key!");
-			player.addItem(this);
-			game.items.splice(game.items.indexOf(this), 1);
-			return true;
+			if(!this.vars.collected) {
+				this.vars.collected = true;
+				pickupNoise.play();
+				console.log("Picking up exit key!");
+				player.addItem(this);
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
 		}
 	},
 	{
@@ -96,13 +100,13 @@ var itemTemplates = [
 		},
 		pickup: function() {
 			if(!this.vars.collected) {
+				this.vars.collected = true;
 				pickupNoise.play();
 				player.effects.push(new Effect(EnumItem.PURPLE_MUSHROOM));
 				console.log(this);
 				game.items.splice(game.items.indexOf(this), 1);
+				return true;
 			}
-			this.vars.collected = true;
-			return true;
 		}
 	},
 	{
@@ -133,13 +137,13 @@ var itemTemplates = [
 		},
 		pickup: function() {
 			if(!this.vars.collected) {
+				this.vars.collected = true;
 				pickupNoise.play();
 				player.effects.push(new Effect(EnumItem.GREEN_MUSHROOM));
 				console.log(this);
 				game.items.splice(game.items.indexOf(this), 1);
+				return true;
 			}
-			this.vars.collected = true;
-			return true;
 		}
 	},
 	{
@@ -170,13 +174,13 @@ var itemTemplates = [
 		},
 		pickup: function() {
 			if(!this.vars.collected) {
+				this.vars.collected = true;
 				pickupNoise.play();
 				player.effects.push(new Effect(EnumItem.ORANGE_MUSHROOM));
 				console.log(this);
 				game.items.splice(game.items.indexOf(this), 1);
+				return true;
 			}
-			this.vars.collected = true;
-			return true;
 		}
 	},
 	{

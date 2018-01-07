@@ -758,8 +758,13 @@ var creatureProjectiles = [
 			speed: 5,
 			bounceOff: false
 		},
-		damage: function(target) {
-			target.inflictDamage(1);
+		touchDamage: function() {
+			var touchDamage = {
+				baseDamage: 1,
+				criticalMax: 2,
+				lode: EnumLode.NONE
+			}
+			return touchDamage;
 		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
@@ -795,8 +800,13 @@ var creatureProjectiles = [
 			speed: 5,
 			bounceOff: false
 		},
-		damage: function(target) {
-			target.inflictDamage(1);
+		touchDamage: function() {
+			var touchDamage = {
+				baseDamage: 1,
+				criticalMax: 2,
+				lode: EnumLode.WATER
+			}
+			return touchDamage;
 		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
@@ -814,7 +824,7 @@ var creatureProjectiles = [
 			animation: 0,
 			explodeOnImpact: true,
 			rotation: -Math.PI / 2,
-			spinFactor: 0.1
+			spinFactor: 0.05
 		},
 		sprite: { 
 			size: { x:0.5, y:1 },
@@ -844,8 +854,13 @@ var creatureProjectiles = [
 			speed: 2.5,
 			bounceOff: false
 		},
-		damage: function(target) {
-			target.inflictDamage(1);
+		touchDamage: function() {
+			var touchDamage = {
+				baseDamage: 1,
+				criticalMax: 2,
+				lode: EnumLode.FIRE
+			}
+			return touchDamage;
 		},
 		type: EnumAttack.FIREBALL,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
@@ -855,8 +870,10 @@ var creatureProjectiles = [
 
 spinOffProjectile = function(projectile, spinFactor) {
 	projectile.vars.spinOff = 0;
-	projectile.vars.spinOff += Math.random() * spinFactor;
-	projectile.vars.spinOff -= Math.random() * spinFactor;
+	var rand = Math.floor(Math.random() * 5);
+	if(rand < 1) {
+		spinFactor *= 5;
+	}
 	projectile.vars.spinOff += Math.random() * spinFactor;
 	projectile.vars.spinOff -= Math.random() * spinFactor;
 }

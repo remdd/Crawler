@@ -257,7 +257,12 @@ var creatureTemplates = [
 			bounceOff: true
 		},
 		touchDamage: function() {
-			return 1;
+			var touchDamage = {
+				baseDamage: 1,
+				criticalMax: 2,
+				lode: EnumLode.ACID
+			}
+			return touchDamage;
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;

@@ -925,7 +925,7 @@ setAiAction = function(creature) {
 					case 3: {
 						var direction = getPlayerDirection(creature);
 						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
-						var rand = Math.floor(Math.random() * 5);
+						var rand = Math.floor(Math.random() * 6);
 						if(rand < 1) {
 							creature.ai.nextAction = 0;
 						} else if(rand < 3) {

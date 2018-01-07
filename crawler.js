@@ -26,6 +26,8 @@ var session = {
 session.prng = new Random(session.seed);
 
 var game = {
+	scoreStartTime: 0,
+	scoreOffset: 0,
 	redrawBackground: false,				//	Set to true only when background redraw is required - on viewport move or animated obstacle
 	redrawObstaclesTo: 0,					//	Holds time to which obstacles should be animated
 	viewport_offset_x: 0,					//	Holds current horizontal viewport offset
@@ -618,7 +620,7 @@ function Projectile(projectileTemplate, shooter, direction) {
 	if(projectileTemplate.vars.spinFactor) {
 		spinOffProjectile(this, this.vars.spinFactor);
 	}
-	this.damage = projectileTemplate.damage;
+	this.touchDamage = projectileTemplate.touchDamage;
 	this.currentSprite = projectileTemplate.currentSprite;
 	this.sprite = {};
 	Object.assign(this.sprite, projectileTemplate.sprite);
@@ -658,9 +660,9 @@ function updateProjectiles() {
 					projectile.collidedWith.stuckProjectiles = [];
 				}
 				if(projectile.collidedWith === player && projectile.vars.damagePlayer) {
-					projectile.damage(projectile.collidedWith);
+					resolveHit(projectile.touchDamage, player);
 				} else if(projectile.collidedWith.box.type === EnumBoxtype.CREATURE && projectile.vars.damageCreatures) {
-					projectile.damage(projectile.collidedWith);
+					resolveHit(projectile.touchDamage, projectile.collidedWith);
 				}
 				projectile.stuckTo = projectile.collidedWith;
 				projectile.stuckOffset = {};
@@ -682,9 +684,9 @@ function updateProjectiles() {
 			} else if(projectile.vars.explodeOnImpact && !projectile.exploded && projectile.collidedWith) {
 				if(projectile.collidedWith !== 1) {
 					if(projectile.collidedWith === player && projectile.vars.damagePlayer) {
-						projectile.damage(projectile.collidedWith);
+						resolveHit(projectile.touchDamage, player);
 					} else if(projectile.collidedWith.box.type === EnumBoxtype.CREATURE && projectile.vars.damageCreatures) {
-						projectile.damage(projectile.collidedWith);
+						resolveHit(projectile.touchDamage, projectile.collidedWith);
 					}
 				}
 				projectile.exploded = true;
@@ -893,36 +895,36 @@ Creature.prototype.hasClearPathToPlayer = function() {
 		(level.terrainArray[player.grid.y+1][player.grid.x] === 2 && this.grid.y > player.grid.y) ||
 		(level.terrainArray[player.grid.y-1][player.grid.x] === 2 && this.grid.y < player.grid.y)
 	) {
-		console.log("Blocked by a door!");
+		// console.log("Blocked by a door!");
 		return false;
 	} else if(diffX === 0) {
 		for(var i = 0; i < diffY; i++) {
 			if(level.terrainArray[y1+i][x1] !== 0) {
-				console.log("Blocked vertically!");
+				// console.log("Blocked vertically!");
 				return false;
 			}
 		}
-		console.log("Clear path vertically");
+		// console.log("Clear path vertically");
 		return true;
 	} else if(diffY === 0) {
 		for(var i = 0; i < diffX; i++) {
 			if(level.terrainArray[y1][x1+i] !== 0) {
-				console.log("Blocked horizontally!");
+				// console.log("Blocked horizontally!");
 				return false;
 			}
 		}
-		console.log("Clear path horizontally");
+		// console.log("Clear path horizontally");
 		return true;
 	} else {
 		var diff = 0;
 		if(diffX === diffY) {
 			for(var i = 0; i < diffX; i++) {
 				if(level.terrainArray[y1+i][x1+i] !== 0) {
-					console.log("Blocked perfect diag!");
+					// console.log("Blocked perfect diag!");
 					return false;
 				}
 			}
-			console.log("Clear path perfect diag");
+			// console.log("Clear path perfect diag");
 			return true;
 		} else if(diffX >= diffY) {
 			var stepY = diffY / diffX;
@@ -933,12 +935,12 @@ Creature.prototype.hasClearPathToPlayer = function() {
 					incY++;
 				}
 				if(level.terrainArray[y1+incY][x1+i] !== 0) {
-					console.log("Blocked across diag!");
+					// console.log("Blocked across diag!");
 					return false;
 				}
 				diff += stepY;
 			}
-			console.log("Clear path across diag");
+			// console.log("Clear path across diag");
 			return true;
 		} else {
 			var stepX = diffX / diffY;
@@ -949,12 +951,12 @@ Creature.prototype.hasClearPathToPlayer = function() {
 					incX++;
 						}
 				if(level.terrainArray[y1+i][x1+incX] !== 0) {
-					console.log("Blocked down diag!");
+					// console.log("Blocked down diag!");
 					return false;
 				}
 				diff += stepX;
 			}
-			console.log("Clear path down diag");
+			// console.log("Clear path down diag");
 			return true;
 		}
 	}
@@ -1311,11 +1313,17 @@ Creature.prototype.updateGear = function() {
 		if(this !== player && this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
 			this.helmet.vars.drawOffset.y += 1;
 		} else if(this === player) {
-			if(this.vars.animation === EnumState.RESTING_L || this.vars.animation === EnumState.RESTING_R) {
+			if(
+				this.vars.animation === EnumState.RESTING_L || this.vars.animation === EnumState.RESTING_R || 
+				this.vars.animation === EnumState.RESTING_HITFLASH_L || this.vars.animation === EnumState.RESTING_HITFLASH_R
+			) {
 				if(this.vars.pointInAnimLoop > this.sprite.animations[0][1][0]) {
 					this.helmet.vars.drawOffset.y += 1;
 				}
-			} else if(this.vars.animation === EnumState.MOVING_L || this.vars.animation === EnumState.MOVING_R) {
+			} else if(
+				this.vars.animation === EnumState.MOVING_L || this.vars.animation === EnumState.MOVING_R || 
+				this.vars.animation === EnumState.MOVING_HITFLASH_L || this.vars.animation === EnumState.MOVING_HITFLASH_R
+			) {
 				if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][0]) {
 					this.helmet.vars.drawOffset.y += 0;
 				} else if(this.vars.pointInAnimLoop < this.sprite.animations[2][1][1]) {
@@ -1385,6 +1393,22 @@ function addScore(score) {
 	$('.scoreSpan').text('Score: ' + session.score);
 }
 
+function updateScoreDisplay() {
+	if(!player.vars.dead && session.score - Math.floor((performance.now() - game.scoreStartTime) / 1000) > 0) {
+		game.scoreOffset = Math.floor((performance.now() - game.scoreStartTime) / 1000);
+		$('.scoreSpan').text('Score: ' + (session.score - game.scoreOffset));
+	} else if(player.vars.dead) {
+		session.score -= game.scoreOffset;
+		game.scoreOffset = 0;
+		$('.scoreSpan').text('Score: ' + (session.score));
+	} else {
+		game.scoreStartTime = performance.now();
+		game.scoreOffset = 0;
+		session.score = 0;
+		$('.scoreSpan').text('Score: ' + (session.score));
+	}
+}
+
 function updateAttacks() {
 	resolveAttacks();
 	game.attacks.forEach(function(attack) {
@@ -1445,7 +1469,12 @@ function resolveHit(attack, target) {
 	//	Switch the *defender's* lode type
 	switch (target.lode) {
 		case EnumLode.NONE: {
-			criticalChance = 0.15;
+			if(attack.lode === EnumLode.ACID || attack.lode === EnumLode.CRYSTAL || attack.lode === EnumLode.SHADOW ||
+				attack.lode === EnumLode.FIRE || attack.lode === EnumLode.WATER || attack.lode === EnumLode.LIGHTNING) {
+				criticalChance = 0.2;
+			} else {
+				criticalChance = 0.1;
+			}
 			break;
 		}
 		case EnumLode.ACID: {
@@ -1549,7 +1578,7 @@ function resolveHit(attack, target) {
 		}
 	}
 	target.inflictDamage(damage);
-	console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
+	// console.log(target.name + " has " + target.vars.currentHP + " HP remaining.");
 }
 
 function checkCollision(obj, tryX, tryY) {
@@ -1707,7 +1736,7 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
 					obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
 					player.vars.lastDamageTime = performance.now();
-					player.inflictDamage(obj.touchDamage());
+					resolveHit(obj.touchDamage(), player);
 				}
 				//	If player comes into contact with a pickup, execute its pickup function
 				if(obj === player && game.nearbyColliders[i].pickup) {
@@ -1939,6 +1968,7 @@ function update(delta) {
 	updateProjectiles();
 	updateDrawables();
 	updateInterface();
+	updateScoreDisplay();
 }
 
 //	Master game draw function
@@ -1987,6 +2017,7 @@ $('.startBtn').click(function() {
 });
 
 function endLevel() {
+	MainLoop.stop();
 	$('#messageDiv').fadeOut('fast');
 	$.when($('canvas').fadeOut('slow')).then(function() {
 		$('#completedLevelSpan').text(session.levelNumber);
@@ -1997,6 +2028,8 @@ function endLevel() {
 			MainLoop.stop();
 			session.loadingLevel = false;
 			session.levelNumber++;
+			session.score -= game.scoreOffset;
+			game.scoreOffset = 0;
 			$('.nextLevelBtn').click(function() {
 				if(!session.loadingLevel) {
 					session.loadingLevel = true;
@@ -2010,6 +2043,8 @@ function endLevel() {
 
 function initializeGame() {
 	console.log("Initializing game");
+	game.scoreStartTime = 0;
+	game.scoreOffset = 0;
 	game.redrawBackground = true;
 	game.redrawObstaclesTo = performance.now() + 1000;
 	game.viewport_offset_x = 0;
@@ -2104,6 +2139,7 @@ function start(newGame) {
 		console.log("Starting game - level: " + level.levelNumber);
 		drawMap();
 		$('canvas').fadeIn('slow', function() {
+			game.scoreStartTime = performance.now();
 			$('.gameMenuScreen').hide();
 			if(newGame) {
 				displayMessage(3000, "Clutching your trusty knife in your sweaty palms,", "you enter the Baron's dungeon...")
@@ -2118,12 +2154,15 @@ window.onfocus = function() {
 	session.focused = true;
 	// bgMusic.play();
 	MainLoop.start();
+	game.scoreStartTime = performance.now();
+	session.score -= 1;
 }
 window.onblur = function() {
 	session.focused = false;
 	// bgMusic.pause();
 	Key.clearPressed();
 	MainLoop.stop();
+	session.score -= (game.scoreOffset);
 }
 
 function drawMap() {

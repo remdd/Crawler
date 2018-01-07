@@ -25,13 +25,17 @@ var levelGen = {
 		EnumRoomtype.BASIC_ROOM,
 		EnumRoomtype.BASIC_ROOM,
 		EnumRoomtype.LIGHT_FLOOR_PATCH, 
-		EnumRoomtype.LIGHT_FLOOR_PATCH, 
 		EnumRoomtype.MUD_POOL,
-		EnumRoomtype.COBBLES,
-		EnumRoomtype.GREY_STONE,
+		EnumRoomtype.PUDDLE,
+		EnumRoomtype.RED_COBBLES,
 		EnumRoomtype.SQUARE_TILE,
+		EnumRoomtype.PAVED_FLOOR,
 		EnumRoomtype.PARQUET_FLOOR,
-		EnumRoomtype.FLOORBOARDS
+		EnumRoomtype.FLOORBOARDS,
+		EnumRoomtype.BIG_SQUARE_TILE,
+		EnumRoomtype.GREY_COBBLES,
+		EnumRoomtype.GREY_SQUARE_TILE,
+		EnumRoomtype.GREY_PAVED_FLOOR
 	],
 	startingCommonCreatures: [
 		EnumCreature.GREEN_GOBLIN,
@@ -181,6 +185,7 @@ levelGen.loadLevel = function(levelNumber) {
 	//	Default startRoom contents function
 	level.startRoomContents = function() {
 		console.log("Adding start room contents");
+		level.creatureArray[this.origin.y+2][this.origin.x+2] = EnumCreature.GREEN_SLUDGIE;
 	};
 	//	Switch level number to set up level variables
 	switch(levelNumber) {
@@ -193,6 +198,7 @@ levelGen.loadLevel = function(levelNumber) {
 			} else {
 				level.specialItemCount = 1;
 			}
+			// level.specialItemCount = 10;
 			sessionVars.uncommonCreatures.push(EnumCreature.SNEAKY_SKELTON);
 			level.startRoomContents = function() {
 				console.log("Adding start room contents");
@@ -282,7 +288,7 @@ levelGen.generateLevel = function() {
 	});
 	//	Add a smattering of extra random creatures
 	this.addRandomCreatures();
-	for(var i = 0; i < level.specialItemCount; i++) {
+	while(level.specialItemCount > 0) {
 		this.addSpecialItem();
 	}
 },
@@ -905,24 +911,42 @@ levelGen.addRandomCreatures = function() {
 	}
 };
 
-levelGen.addSpecialItem = function() {
+levelGen.addSpecialItem = function(room) {
 	var item = Math.floor(session.prng.nextFloat() * level.specialItems.length);
 	var retry = true;
 	var tries = levelGen.vars.addCreatureAttempts;
 	while(tries && retry) {
-		var randY = Math.floor(session.prng.nextFloat() * (level.terrainArray.length));
-		var randX = Math.floor(session.prng.nextFloat() * (level.terrainArray[0].length));
-		if(		
-			//	Check that creature array and obstacle array are clear, and that position is not within 5 tiles of the player start room
-			level.terrainArray[randY][randX] === 0 && level.obstacleArray[randY][randX] === undefined &&
-			!(randY >= level.startRoom.origin.y - 5 && randY <= level.startRoom.origin.y + level.startRoom.height + 5 &&
-			randX >= level.startRoom.origin.x - 5 && randX <= level.startRoom.origin.x + level.startRoom.width + 5)
-		) {
-			level.itemArray[randY][randX] = level.specialItems[item];
-			console.log("Adding special item! " + item);
-			retry = false;
+		if(room) {
+			var randY = Math.floor(session.prng.nextFloat() * (room.height));
+			var randX = Math.floor(session.prng.nextFloat() * (room.width));
+			//	Check that terrain, item and obstacle arrays are clear
+			if(
+				level.terrainArray[room.origin.y + randY][room.origin.x + randX] === 0 && level.obstacleArray[room.origin.y + randY][room.origin.x + randX] === undefined &&
+				level.itemArray[room.origin.y + randY][room.origin.x + randX] === undefined
+			) {
+				level.itemArray[room.origin.y + randY][room.origin.x + randX] = level.specialItems[item];
+				console.log("Adding special item! " + item);
+				level.specialItemCount--;
+				retry = false;
+			}
+			tries--;
+		} else {
+			var randY = Math.floor(session.prng.nextFloat() * (level.terrainArray.length));
+			var randX = Math.floor(session.prng.nextFloat() * (level.terrainArray[0].length));
+			if(		
+				//	Check that terrain, item and obstacle arrays are clear, and that position is not within 5 tiles of the player start room
+				level.terrainArray[randY][randX] === 0 && level.obstacleArray[randY][randX] === undefined &&
+				level.itemArray[randY][randX] === undefined &&
+				!(randY >= level.startRoom.origin.y - 5 && randY <= level.startRoom.origin.y + level.startRoom.height + 5 &&
+				randX >= level.startRoom.origin.x - 5 && randX <= level.startRoom.origin.x + level.startRoom.width + 5)
+			) {
+				level.itemArray[randY][randX] = level.specialItems[item];
+				console.log("Adding special item! " + item);
+				level.specialItemCount--;
+				retry = false;
+			}
+			tries--;
 		}
-		tries--;
 	}
 }
 
@@ -1006,9 +1030,9 @@ levelGen.bossRooms = [
 		room.addWallDecor(false, 2);
 		var rand2 = Math.floor(session.prng.nextFloat() * 2);
 		if(rand2 < 1) {
-			room.addFloor(level.tiles.cobbleFloor, true);
+			room.addFloor(level.tiles.redCobbleFloor, true);
 		} else {
-			room.addFloor(level.tiles.plankFloor);
+			room.addFloor(level.tiles.floorboards);
 		}
 		room.addFloorDecor(5);
 
@@ -1305,15 +1329,23 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 			}
 			break;
 		}
-		case EnumRoomtype.COBBLES: {
+		case EnumRoomtype.PUDDLE: {
 			this.setupOverlays = function() {
-				this.addFloor(level.tiles.cobbleFloor, true);
+				this.addFloorPatch(EnumFloorpatch.PUDDLE);
+				this.addWallDecor(true);
+				this.addObstacles(EnumObstacletype.BASIC_ROOM);
+			}
+			break;
+		}
+		case EnumRoomtype.RED_COBBLES: {
+			this.setupOverlays = function() {
+				this.addFloor(level.tiles.redCobbleFloor, true);
 				this.addWallDecor(false);
 				this.addObstacles(EnumObstacletype.STONE_FLOOR);
 			}
 			break;
 		}
-		case EnumRoomtype.GREY_STONE: {
+		case EnumRoomtype.GREY_COBBLES: {
 			this.setupOverlays = function() {
 				this.addFloor(level.tiles.greyCobbleFloor, true);
 				this.replaceWalls(level.tiles.greyWall, 4);
@@ -1337,9 +1369,9 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 			}
 			break;
 		}
-		case EnumRoomtype.PLANK_FLOOR: {
+		case EnumRoomtype.FLOORBOARDS: {
 			this.setupOverlays = function() {
-				this.addFloor(level.tiles.plankFloor);
+				this.addFloor(level.tiles.floorboards);
 				this.addWallDecor(false);
 				this.addObstacles(EnumObstacletype.TILED_FLOOR);
 			}
@@ -1348,6 +1380,30 @@ Room = function(origin_y, origin_x, height, width, type, addContents) {
 		case EnumRoomtype.PAVED_FLOOR: {
 			this.setupOverlays = function() {
 				this.addFloor(level.tiles.pavedFloor);
+				this.addWallDecor(false);
+				this.addObstacles(EnumObstacletype.TILED_FLOOR);
+			}
+			break;
+		}
+		case EnumRoomtype.GREY_PAVED_FLOOR: {
+			this.setupOverlays = function() {
+				this.addFloor(level.tiles.greyPavedFloor);
+				this.replaceWalls(level.tiles.greyWall, 4);
+				this.addObstacles(EnumObstacletype.TILED_FLOOR);
+			}
+			break;
+		}
+		case EnumRoomtype.GREY_SQUARE_TILE: {
+			this.setupOverlays = function() {
+				this.addFloor(level.tiles.greySquareTileFloor, null, null, true);
+				this.replaceWalls(level.tiles.greyWall, 4);
+				this.addObstacles(EnumObstacletype.TILED_FLOOR);
+			}
+			break;
+		}
+		case EnumRoomtype.BIG_SQUARE_TILE: {
+			this.setupOverlays = function() {
+				this.addFloor(level.tiles.bigSquareTileFloor, null, null, true);
 				this.addWallDecor(false);
 				this.addObstacles(EnumObstacletype.TILED_FLOOR);
 			}
@@ -1429,6 +1485,10 @@ Room.prototype.addFloorPatch = function(type) {
 		}
 		case EnumFloorpatch.MUD_POOL: {
 			tiles = level.tiles.mudPool;
+			break;
+		}
+		case EnumFloorpatch.PUDDLE: {
+			tiles = level.tiles.puddle;
 			break;
 		}
 		default: {
@@ -1578,7 +1638,7 @@ Room.prototype.replaceWalls = function(wallTiles, decorFrequency) {
 			} else if(level.terrainArray[this.origin.y-1][this.origin.x+i-1] === 1 && level.terrainArray[this.origin.y-1][this.origin.x+i+1] === 1) {
 				var rand = Math.floor(session.prng.nextFloat() * decorFrequency)
 				if(rand < 1) {
-					var rand2 = Math.floor(session.prng.nextFloat() * level.tiles.greyWallDecor.length);
+					var rand2 = Math.floor(session.prng.nextFloat() * wallTiles[2].length);
 					level.overlayArray[this.origin.y-1][this.origin.x+i] = wallTiles[2][rand2];
 				} else {
 					level.overlayArray[this.origin.y-1][this.origin.x+i] = wallTiles[0][0];
@@ -1700,10 +1760,13 @@ Room.prototype.addObstacles = function(obstacleType) {
 				//	Storeroom
 				this.addStoreRoomObstacles();
 				this.addFloorDecor(1);
+				if(level.specialItemCount > 0) {
+					levelGen.addSpecialItem(this);
+				}
 			} else if(rand < 7) {
 				//	Well room
 				this.addWellRoomObstacles();
-				this.addFloorDecor(2, [EnumDecortype.FILTH, EnumDecortype.SPLATS, EnumDecortype.PLANTS]);
+				this.addFloorDecor(2, [EnumDecortype.FILTH, EnumDecortype.PLANTS]);
 			} else if(rand < 8) {
 				//	Table room
 				this.addTableRoomObstacles();

@@ -45,7 +45,10 @@ var levelTilesets = [
 			{y: 0, x: 6},
 			{y: 0, x: 7},
 			{y: 0, x: 8},
-			{y: 0, x: 9}
+			{y: 0, x: 9},
+			{y: 3, x: 9},
+			{y: 3, x: 10},
+			{y: 3, x: 11}
 		],
 		wallDecorTall: [
 			{y: 1, x: 9, height: 2, offset_y: 0},			//	Green goo
@@ -53,7 +56,7 @@ var levelTilesets = [
 			{y: 0, x: 11, height: 3, offset_y: -1}			//	Red fountain face
 		],
 		door: [
-			{y:8,x:0}, {y:8,x:1}, {y:8,x:2}, {y:10,x:0}, {y:10,x:1}, {y:10,x:2}
+			{y:8,x:0}, {y:8,x:1}, {y:8,x:2}, {y:10,x:0}, {y:10,x:1}, {y:10,x:2}, {y:12,x:0}, {y:12,x:1}, {y:12,x:2} 
 		],
 		exitStairs: [
 			{y:10,x:3}, {y:10,x:5}, {y:10,x:7}
@@ -80,7 +83,18 @@ var levelTilesets = [
 			[{y:5,x:13}, {y:7,x:15}],					//	Left
 			[{y:5,x:15}, {y:7,x:13}]					//	Right
 		],
-		cobbleFloor: [
+		puddle: [
+			[{y:7,x:9}, {y:7,x:10}],					//	Centre
+			[{y:6,x:8}],								//	Top-left
+			[{y:6,x:11}],								//	Top-right
+			[{y:8,x:8}],								//	Bottom-left
+			[{y:8,x:11}],								//	Bottom-right
+			[{y:6,x:9}, {y:6,x:10}],					//	Top
+			[{y:8,x:9}, {y:8,x:10}],					//	Bottom
+			[{y:7,x:8}, {y:9,x:10}],					//	Left
+			[{y:7,x:11}, {y:9,x:11}]					//	Right
+		],
+		redCobbleFloor: [
 			[{y:6,x:0}, {y:6,x:1}, {y:7,x:0}, {y:7,x:1}],		//	Centre
 			[{y:6,x:2}], 										//	Transition left
 			[{y:6,x:3}], 										//	Transition right
@@ -99,22 +113,22 @@ var levelTilesets = [
 			[{y:5,x:5}, {y:5,x:4}, {y:5,x:6}, {y:5,x:7}],		//	Wall top
 			[{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}, {y:4,x:7}, {y:4,x:8}, {y:4,x:9}, {y:4,x:10}]		//	Decor
 		],
-		greyWallFace: [
-			{y:6,x:5}, {y:6,x:4}, {y:6,x:6}, {y:6,x:7}
-		],
-		greyWallTop: [
-			{y:5,x:5}, {y:5,x:4}, {y:5,x:6}, {y:5,x:7}
-		],
-		greyWallDecor: [
-			{y:7,x:4}, {y:7,x:5}, {y:7,x:6}, {y:7,x:7}, {y:4,x:5}, {y:4,x:6}, {y:4,x:7}, {y:4,x:8}, {y:4,x:9}, {y:4,x:10}
-		],
 		squareTileFloor: [
 			{y:10,x:11}, {y:11,x:11}, {y:12,x:11}
+		],
+		greySquareTileFloor: [
+			{y:10,x:12}, {y:11,x:12}, {y:12,x:12}
+		],
+		bigSquareTileFloor: [
+			{y:10,x:13}, {y:11,x:13}, {y:12,x:13}
 		],
 		pavedFloor: [
 			{y:9,x:12}, {y:9,x:13}, {y:9,x:14}
 		],
-		plankFloor: [
+		greyPavedFloor: [
+			{y:5,x:8}, {y:5,x:9}, {y:5,x:10}
+		],
+		floorboards: [
 			{y:9,x:15}
 		],
 		tiledFloor: [
@@ -213,7 +227,12 @@ var floorDecorTiles = [
 		{y:3,x:1, maxOffset: {y:13,x:9}}, 
 		{y:3,x:2, maxOffset: {y:4,x:0}}, 
 		{y:3,x:3, maxOffset: {y:4,x:8}}, 
-		{y:3,x:4, maxOffset: {y:4,x:4}}
+		{y:3,x:4, maxOffset: {y:4,x:4}},
+		{y:3,x:5, maxOffset: {y:1,x:2}},
+		{y:3,x:6, maxOffset: {y:4,x:8}},
+		{y:3,x:7, maxOffset: {y:3,x:5}},
+		{y:3,x:8, maxOffset: {y:1,x:0}},
+		{y:3,x:9, maxOffset: {y:10,x:12}}
 	],
 	[
 		//	3	Bones
