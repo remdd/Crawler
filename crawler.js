@@ -214,7 +214,7 @@ function setUpPlayer() {
 
 function setUpCreatures() {
 	console.log(player.grid);
-	level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.BLACK_WIZ;
+	// level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.BLACK_WIZ;
 	for(var i = 0; i < level.creatureArray.length; i++) {
 		for(var j = 0; j < level.creatureArray[i].length; j++) {
 			if(level.creatureArray[i][j]) {
@@ -272,6 +272,7 @@ function drawOnCanvas(entity, ctx) {
 			catch(err) {
 				console.log(err);
 				console.log(entity);
+				debugger;
 			}
 		}
 	}
@@ -663,9 +664,9 @@ function updateProjectiles() {
 					projectile.collidedWith.stuckProjectiles = [];
 				}
 				if(projectile.collidedWith === player && projectile.vars.damagePlayer) {
-					resolveHit(projectile.touchDamage, player);
+					resolveHit(projectile.touchDamage(), player);
 				} else if(projectile.collidedWith.box.type === EnumBoxtype.CREATURE && projectile.vars.damageCreatures) {
-					resolveHit(projectile.touchDamage, projectile.collidedWith);
+					resolveHit(projectile.touchDamage(), projectile.collidedWith);
 				}
 				projectile.stuckTo = projectile.collidedWith;
 				projectile.stuckOffset = {};
@@ -687,9 +688,9 @@ function updateProjectiles() {
 			} else if(projectile.vars.explodeOnImpact && !projectile.exploded && projectile.collidedWith) {
 				if(projectile.collidedWith !== 1) {
 					if(projectile.collidedWith === player && projectile.vars.damagePlayer) {
-						resolveHit(projectile.touchDamage, player);
+						resolveHit(projectile.touchDamage(), player);
 					} else if(projectile.collidedWith.box.type === EnumBoxtype.CREATURE && projectile.vars.damageCreatures) {
-						resolveHit(projectile.touchDamage, projectile.collidedWith);
+						resolveHit(projectile.touchDamage(), projectile.collidedWith);
 					}
 				}
 				projectile.exploded = true;
@@ -739,6 +740,7 @@ function Creature(creatureTemplate) {
 	this.ai.action = 0;
 	this.ai.nextAction = 0;		
 	this.movement = {};
+	this.currentSprite = creatureTemplate.currentSprite;
 	if(creatureTemplate.movement) {
 		Object.assign(this.movement, creatureTemplate.movement);
 	}
@@ -1751,7 +1753,9 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
 					// debugger;
 					obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
-					resolveHit(obj.touchDamage(), player);
+					var touch = obj.touchDamage();
+					console.log(touch);
+					resolveHit(touch, player);
 				}
 				//	If player comes into contact with a pickup, execute its pickup function
 				if(obj === player && game.nearbyColliders[i].pickup) {
@@ -2170,7 +2174,7 @@ window.onfocus = function() {
 	// bgMusic.play();
 	MainLoop.start();
 	game.scoreStartTime = performance.now();
-	if(!player.vars.dead) {
+	if(player && !player.vars.dead) {
 		session.score -= 1;
 	}
 }

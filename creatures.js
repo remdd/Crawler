@@ -969,8 +969,8 @@ var creatureTemplates = [
 				{ x: 20, y: 1 }		//	Biting facing L 2
 			],
 			animations: [
-				[ 200, [200], [0] ],											//	Resting, facing R
-				[ 200, [200], [7] ],											//	Resting, facing L
+				[ 200, [200], [6] ],											//	Resting, facing R (dead!)
+				[ 200, [200], [13] ],											//	Resting, facing L (dead!)
 				[ 400, [100, 200, 300, 400], [ 0, 1, 2, 3 ] ],					//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [ 7, 8, 9,10 ] ],					//	Moving, facing L
 				[ 600, [200, 400, 600], [4, 5, 6] ],							//	Death, facing R
@@ -1483,6 +1483,8 @@ var creatureTemplates = [
 			attackRate: 1,
 			nextTeleportTime: 0,
 			teleportCooldown: 4000,
+			impCount: 0,
+			maxImps: 3,
 			score: 400
 		},
 		sprite: {
@@ -1535,8 +1537,8 @@ var creatureTemplates = [
 				[ 400, [100, 200, 300, 400], [16,17,18,19] ],							//	Moving, facing L
 				[ 1800, [300, 600, 900, 1200, 1500, 1800], [8 ,9 ,10,11,12,13] ],		//	Death, facing R
 				[ 1800, [300, 600, 900, 1200, 1500, 1800], [22,23,24,25,26,27] ],		//	Death, facing L
-				[ 1000, [250, 500, 600, 700, 750, 800, 850, 900, 925, 950, 975, 1000], [6, 7, 6, 7, 6, 7, 6, 7, 6, 7, 6, 7 ] ],	//	Casting, facing R
-				[ 1000, [250, 500, 600, 700, 750, 800, 850, 900, 925, 950, 975, 1000], [20,21,20,21,20,21,20,21,20,21,20,21] ],	//	Casting, facing L
+				[ 600, [150, 300, 400, 450, 500, 525, 550, 575, 600], [6, 7, 6, 7, 6, 7, 6, 7, 6 ] ],	//	Casting, facing R
+				[ 600, [150, 300, 400, 450, 500, 525, 550, 575, 600], [20,21,20,21,20,21,20,21,20] ],	//	Casting, facing L
 				[ 150, [50, 100, 150], [28,29,30]],			//	Teleport, facing R
 				[ 150, [50, 100, 150], [31,32,33]],			//	Teleport, facing L
 				[ 150, [50, 100, 150], [28,29,30]],			//	Reappear, facing R
@@ -1555,7 +1557,7 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				this.ai.nextAction = 0;
+				this.ai.nextAction = 4;
 				clearAiAction(this);
 			}
 		},
@@ -1565,6 +1567,184 @@ var creatureTemplates = [
 		addWeapon: function() {
 			return EnumCreatureWeapon.BLACK_WIZ_WEAPON;
 		},
-	}
+	},
+
+	//	21	RED WIZ
+	{
+		name: 'Red Wiz',
+		lode: EnumLode.FIRE,
+		currentSprite: { x: 18, y: 8},
+		vars: {
+			speed: 1.3,
+			maxHP: 7,
+			currentHP: 7,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			nextTeleportTime: 0,
+			teleportCooldown: 4000,
+			score: 400
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 18, y: 8 },	//	0	Resting facing R 1
+				{ x: 19, y: 8 },	//	1	Resting facing R 2
+				{ x: 20, y: 8 },	//	2	Moving facing R 1
+				{ x: 21, y: 8 },	//	3	Moving facing R 2
+				{ x: 22, y: 8 },	//	4	Moving facing R 3
+				{ x: 23, y: 8 },	//	5	Moving facing R 4
+				{ x: 24, y: 8 },	//	6	Casting facing R 1
+				{ x: 25, y: 8 },	//	7	Casting facing R 2
+				{ x: 26, y: 8 },	//	8	Death facing R 1
+				{ x: 27, y: 8 },	//	9	Death facing R 2
+				{ x: 28, y: 8 },	//	10	Death facing R 3
+				{ x: 29, y: 8 },	//	11	Death facing R 4
+				{ x: 30, y: 8 },	//	12	Death facing R 5
+				{ x: 31, y: 8 },	//	13	Death facing R 6
+
+				{ x: 18, y: 9 },	//	14	Resting facing L 1
+				{ x: 19, y: 9 },	//	15	Resting facing L 2
+				{ x: 20, y: 9 },	//	16	Moving facing L 1
+				{ x: 21, y: 9 },	//	17	Moving facing L 2
+				{ x: 22, y: 9 },	//	18	Moving facing L 3
+				{ x: 23, y: 9 },	//	19	Moving facing L 4
+				{ x: 24, y: 9 },	//	20	Casting facing L 1
+				{ x: 25, y: 9 },	//	21	Casting facing L 2
+				{ x: 26, y: 9 },	//	22	Death facing L 1
+				{ x: 27, y: 9 },	//	23	Death facing L 2
+				{ x: 28, y: 9 },	//	24	Death facing L 3
+				{ x: 29, y: 9 },	//	25	Death facing L 4
+				{ x: 30, y: 9 },	//	26	Death facing L 5
+				{ x: 31, y: 9 },	//	27	Death facing L 6
+
+				{ x: 29, y: 2 },	//	28	Teleport facing R 1
+				{ x: 30, y: 2 },	//	29	Teleport facing R 2
+				{ x: 31, y: 2 },	//	30	Teleport facing R 3
+				{ x: 29, y: 3 },	//	31	Teleport facing L 1
+				{ x: 30, y: 3 },	//	32	Teleport facing L 2
+				{ x: 31, y: 3 }		//	33	Teleport facing L 3
+
+			],
+			animations: [
+				[ 500, [300, 400], [0, 1] ],											//	Resting, facing R
+				[ 500, [300, 400], [14, 15] ],											//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],							//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [16,17,18,19] ],							//	Moving, facing L
+				[ 1800, [300, 600, 900, 1200, 1500, 1800], [8 ,9 ,10,11,12,13] ],		//	Death, facing R
+				[ 1800, [300, 600, 900, 1200, 1500, 1800], [22,23,24,25,26,27] ],		//	Death, facing L
+				[ 600, [150, 300, 400, 450, 500, 525, 550, 575, 600], [6, 7, 6, 7, 6, 7, 6, 7, 6 ] ],	//	Casting, facing R
+				[ 600, [150, 300, 400, 450, 500, 525, 550, 575, 600], [20,21,20,21,20,21,20,21,20] ],	//	Casting, facing L
+				[ 150, [50, 100, 150], [28,29,30]],			//	Teleport, facing R
+				[ 150, [50, 100, 150], [31,32,33]],			//	Teleport, facing L
+				[ 150, [50, 100, 150], [28,29,30]],			//	Reappear, facing R
+				[ 150, [50, 100, 150], [31,32,33]]			//	Reappear, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 15
+		},
+		ai: {
+			type: EnumAi.BLACK_WIZ,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 4;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.RED_WIZ_WEAPON;
+		},
+	},
+
+	//	22	BLACK IMP
+	{
+		name: 'Black Imp',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: -1, y: -1},
+		vars: {
+			speed: 1.4,
+			maxHP: 1,
+			currentHP: 1,
+			restingWeaponAnimation: false,
+			score: 0
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 14, y: 10 },	//	Resting facing R 1
+				{ x: 15, y: 10 },	//	Resting facing R 2
+				{ x: 16, y: 10 },	//	Moving facing R 1
+				{ x: 17, y: 10 },	//	Moving facing R 2
+				{ x: 18, y: 10 },	//	Moving facing R 3
+				{ x: 19, y: 10 },	//	Moving facing R 4
+				{ x: 20, y: 10 },	//	Biting facing R 1
+				{ x: 21, y: 10 },	//	Biting facing R 2
+				{ x: 22, y: 10 },	//	Vanishing facing R 1
+				{ x: 23, y: 10 },	//	Vanishing facing R 2
+				{ x: 24, y: 10 },	//	Vanishing facing R 3
+				{ x: 25, y: 10 },	//	Vanishing facing R 4
+
+				{ x: 14, y: 11 },	//	Resting facing R 1
+				{ x: 15, y: 11 },	//	Resting facing R 2
+				{ x: 16, y: 11 },	//	Moving facing R 1
+				{ x: 17, y: 11 },	//	Moving facing R 2
+				{ x: 18, y: 11 },	//	Moving facing R 3
+				{ x: 19, y: 11 },	//	Moving facing R 4
+				{ x: 20, y: 11 },	//	Biting facing R 1
+				{ x: 21, y: 11 },	//	Biting facing R 2
+				{ x: 22, y: 11 },	//	Vanishing facing R 1
+				{ x: 23, y: 11 },	//	Vanishing facing R 2
+				{ x: 24, y: 11 },	//	Vanishing facing R 3
+				{ x: 25, y: 11 },	//	Vanishing facing R 4
+
+				{ x: -1, y: -1}		//	Dead (no sprite)
+			],
+			animations: [
+				[ 400, [150, 400], [0, 1 ] ],									//	Resting, facing R
+				[ 400, [150, 400], [12,13] ],									//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 5 ] ],					//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 14,15,16,17] ],					//	Moving, facing L
+				[ 500, [100, 200, 300, 400, 500], [ 8, 9, 10,11,24] ],			//	Death, facing R
+				[ 500, [100, 200, 300, 400, 500], [ 20,21,22,23,24] ],			//	Death, facing L
+				[ 400, [100, 200, 300, 400], [ 6, 7, 0, 1 ] ],					//	Biting, facing R
+				[ 400, [100, 200, 300, 400], [ 18,19,12,13] ],					//	Biting, facing L
+				[ 400, [100, 200, 300, 400], [ 23,22,21,20] ]					//	Reappearing
+			]
+		},
+		box: {
+			width: 6, 
+			height: 12
+		},
+		ai: {
+			type: EnumAi.BLACK_IMP,
+		},
+		deathDrop: function() {
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.IMP_BITE;
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathResponse: function() {
+			this.summoner.vars.impCount--;
+			this.kill();
+		}
+	},
 
 ];

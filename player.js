@@ -6,7 +6,7 @@ var playerTemplates = [
 		vars: {
 			speed: 1.2,
 			maxHP: 15,
-			currentHP: 15,
+			currentHP: 150,
 			restingWeaponAnimation: true,
 			invulnerableTime: 1000,						//	Time that player remains immune after taking damage
 			invulnerableTo: 0,							//	Time at which player stops being invulnerable

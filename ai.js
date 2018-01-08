@@ -985,20 +985,28 @@ setAiAction = function(creature) {
 				switch(creature.ai.nextAction) {
 					case 0: {
 						//	Next action not specified
-						if(getPlayerDistance(creature) < TILE_SIZE * 2 && performance.now() > creature.vars.nextTeleportTime) {
-							ai.rest(creature, 0, 150, 8);
-							creature.ai.nextAction = 1;
+						if(creature.checkIfCollides()) {
+							creature.ai.nextAction = 4;
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 2 && performance.now() > creature.vars.nextTeleportTime) {
+							creature.ai.nextAction = 4;
 						} else {
 							var action = Math.floor(Math.random() * 3);
 							if(action < 1) {
 								ai.moveRandomVector(creature, 500, 500, 1);
 							} else if(action < 2) {
 								ai.moveAwayFromPlayer(creature, 500, 500, 1);
-							} else {
-								if(getPlayerDistance(creature) > TILE_SIZE * 3) {
-									ai.rest(creature, 0, 1000, 6);
+							} else {		//	Cast a spell
+								if(creature.vars.impCount < creature.vars.maxImps) {
+									ai.rest(creature, 0, 600, 6);
+									creature.ai.nextAction = 5;
+								} else {
+									ai.rest(creature, 0, 600, 6);
 									creature.ai.nextAction = 3;
 								}
+								// if(getPlayerDistance(creature) > TILE_SIZE * 3) {		//	Cast lightning
+								// 	ai.rest(creature, 0, 600, 6);
+								// 	creature.ai.nextAction = 3;
+								// }
 							}
 						}
 						break;
@@ -1010,15 +1018,27 @@ setAiAction = function(creature) {
 						creature.ai.nextAction = 2;
 						break;
 					}
-					case 2: {
+					case 2: {	//	Rest
 						ai.rest(creature, 0, 500, 0);
 						creature.ai.nextAction = 0;
 						break;
 					}
-					case 3: {
+					case 3: {	//	Shoot lightning
 						var direction = getPlayerDirection(creature);
-						ai.attack(creature, 0, 1000, direction, Math.PI / 16);
+						if(creature.hasClearPathToPlayer()) {
+							ai.attack(creature, 0, 1000, direction, Math.PI / 16);	
+						} 
 						creature.ai.nextAction = 0;
+						break;
+					}
+					case 4: {	//	Teleport
+						ai.rest(creature, 0, 150, 8);
+						creature.ai.nextAction = 1;
+						break;
+					}
+					case 5: {	//	Summon Black Imp
+						summon(creature, EnumCreature.BLACK_IMP);
+						creature.ai.nextAction = 2;
 						break;
 					}
 					default: {
@@ -1026,6 +1046,38 @@ setAiAction = function(creature) {
 					}
 				} break;
 			}
+
+			case EnumAi.BLACK_IMP: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						ai.rest(creature, 0, 400, 8);
+						creature.ai.nextAction = 1;
+						break;
+					}
+					case 1: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 1 && creature.hasClearPathToPlayer()) {
+							var direction = getPlayerCompassDirection(creature);
+							creature.setFacing(direction);
+							if(creature.vars.facingRight) {
+								ai.attack(creature, 0, 400, direction, 0, 6);
+							} else {
+								ai.attack(creature, 0, 400, direction, 0, 7);
+							}
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 10 && creature.hasClearPathToPlayer()) {
+							var direction = getPlayerCompassDirection(creature);
+							ai.moveInDirection(creature, 0, 400, 1, direction, Math.PI / 2)
+						} else {
+							ai.moveRandomVector(creature, 0, 400, 1);
+						}
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
 			default: {
 				break;
 			}
@@ -1043,6 +1095,44 @@ setAiTiming = function(creature, duration) {
 }
 clearAiAction = function(creature) {
 	creature.ai.endTime = performance.now();
+}
+
+summon = function(summoner, newCreature) {
+	var foundSpace = false;
+	var tries = 10;
+	var summonX, summonY;
+
+	while(!foundSpace && tries) {
+		foundSpace = false;
+		var summonX = summoner.grid.x + (Math.floor(Math.random() * 3) - 1);
+		var summonY = summoner.grid.y + (Math.floor(Math.random() * 3) - 1);
+		if(
+			!((summonX <= player.grid.x + 1 && summonX >= player.grid.x-1) && (summonY <= player.grid.y + 1 && summonY >= player.grid.y-1)) &&
+			level.terrainArray[summonY][summonX] === 0 && level.obstacleArray[summonY][summonX] === undefined
+		) {
+			foundSpace = true;
+			game.drawables.forEach(function(drawable) {
+				if(drawable.grid.x === summonX && drawable.grid.y === summonY) {
+					foundSpace = false;
+				}
+			});
+		}
+		tries--;
+	}
+	if(foundSpace) {
+		var summoned = new Creature(creatureTemplates[newCreature]);
+		summoned.summoner = summoner;
+		summoner.vars.impCount++;
+		summoned.position.x = summonX * TILE_SIZE + TILE_SIZE / 2;
+		summoned.position.y = summonY * TILE_SIZE + TILE_SIZE / 2;
+		summoned.grid.x = summonX;
+		summoned.grid.y = summonY;
+		summoned.updateBox();
+		summoned.type = newCreature;
+		if(!summoned.checkIfCollides()) {
+			game.creatures.push(summoned);
+		}
+	}
 }
 
 var ai = {
@@ -1232,7 +1322,7 @@ var ai = {
 			direction: 'right',
 			distance: 0
 		}
-		for(var i = 0; i < 10; i++) {
+		for(var i = 1; i < 10; i++) {
 			if(level.terrainArray[startY][startX+i] !== 0) {
 				break;
 			} else {
@@ -1240,7 +1330,7 @@ var ai = {
 			}
 		}
 		teleport.distance = elbowRoom.right;
-		for(var i = 0; i < 10; i++) {
+		for(var i = 1; i < 10; i++) {
 			if(level.terrainArray[startY][startX-i] !== 0) {
 				break;
 			} else {
@@ -1251,7 +1341,7 @@ var ai = {
 			teleport.direction = 'left';
 			teleport.distance = elbowRoom.left;
 		}
-		for(var i = 0; i < 10; i++) {
+		for(var i = 1; i < 10; i++) {
 			if(level.terrainArray[startY+i][startX] !== 0) {
 				break;
 			} else {
@@ -1262,7 +1352,7 @@ var ai = {
 			teleport.direction = 'down';
 			teleport.distance = elbowRoom.down;
 		}
-		for(var i = 0; i < 10; i++) {
+		for(var i = 1; i < 10; i++) {
 			if(level.terrainArray[startY-i][startX] !== 0) {
 				break;
 			} else {

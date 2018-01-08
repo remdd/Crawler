@@ -827,7 +827,6 @@ var creatureWeapons = [
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
 	},
-
 	{
 		name: "Black Wiz Weapon",
 		lode: EnumLode.LIGHTNING,
@@ -873,6 +872,107 @@ var creatureWeapons = [
 		attack: {},
 		projectile: EnumCreatureProjectile.BLACK_WIZ_LIGHTNING
 	},
+	{
+		name: "Red Wiz Weapon",
+		lode: EnumLode.FIRE,
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			var fireballs = Math.floor(Math.random() * 4) + 1;
+			for(var i = 0; i < fireballs; i++) {
+				this.shoot(direction, this.projectile, false, true);
+			}
+			return false;
+		},
+		reset: function() {
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 10,								//	Length of time the weapon stays animated after attack
+			attackRate: 2000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: false,
+			displayTime: 10,
+			aimTime: 1000
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 1,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1 },							//	Right facing
+				{ x: -1, y: -1 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: 0,
+				y: 0
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: 0
+			}
+		},
+		attack: {},
+		projectile: EnumCreatureProjectile.BLACK_WIZ_LIGHTNING
+	},
+	{
+		name: 'Imp Bite',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			if(this.holder.vars.facingRight) {
+				this.currentSprite = this.sprite.frames[0];
+			} else {
+				this.currentSprite = this.sprite.frames[0];
+			}
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			// this.vars.hidden = true;
+			this.vars.attacking = false;
+		},
+		vars: {
+			hidden: true,
+			animTime: 100,								//	Length of time the weapon stays animated after attack
+			attackRate: 200,
+			drawOffset: { x: 0, y: 0 },
+			foreground: false
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1},							//	Resting - no sprite
+				{ x: -1, y: -1}							//	Resting - no sprite
+			],
+			restingDrawOffset: {
+				x: 0,
+				y: 0
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: TILE_SIZE * -0.6
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 0.75,						//	Reach of attack from centre of creature position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			swipeThickness: 0.85,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}	},
 
 ];
 
@@ -910,12 +1010,12 @@ var creatureProjectiles = [
 			bounceOff: false
 		},
 		touchDamage: function() {
-			var touchDamage = {
+			var touch = {
 				baseDamage: 1,
 				criticalMax: 2,
 				lode: EnumLode.NONE
 			}
-			return touchDamage;
+			return touch;
 		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
@@ -952,12 +1052,12 @@ var creatureProjectiles = [
 			bounceOff: false
 		},
 		touchDamage: function() {
-			var touchDamage = {
+			var touch = {
 				baseDamage: 1,
 				criticalMax: 2,
 				lode: EnumLode.WATER
 			}
-			return touchDamage;
+			return touch;
 		},
 		type: EnumAttack.ARROW,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
@@ -1006,12 +1106,12 @@ var creatureProjectiles = [
 			bounceOff: false
 		},
 		touchDamage: function() {
-			var touchDamage = {
+			var touch = {
 				baseDamage: 1,
 				criticalMax: 2,
 				lode: EnumLode.FIRE
 			}
-			return touchDamage;
+			return touch;
 		},
 		type: EnumAttack.FIREBALL,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
@@ -1060,12 +1160,12 @@ var creatureProjectiles = [
 			bounceOff: false
 		},
 		touchDamage: function() {
-			var touchDamage = {
+			var touch = {
 				baseDamage: 3,
 				criticalMax: 3,
 				lode: EnumLode.LIGHTNING
 			}
-			return touchDamage;
+			return touch;
 		},
 		type: EnumAttack.FIREBALL,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits

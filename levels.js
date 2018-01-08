@@ -12,7 +12,7 @@ var levelGen = {
 		addCreatureAttempts: 20,
 		addObstacleAttempts: 20,
 		minimumCreatureCount: 30,
-		basicItemFrequency: 1
+		basicItemFrequency: 5
 	},
 	earlyBossRooms: [
 		EnumCreature.URK_SHAMAN,
@@ -20,6 +20,11 @@ var levelGen = {
 		EnumCreature.CAMP_VAMP,
 		EnumCreature.BLACK_KNIGHT
 	],
+	lateBossRooms: [
+		EnumCreature.BLACK_WIZ,
+		EnumCreature.RED_WIZ
+	],
+	finalBossRoom: 0,
 	startingRoomTypes: [
 		EnumRoomtype.BASIC_ROOM,
 		EnumRoomtype.BASIC_ROOM,
@@ -92,7 +97,9 @@ levelGen.loadLevel = function(levelNumber) {
 	if(level.levelNumber === 1) {
 		sessionVars = Object.create({});
 		sessionVars.earlyBossRooms = [];
-		sessionVars.earlyBossRooms = levelGen.earlyBossRooms.slice();
+		// sessionVars.earlyBossRooms = levelGen.earlyBossRooms.slice();
+		sessionVars.lateBossRooms = [];
+		sessionVars.lateBossRooms = levelGen.lateBossRooms.slice();
 		sessionVars.roomTypes = levelGen.startingRoomTypes.slice();
 		sessionVars.commonCreatures = [];
 		sessionVars.commonCreatures = levelGen.startingCommonCreatures.slice();
@@ -122,61 +129,103 @@ levelGen.loadLevel = function(levelNumber) {
 	level.randomRoomRange = sessionVars.randomRoomRange;
 	level.randomRoomBaseline = sessionVars.randomRoomBaseline;
 
-	//	Pick a random boss room from the firstBossRoom array and delete it from the array
-	var rand = Math.floor(session.prng.nextFloat() * sessionVars.earlyBossRooms.length);
-	level.bossRoomType = sessionVars.earlyBossRooms[rand];
-	sessionVars.earlyBossRooms.splice(rand, 1);
-	//	Add the boss room contents function relevant to type
-	switch(level.bossRoomType) {
-		case EnumCreature.BLACK_KNIGHT: {
-			level.bossRoomNumber = 3;
-			level.bossSizeMin = 9;
-			level.bossSizeMax = 9;
-			level.bossSizeRand = 0;
-			sessionVars.rareCreatures.push(EnumCreature.BLACK_KNIGHT);
-			sessionVars.specialItems.push(EnumItem.SHADOW_KNIFE);
-			sessionVars.specialItems.push(EnumItem.SHADOW_HELMET);
-			break;
+	//	Pick a random boss room from the earlyBossRoom array and delete it from the array
+	if(sessionVars.earlyBossRooms.length > 0) {
+		var rand = Math.floor(session.prng.nextFloat() * sessionVars.earlyBossRooms.length);
+		level.bossRoomType = sessionVars.earlyBossRooms[rand];
+		sessionVars.earlyBossRooms.splice(rand, 1);
+		//	Add the boss room contents function relevant to type
+		switch(level.bossRoomType) {
+			case EnumCreature.BLACK_KNIGHT: {
+				level.bossRoomNumber = 3;
+				level.bossSizeMin = 9;
+				level.bossSizeMax = 9;
+				level.bossSizeRand = 0;
+				sessionVars.rareCreatures.push(EnumCreature.BLACK_KNIGHT);
+				sessionVars.specialItems.push(EnumItem.SHADOW_KNIFE);
+				sessionVars.specialItems.push(EnumItem.SHADOW_HELMET);
+				break;
+			}
+			case EnumCreature.URK_SHAMAN: {
+				level.bossRoomNumber = 2;
+				level.bossSizeMin = 8;
+				level.bossSizeMax = 15;
+				level.bossSizeRand = 6;
+				sessionVars.uncommonCreatures.push(EnumCreature.URK_VETERAN);
+				sessionVars.rareCreatures.push(EnumCreature.URK_SHAMAN);
+				sessionVars.specialItems.push(EnumItem.FIRE_KNIFE);
+				sessionVars.specialItems.push(EnumItem.FIRE_HELMET);
+				break;
+			}
+			case EnumCreature.ZOMBI_MASTER: {
+				level.bossRoomNumber = 1;
+				level.bossSizeMin = 8;
+				level.bossSizeMax = 12;
+				level.bossSizeRand = 5;
+				sessionVars.specialItems.push(EnumItem.ACID_KNIFE);
+				sessionVars.specialItems.push(EnumItem.ACID_HELMET);
+				break;
+			}
+			case EnumCreature.CAMP_VAMP: {
+				level.bossRoomNumber = 0;
+				level.bossSizeMin = 8;
+				level.bossSizeMax = 11;
+				level.bossSizeRand = 3;
+				sessionVars.uncommonCreatures.push(EnumCreature.MUMI);
+				sessionVars.rareCreatures.push(EnumCreature.CAMP_VAMP);
+				sessionVars.specialItems.push(EnumItem.LIGHTNING_KNIFE);
+				sessionVars.specialItems.push(EnumItem.LIGHTNING_HELMET);
+				break;
+			}
+			default: {
+				console.log("Should never be hit!");
+				debugger;
+				break;
+			}
 		}
-		case EnumCreature.URK_SHAMAN: {
-			level.bossRoomNumber = 2;
-			level.bossSizeMin = 8;
-			level.bossSizeMax = 15;
-			level.bossSizeRand = 6;
-			sessionVars.uncommonCreatures.push(EnumCreature.URK_VETERAN);
-			sessionVars.rareCreatures.push(EnumCreature.URK_SHAMAN);
-			sessionVars.specialItems.push(EnumItem.FIRE_KNIFE);
-			sessionVars.specialItems.push(EnumItem.FIRE_HELMET);
-			break;
-		}
-		case EnumCreature.ZOMBI_MASTER: {
-			level.bossRoomNumber = 1;
-			level.bossSizeMin = 8;
-			level.bossSizeMax = 12;
-			level.bossSizeRand = 5;
-			sessionVars.specialItems.push(EnumItem.ACID_KNIFE);
-			sessionVars.specialItems.push(EnumItem.ACID_HELMET);
-			break;
-		}
-		case EnumCreature.CAMP_VAMP: {
-			level.bossRoomNumber = 0;
-			level.bossSizeMin = 8;
-			level.bossSizeMax = 11;
-			level.bossSizeRand = 3;
-			sessionVars.uncommonCreatures.push(EnumCreature.MUMI);
-			sessionVars.rareCreatures.push(EnumCreature.CAMP_VAMP);
-			sessionVars.specialItems.push(EnumItem.LIGHTNING_KNIFE);
-			sessionVars.specialItems.push(EnumItem.LIGHTNING_HELMET);
-			break;
+	} else {
+		var rand = Math.floor(session.prng.nextFloat() * sessionVars.lateBossRooms.length);
+		// level.bossRoomType = sessionVars.lateBossRooms[rand];
+		// sessionVars.lateBossRooms.splice(rand, 1);
+		level.bossRoomType = EnumCreature.BLACK_WIZ;
+		//	Add the boss room contents function relevant to type
+		switch(level.bossRoomType) {
+			case EnumCreature.BLACK_WIZ: {
+				level.bossRoomNumber = 4;
+				level.bossSizeMin = 11;
+				level.bossSizeMax = 11;
+				level.bossSizeRand = 0;
+				sessionVars.rareCreatures.push(EnumCreature.BLACK_WIZ);
+				sessionVars.specialItems.push(EnumItem.SHADOW_SWORD);
+				sessionVars.specialItems.push(EnumItem.LIGHTNING_SWORD);
+				sessionVars.specialItems.push(EnumItem.ACID_SWORD);
+				break;
+			}
+			case EnumCreature.RED_WIZ: {
+				level.bossRoomNumber = 5;
+				level.bossSizeMin = 20;
+				level.bossSizeMax = 20;
+				level.bossSizeRand = 3;
+				sessionVars.rareCreatures.push(EnumCreature.RED_WIZ);
+				sessionVars.specialItems.push(EnumItem.FIRE_SWORD);
+				sessionVars.specialItems.push(EnumItem.WATER_SWORD);
+				sessionVars.specialItems.push(EnumItem.CRYSTAL_SWORD);
+				break;
+			}
+			default: {
+				console.log("Should never be hit!");
+				debugger;
+				break;
+			}
 		}
 	}
 	//	Copy session roomtypes to level roomtypes
 	level.roomTypes = sessionVars.roomTypes.slice();
 	//	Add boss room setup function
 	level.bossRoomContents = function() {
-		// level.playerStart = {y: this.origin.y, x: this.origin.x};
-		levelGen.bossRooms[level.bossRoomNumber](this);
-		// levelGen.bossRooms[3](this);
+		level.playerStart = {y: this.origin.y, x: this.origin.x};
+		// levelGen.bossRooms[level.bossRoomNumber](this);
+		levelGen.bossRooms[4](this);
 	};
 	level.exitRoomContents = function() {
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
@@ -185,7 +234,6 @@ levelGen.loadLevel = function(levelNumber) {
 	//	Default startRoom contents function
 	level.startRoomContents = function() {
 		console.log("Adding start room contents");
-		level.creatureArray[this.origin.y+2][this.origin.x+2] = EnumCreature.GREEN_SLUDGIE;
 	};
 	//	Switch level number to set up level variables
 	switch(levelNumber) {
@@ -239,6 +287,7 @@ levelGen.loadLevel = function(levelNumber) {
 			level.height = 100;
 			level.width = 85;
 			sessionVars.minimumCreatureCount = 50;
+			sessionVars.uncommonCreatures.push(EnumCreature.OGR);
 			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
 				level.specialItemCount = 0;
@@ -250,6 +299,31 @@ levelGen.loadLevel = function(levelNumber) {
 			break;
 		}
 		case 5: {
+			level.height = 70;
+			level.width = 100;
+			sessionVars.minimumCreatureCount = 55;
+			var rand = Math.floor(session.prng.nextFloat() * 3);
+			if(rand < 1) {
+				level.specialItemCount = 0;
+			} else if(rand < 2) {
+				level.specialItemCount = 1;
+			} else {
+				level.specialItemCount = 2;
+			}
+			break;
+		}
+		case 5: {
+			level.height = 90;
+			level.width = 90;
+			sessionVars.minimumCreatureCount = 60;
+			var rand = Math.floor(session.prng.nextFloat() * 3);
+			if(rand < 1) {
+				level.specialItemCount = 0;
+			} else if(rand < 2) {
+				level.specialItemCount = 1;
+			} else {
+				level.specialItemCount = 2;
+			}
 			break;
 		}
 		default: {
@@ -1043,7 +1117,8 @@ levelGen.bossRooms = [
 			room.addCreature(EnumCreature.ZOMBI);
 		}	
 	},
-	//	URK NEST
+	
+	//	Urk Nest
 	function(room) {
 		level.boss = EnumCreature.URK_SHAMAN;
 		console.log("Adding Urk Nest boss room");
@@ -1085,7 +1160,9 @@ levelGen.bossRooms = [
 				room.addCreature(EnumCreature.GREEN_GOBLIN);
 			}
 		}
-	},	//	Black Knight
+	},	
+
+	//	Black Knight
 	function(room) {
 		level.boss = EnumCreature.BLACK_KNIGHT;
 		console.log("Adding Black Knight boss room");
@@ -1123,6 +1200,88 @@ levelGen.bossRooms = [
 		}
 		room.addWallDecor(false, 4);
 		room.addFloorDecor(2);
+		// Add boss and other creatures
+		room.addCreature(level.boss);
+	},	
+
+	//	Black Wiz
+	function(room) {
+		level.boss = EnumCreature.BLACK_WIZ;
+		console.log("Adding Black Wiz boss room");
+		room.removeExistingContents();
+
+		//	Add pentagram in centre of floor
+		var pentagram_y = room.origin.y + Math.floor(room.height / 2) - 1;
+		var pentagram_x = room.origin.x +Math.floor(room.width / 2) - 2;
+		for(var i = 0; i < 3; i++) {
+			for(var j = 0; j < 4; j++) {
+				new Decor(uniqueFloorDecor[1][(4*i)+j].y, uniqueFloorDecor[1][(4*i)+j].x, pentagram_y + i, pentagram_x + j, 0, 0);
+			}
+		}
+
+		//	Add desk and special obstacles
+		var desk_y, shelves_y;
+		var rand = Math.floor(session.prng.nextFloat() * 1) + 3;
+		if(rand < 1) {			//	Desk top left
+			shelves_y = pentagram_y + 4;
+			desk_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK, room, desk_y, room.origin.x + 2);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 3);
+			new Obstacle(EnumObstacle.BLUE_SPHERE, room, desk_y + 1, room.origin.x + 7);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 5, room.origin.x + 1);
+			new Obstacle(EnumObstacle.BARREL, room, desk_y + 3, room.origin.x + 9);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 5, room.origin.x + 8);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y + 3, room.origin.x + 2);
+		} else if(rand < 2) {	//	Desk top right
+			shelves_y = pentagram_y + 4;
+			desk_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK, room, desk_y, room.origin.x + 6);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 7);
+			new Obstacle(EnumObstacle.BLUE_SPHERE, room, desk_y + 4, room.origin.x + 1);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y, room.origin.x + 1);
+			new Obstacle(EnumObstacle.SACK, room, desk_y + 4, room.origin.x + 8);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 1, room.origin.x + 5);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y, room.origin.x + 3);
+		} else if(rand < 3) {	//	Desk bottom left
+			desk_y = pentagram_y + 3;
+			shelves_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK, room, desk_y, room.origin.x + 2);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 3);
+			new Obstacle(EnumObstacle.BLUE_SPHERE, room, desk_y + 1, room.origin.x + 7);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y -2, room.origin.x + 1);
+			new Obstacle(EnumObstacle.BARRELSx2, room, desk_y -3, room.origin.x + 8);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 1, room.origin.x + 5);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y -1, room.origin.x + 8);
+		} else {				//	Desk bottom right
+			desk_y = pentagram_y + 3;
+			shelves_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK, room, desk_y, room.origin.x + 6);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 7);
+			new Obstacle(EnumObstacle.BLUE_SPHERE, room, desk_y, room.origin.x + 1);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y - 3, room.origin.x + 2);
+			new Obstacle(EnumObstacle.SACKx2, room, desk_y -2, room.origin.x + 9);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 1, room.origin.x + 5);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y, room.origin.x + 3);
+		}
+		//	Add shelves
+		new Obstacle(EnumObstacle.BOOKCASE_WIDE, room, shelves_y, room.origin.x + 1);
+		new Obstacle(EnumObstacle.NARROW_SHELVES, room, shelves_y, room.origin.x + 3);
+		new Obstacle(EnumObstacle.BOOKCASE, room, shelves_y, room.origin.x + 5);
+		new Obstacle(EnumObstacle.WIDE_SHELVES, room, shelves_y, room.origin.x + 7);
+		new Obstacle(EnumObstacle.NARROW_SHELVES, room, shelves_y, room.origin.x + 9);
+
+		//	Add room floor and decor
+		var rand = Math.floor(session.prng.nextFloat() * 3);
+		if(rand < 1) {
+			room.addFloor(level.tiles.squareTileFloor, null, null, true);
+		} else if(rand < 2) {
+			room.addFloor(level.tiles.pavedFloor);
+		} else {
+			room.addFloor(level.tiles.floorboards);
+		}
+		room.addWallDecor(false, 4);
+		room.addFloorDecor(2, [EnumDecortype.SPLATS, EnumDecortype.BONES, EnumDecortype.MISC] );
+
 		// Add boss and other creatures
 		room.addCreature(level.boss);
 	}

@@ -195,7 +195,14 @@ var obstacleTiles = [
 		{y:6,x:2},	//	49	Stone Pillar 1
 		{y:8,x:3},	//	50	Stone Pillar 2
 		{y:8,x:4},	//	51	Stone Pillar 3
-		{y:8,x:5}	//	52	Black Knight statue
+		{y:8,x:5},	//	52	Black Knight statue
+		{y:5,x:11},	//	53	Wiz Desk
+		{y:4,x:15},	//	54	Bookcase Mini
+		{y:5,x:14},	//	55	Bookcase
+		{y:7,x:14},	//	56	Bookcase Wide
+		{y:7,x:9},	//	57	Candles-5
+		{y:7,x:10},	//	58	Candles-3
+		{y:7,x:11}	//	59	Blue Sphere
 	]
 ];
 
@@ -254,5 +261,19 @@ var uniqueFloorDecor = [
 		{y:13,x:0},
 		{y:14,x:0},
 		{y:15,x:0}
+	],
+	[	//	Black Wiz's pentagram
+		{y:13,x:4},
+		{y:13,x:5},
+		{y:13,x:6},
+		{y:13,x:7},
+		{y:14,x:4},
+		{y:14,x:5},
+		{y:14,x:6},
+		{y:14,x:7},
+		{y:15,x:4},
+		{y:15,x:5},
+		{y:15,x:6},
+		{y:15,x:7}
 	]
 ]

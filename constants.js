@@ -55,7 +55,8 @@ var EnumCreature = {
 	BLACK_KNIGHT: 18,
 	OGR: 19,
 	BLACK_WIZ: 20,
-	RED_WIZ: 21
+	RED_WIZ: 21,
+	BLACK_IMP: 22
 }
 
 var EnumAi = {
@@ -79,7 +80,8 @@ var EnumAi = {
 	BLACK_KNIGHT: 18,
 	OGR: 19,
 	BLACK_WIZ: 20,
-	RED_WIZ: 21
+	RED_WIZ: 21,
+	BLACK_IMP: 22
 }
 
 var EnumCreatureWeapon = {
@@ -98,7 +100,9 @@ var EnumCreatureWeapon = {
 	BLACK_KNIGHT_SWORD: 13,
 	OGR_AX: 14,
 	OGR_SWORD: 15,
-	BLACK_WIZ_WEAPON: 16
+	BLACK_WIZ_WEAPON: 16,
+	RED_WIZ_WEAPON: 17,
+	IMP_BITE: 18
 }
 
 var EnumCreatureProjectile = {
@@ -246,7 +250,13 @@ var EnumObstacle = {
 	WARRIOR_STATUE: 39,
 	DRAGON_STATUE: 40,
 	STONE_PILLAR: 41,
-	BLACK_KNIGHT_STATUE: 42
+	BLACK_KNIGHT_STATUE: 42,
+	WIZ_DESK: 43,
+	BOOKCASE_MINI: 44,
+	BOOKCASE: 45,
+	BOOKCASE_WIDE: 46,
+	CANDLES: 47,
+	BLUE_SPHERE: 48
 }
 
 var EnumDecortype = {

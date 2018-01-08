@@ -714,7 +714,7 @@ function Effect(type) {
 				case 0: {
 					this.name = "Extra Invulnerability time";
 					this.message1 = "Not bad! A bit like chicken.";
-					this.message2 = "Your peripheral vision seems sharper, somehow...";
+					this.message2 = "Your peripheral vision seesm sharper...";
 					this.message3 = "";
 					this.apply = function() {
 						player.vars.invulnerableTime = player.vars.invulnerableTime * 5;
@@ -765,7 +765,7 @@ function Effect(type) {
 				case 2: {		
 					this.name = "Increased speed";
 					this.message1 = "The mushroom tastes slightly lemony.";
-					this.message2 = "You feel like it has given you an energy boost.";
+					this.message2 = "It seems to have given you an energy boost.";
 					this.message3 = "";
 					this.apply = function() {
 						player.vars.speed = player.vars.speed * 1.1;
@@ -808,6 +808,7 @@ function Effect(type) {
 					this.duration = 1000;
 					this.apply = function() {
 						player.vars.maxHP++;
+						player.vars.currentHP++;
 						$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
 					};
 					this.remove = function() {
