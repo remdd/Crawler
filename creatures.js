@@ -1390,6 +1390,7 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.BLACK_KNIGHT_SWORD;
 		}
 	},
+
 	//	19	OGR
 	{
 		name: 'Ogr',
@@ -1432,11 +1433,11 @@ var creatureTemplates = [
 			],
 			animations: [
 				[ 1000, [600, 1000], [0, 1] ],								//	Resting, facing R
-				[ 1000, [600, 1000], [10, 11] ],								//	Resting, facing L
+				[ 1000, [600, 1000], [10, 11] ],							//	Resting, facing L
 				[ 600, [150, 300, 450, 600], [2, 3, 4, 5 ] ],				//	Moving, facing R
 				[ 600, [150, 300, 450, 600], [12,13,14,15] ],				//	Moving, facing L
-				[ 2500, [400, 1400, 2000, 2500], [6, 7, 8, 9] ],		//	Death, facing R
-				[ 2500, [400, 1400, 2000, 2500], [16,17,18,19] ]		//	Death, facing L
+				[ 2500, [400, 1400, 2000, 2500], [6, 7, 8, 9] ],			//	Death, facing R
+				[ 2500, [400, 1400, 2000, 2500], [16,17,18,19] ]			//	Death, facing L
 			]
 		},
 		box: {
@@ -1467,5 +1468,103 @@ var creatureTemplates = [
 			}
 		},
 
+	},
+
+	//	20	BLACK WIZ
+	{
+		name: 'Black Wiz',
+		lode: EnumLode.LIGHTNING,
+		currentSprite: { x: 18, y: 6},
+		vars: {
+			speed: 1.3,
+			maxHP: 7,
+			currentHP: 7,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			nextTeleportTime: 0,
+			teleportCooldown: 4000,
+			score: 400
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 18, y: 6 },	//	0	Resting facing R 1
+				{ x: 19, y: 6 },	//	1	Resting facing R 2
+				{ x: 20, y: 6 },	//	2	Moving facing R 1
+				{ x: 21, y: 6 },	//	3	Moving facing R 2
+				{ x: 22, y: 6 },	//	4	Moving facing R 3
+				{ x: 23, y: 6 },	//	5	Moving facing R 4
+				{ x: 24, y: 6 },	//	6	Casting facing R 1
+				{ x: 25, y: 6 },	//	7	Casting facing R 2
+				{ x: 26, y: 6 },	//	8	Death facing R 1
+				{ x: 27, y: 6 },	//	9	Death facing R 2
+				{ x: 28, y: 6 },	//	10	Death facing R 3
+				{ x: 29, y: 6 },	//	11	Death facing R 4
+				{ x: 30, y: 6 },	//	12	Death facing R 5
+				{ x: 31, y: 6 },	//	13	Death facing R 6
+
+				{ x: 18, y: 7 },	//	14	Resting facing L 1
+				{ x: 19, y: 7 },	//	15	Resting facing L 2
+				{ x: 20, y: 7 },	//	16	Moving facing L 1
+				{ x: 21, y: 7 },	//	17	Moving facing L 2
+				{ x: 22, y: 7 },	//	18	Moving facing L 3
+				{ x: 23, y: 7 },	//	19	Moving facing L 4
+				{ x: 24, y: 7 },	//	20	Casting facing L 1
+				{ x: 25, y: 7 },	//	21	Casting facing L 2
+				{ x: 26, y: 7 },	//	22	Death facing L 1
+				{ x: 27, y: 7 },	//	23	Death facing L 2
+				{ x: 28, y: 7 },	//	24	Death facing L 3
+				{ x: 29, y: 7 },	//	25	Death facing L 4
+				{ x: 30, y: 7 },	//	26	Death facing L 5
+				{ x: 31, y: 7 },	//	27	Death facing L 6
+
+				{ x: 29, y: 4 },	//	28	Teleport facing R 1
+				{ x: 30, y: 4 },	//	29	Teleport facing R 2
+				{ x: 31, y: 4 },	//	30	Teleport facing R 3
+				{ x: 29, y: 5 },	//	31	Teleport facing L 1
+				{ x: 30, y: 5 },	//	32	Teleport facing L 2
+				{ x: 31, y: 5 }		//	33	Teleport facing L 3
+
+			],
+			animations: [
+				[ 500, [300, 400], [0, 1] ],											//	Resting, facing R
+				[ 500, [300, 400], [14, 15] ],											//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],							//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [16,17,18,19] ],							//	Moving, facing L
+				[ 1800, [300, 600, 900, 1200, 1500, 1800], [8 ,9 ,10,11,12,13] ],		//	Death, facing R
+				[ 1800, [300, 600, 900, 1200, 1500, 1800], [22,23,24,25,26,27] ],		//	Death, facing L
+				[ 1000, [250, 500, 600, 700, 750, 800, 850, 900, 925, 950, 975, 1000], [6, 7, 6, 7, 6, 7, 6, 7, 6, 7, 6, 7 ] ],	//	Casting, facing R
+				[ 1000, [250, 500, 600, 700, 750, 800, 850, 900, 925, 950, 975, 1000], [20,21,20,21,20,21,20,21,20,21,20,21] ],	//	Casting, facing L
+				[ 150, [50, 100, 150], [28,29,30]],			//	Teleport, facing R
+				[ 150, [50, 100, 150], [31,32,33]],			//	Teleport, facing L
+				[ 150, [50, 100, 150], [28,29,30]],			//	Reappear, facing R
+				[ 150, [50, 100, 150], [31,32,33]]			//	Reappear, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 15
+		},
+		ai: {
+			type: EnumAi.BLACK_WIZ,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 0;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BLACK_WIZ_WEAPON;
+		},
 	}
+
 ];

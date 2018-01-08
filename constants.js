@@ -53,7 +53,9 @@ var EnumCreature = {
 	URK_VETERAN: 16,
 	URK_SHAMAN: 17,
 	BLACK_KNIGHT: 18,
-	OGR: 19
+	OGR: 19,
+	BLACK_WIZ: 20,
+	RED_WIZ: 21
 }
 
 var EnumAi = {
@@ -74,7 +76,10 @@ var EnumAi = {
 	BLUE_SQUARK: 15,
 	URK_VETERAN: 16,
 	URK_SHAMAN: 17,
-	BLACK_KNIGHT: 18
+	BLACK_KNIGHT: 18,
+	OGR: 19,
+	BLACK_WIZ: 20,
+	RED_WIZ: 21
 }
 
 var EnumCreatureWeapon = {
@@ -92,13 +97,15 @@ var EnumCreatureWeapon = {
 	URK_SHAMAN_STAFF: 12,
 	BLACK_KNIGHT_SWORD: 13,
 	OGR_AX: 14,
-	OGR_SWORD: 15
+	OGR_SWORD: 15,
+	BLACK_WIZ_WEAPON: 16
 }
 
 var EnumCreatureProjectile = {
 	BONE_ARROW: 1,
 	SQUARK_KNIFE: 2,
-	URK_SHAMAN_FIREBALL: 3
+	URK_SHAMAN_FIREBALL: 3,
+	BLACK_WIZ_LIGHTNING: 4
 }
 
 var EnumItem = {

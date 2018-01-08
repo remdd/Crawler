@@ -3,8 +3,8 @@ var level;											//	Current level object, loaded from levels.js
 var master = {
 	interactDistance: 15,							//	Distance at which player can interact with interactables
 	defaultDropFrequency: 7,						//	Average number of default death drops per pickup drop
-	defaultMushroomFactor: 60000,					//	Multiplier for default mushroom effect duration
-	defaultMushroomMin: 20000,						//	Base minimum default mushroom effect duration
+	defaultMushroomFactor: 90000,					//	Multiplier for default mushroom effect duration
+	defaultMushroomMin: 30000,						//	Base minimum default mushroom effect duration
 	dropFrequency: [
 		[EnumItem.HEALTH_HEART, 5],
 		[EnumItem.PURPLE_MUSHROOM, 2],
@@ -214,7 +214,7 @@ function setUpPlayer() {
 
 function setUpCreatures() {
 	console.log(player.grid);
-	level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.OGR;
+	level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.BLACK_WIZ;
 	for(var i = 0; i < level.creatureArray.length; i++) {
 		for(var j = 0; j < level.creatureArray[i].length; j++) {
 			if(level.creatureArray[i][j]) {

@@ -709,20 +709,30 @@ function Effect(type) {
 	switch(type) {
 		case EnumItem.GREEN_MUSHROOM: {
 			this.color = EnumColor.GREEN;
-					this.name = "Placeholder";
-					this.message1 = "Mmmmm... a *green* mushroom.";
-					this.message2 = "";
+			var rand = Math.floor(Math.random() * 1);
+			switch(rand) {
+				case 0: {
+					this.name = "Extra Invulnerability time";
+					this.message1 = "Not bad! A bit like chicken.";
+					this.message2 = "Your peripheral vision seems sharper, somehow...";
 					this.message3 = "";
 					this.apply = function() {
+						player.vars.invulnerableTime = player.vars.invulnerableTime * 5;
 					};
 					this.remove = function() {
+						player.vars.invulnerableTime = player.vars.invulnerableTime / 5;
 					}
+					break;
+				}
+				default: {
+					break;
+				}
+			}
 			break;
 		}
 		case EnumItem.PURPLE_MUSHROOM: {
 			this.color = EnumColor.PURPLE;
 			var rand = Math.floor(Math.random() * 7);
-			console.log("rand: " + rand);
 			switch(rand) {
 				case 0: {
 					this.name = "Reduced speed";

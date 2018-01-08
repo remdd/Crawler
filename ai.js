@@ -981,12 +981,59 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.BLACK_WIZ: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						//	Next action not specified
+						if(getPlayerDistance(creature) < TILE_SIZE * 2 && performance.now() > creature.vars.nextTeleportTime) {
+							ai.rest(creature, 0, 150, 8);
+							creature.ai.nextAction = 1;
+						} else {
+							var action = Math.floor(Math.random() * 3);
+							if(action < 1) {
+								ai.moveRandomVector(creature, 500, 500, 1);
+							} else if(action < 2) {
+								ai.moveAwayFromPlayer(creature, 500, 500, 1);
+							} else {
+								if(getPlayerDistance(creature) > TILE_SIZE * 3) {
+									ai.rest(creature, 0, 1000, 6);
+									creature.ai.nextAction = 3;
+								}
+							}
+						}
+						break;
+					}
+					case 1: {	//	Reappear
+						var direction = getPlayerCompassDirection(creature);
+						ai.teleportAwayFromPlayer(creature);
+						ai.rest(creature, 0, 150, 10);
+						creature.ai.nextAction = 2;
+						break;
+					}
+					case 2: {
+						ai.rest(creature, 0, 500, 0);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						var direction = getPlayerDirection(creature);
+						ai.attack(creature, 0, 1000, direction, Math.PI / 16);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				} break;
+			}
 			default: {
 				break;
 			}
 		}
 	}
 }
+
+
 
 setAiTiming = function(creature, duration) {
 	creature.ai.startTime = performance.now();
@@ -1124,5 +1171,108 @@ var ai = {
 			creature.vars.animation = animation;
 		}
 		creature.movement.speed = 0;
+	},
+	teleportAwayFromPlayer: function(creature) {
+		var startX = creature.grid.x;
+		var startY = creature.grid.y;
+		var teleport = ai.getTeleportDirection(creature);
+		creature.vars.nextTeleportTime = performance.now() + creature.vars.teleportCooldown;
+		switch (teleport.direction) {
+			case 'right': {
+				for(var i = teleport.distance; i >= 0; i--) {
+					if(level.terrainArray[startY][startX+i] === 0 && level.obstacleArray[startY][startX+i] === undefined) {
+						creature.grid.x = startX + i;
+						break;
+					}
+				}
+				break;
+			}
+			case 'left': {
+				for(var i = teleport.distance; i >= 0; i--) {
+					if(level.terrainArray[startY][startX-i] === 0 && level.obstacleArray[startY][startX-i] === undefined) {
+						creature.grid.x = startX - i;
+						break;
+					}
+				}
+				break;
+			}
+			case 'down': {
+				for(var i = teleport.distance; i >= 0; i--) {
+					if(level.terrainArray[startY+i][startX] === 0 && level.obstacleArray[startY+i][startX] === undefined) {
+						creature.grid.y = startY + i;
+						break;
+					}
+				}
+				break;
+			}
+			case 'up': {
+				for(var i = teleport.distance; i >= 0; i--) {
+					if(level.terrainArray[startY-i][startX] === 0 && level.obstacleArray[startY-i][startX] === undefined) {
+						creature.grid.y = startY - i;
+						break;
+					}
+				}
+				break;
+			}
+		}
+		creature.position.x = creature.grid.x * TILE_SIZE + creature.sprite.size.x * TILE_SIZE / 2;
+		creature.position.y = creature.grid.y * TILE_SIZE + creature.sprite.size.y * TILE_SIZE / 2;
+		creature.updateBox();
+	},
+	getTeleportDirection: function(creature) {
+		var elbowRoom = {
+			right: 0,
+			left: 0,
+			down: 0,
+			up: 0
+		}
+		var startX = creature.grid.x;
+		var startY = creature.grid.y;
+		var teleport = {
+			direction: 'right',
+			distance: 0
+		}
+		for(var i = 0; i < 10; i++) {
+			if(level.terrainArray[startY][startX+i] !== 0) {
+				break;
+			} else {
+				elbowRoom.right++;
+			}
+		}
+		teleport.distance = elbowRoom.right;
+		for(var i = 0; i < 10; i++) {
+			if(level.terrainArray[startY][startX-i] !== 0) {
+				break;
+			} else {
+				elbowRoom.left++;
+			}
+		}
+		if(elbowRoom.left > elbowRoom.right) {
+			teleport.direction = 'left';
+			teleport.distance = elbowRoom.left;
+		}
+		for(var i = 0; i < 10; i++) {
+			if(level.terrainArray[startY+i][startX] !== 0) {
+				break;
+			} else {
+				elbowRoom.down++;
+			}
+		}
+		if(elbowRoom.down > elbowRoom.right && elbowRoom.down > elbowRoom.left) {
+			teleport.direction = 'down';
+			teleport.distance = elbowRoom.down;
+		}
+		for(var i = 0; i < 10; i++) {
+			if(level.terrainArray[startY-i][startX] !== 0) {
+				break;
+			} else {
+				elbowRoom.up++;
+			}
+		}
+		if(elbowRoom.up > elbowRoom.right && elbowRoom.up > elbowRoom.left && elbowRoom.up > elbowRoom.down) {
+			teleport.direction = 'up';
+			teleport.distance = elbowRoom.up;
+		}
+		return teleport;
 	}
 }

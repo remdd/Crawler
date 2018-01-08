@@ -826,7 +826,53 @@ var creatureWeapons = [
 			arc: 3* Math.PI / 4,						//	90 degree swipe
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
-	}
+	},
+
+	{
+		name: "Black Wiz Weapon",
+		lode: EnumLode.LIGHTNING,
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			var fireballs = Math.floor(Math.random() * 4) + 1;
+			for(var i = 0; i < fireballs; i++) {
+				this.shoot(direction, this.projectile, false, true);
+			}
+			return false;
+		},
+		reset: function() {
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 10,								//	Length of time the weapon stays animated after attack
+			attackRate: 2000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: false,
+			displayTime: 10,
+			aimTime: 1000
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 1,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1 },							//	Right facing
+				{ x: -1, y: -1 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: 0,
+				y: 0
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: 0
+			}
+		},
+		attack: {},
+		projectile: EnumCreatureProjectile.BLACK_WIZ_LIGHTNING
+	},
 
 ];
 
@@ -964,6 +1010,60 @@ var creatureProjectiles = [
 				baseDamage: 1,
 				criticalMax: 2,
 				lode: EnumLode.FIRE
+			}
+			return touchDamage;
+		},
+		type: EnumAttack.FIREBALL,
+		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+	},
+	{
+		name: 'Black Wiz Lightning',
+		lode: EnumLode.LIGHTNING,
+		currentSprite: { x: 9, y: 7 },
+		vars: { 
+			drawOffset: { x: 0, y: 0},
+			displayTime: 1000,
+			damagePlayer: true,
+			damageCreatures: false,
+			animated: true,
+			animation: 0,
+			explodeOnImpact: true,
+			rotation: -Math.PI / 2,
+			spinFactor: 0.02
+		},
+		sprite: { 
+			size: { x:0.5, y:1 },
+			spriteSheet: monsterSprites,
+			y_padding: 1,
+			frames: [
+				{ x: 9, y: 7 },
+				{ x: 9.5, y: 7 },
+				{ x: 10, y: 7 },
+				{ x: 10.5, y: 7 },
+				{ x: 11, y: 7 },
+				{ x: 11.5, y: 7 },
+				{ x: -1, y: -1 }
+			],
+			animations: [
+				[ 200, [50, 100, 150, 200], [0, 1, 2, 3] ],						//	In flight
+				[ 1500, [150, 300, 1500], [4, 5, 6] ]								//	Explosion
+			]
+		},
+		position: { x: 0, y: 0 },
+		box: {
+			width: 4,
+			height: 4,
+			type: EnumBoxtype.PROJECTILE
+		},
+		movement: {
+			speed: 6,
+			bounceOff: false
+		},
+		touchDamage: function() {
+			var touchDamage = {
+				baseDamage: 3,
+				criticalMax: 3,
+				lode: EnumLode.LIGHTNING
 			}
 			return touchDamage;
 		},
