@@ -26,6 +26,13 @@ hr {
 	padding: 40px;
 	text-align: center;
 }
+h1, h3, h5 {
+	color: #290000;
+	margin: 15px;
+}
+h1 {
+	font-size: 2.5em;
+}
 
 
 canvas {

@@ -27,6 +27,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.WARRIOR_STATUE:
 		case EnumObstacle.STONE_PILLAR:
 		case EnumObstacle.BLUE_SPHERE:
+		case EnumObstacle.RED_SPHERE:
 		{
 			this.sprite.size = {y: 2, x: 1}
 			break;
@@ -54,6 +55,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.MEAT_RACK:
 		case EnumObstacle.ZOMBI_MASTER_DESK: 
 		case EnumObstacle.WIZ_DESK:
+		case EnumObstacle.WIZ_DESK_2:
 		{
 			this.sprite.size = {y: 2, x: 3}
 			break;
@@ -62,7 +64,9 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.sprite.size = {y: 4, x: 3}
 			break;
 		}
-		case EnumObstacle.BLACK_KNIGHT_STATUE: {
+		case EnumObstacle.BLACK_KNIGHT_STATUE:
+		case EnumObstacle.WIZ_DESK_3: 
+		{
 			this.sprite.size = {y: 3, x: 2}
 			break;
 		}
@@ -120,6 +124,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.MONOLITH:
 		case EnumObstacle.WARRIOR_STATUE:
 		case EnumObstacle.BLUE_SPHERE:
+		case EnumObstacle.RED_SPHERE:
 		{
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			break;
@@ -145,6 +150,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.MEAT_RACK:
 		case EnumObstacle.ZOMBI_MASTER_DESK: 
 		case EnumObstacle.WIZ_DESK:
+		case EnumObstacle.WIZ_DESK_2:
 		{
 			for(var i = 0; i < 2; i++) {
 				for(var j = 0; j < 3; j++) {
@@ -161,7 +167,9 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			}
 			break;
 		}
-		case EnumObstacle.BLACK_KNIGHT_STATUE: {
+		case EnumObstacle.BLACK_KNIGHT_STATUE: 
+		case EnumObstacle.WIZ_DESK_3:
+		{
 			for(var i = 0; i < 3; i++) {
 				for(var j = 0; j < 2; j++) {
 					level.obstacleArray[this.grid.y+i][this.grid.x+j] = 1;
@@ -1178,7 +1186,58 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
 				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
 			}
-			this.maxOffset = {y:0,x:2}
+			this.maxOffset = {y:4,x:2}
+			break;
+		}
+		case EnumObstacle.RED_SPHERE: {
+			this.currentSprite = level.obstacleTiles[60];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 17,
+				x: this.grid.x * TILE_SIZE + 2
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 21,
+				x: this.grid.x * TILE_SIZE + 12
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {y:4,x:2}
+			break;
+		}
+		case EnumObstacle.WIZ_DESK_2: {
+			this.currentSprite = level.obstacleTiles[61];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 13,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 25,
+				x: this.grid.x * TILE_SIZE + 45
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + 3 * TILE_SIZE / 2)
+			}
+			this.maxOffset = {y:0,x:0}
+			break;
+		}
+		case EnumObstacle.WIZ_DESK_3: {
+			this.currentSprite = level.obstacleTiles[62];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 6,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 41,
+				x: this.grid.x * TILE_SIZE + 22
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + 3 * TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {y:0,x:7}
 			break;
 		}
 

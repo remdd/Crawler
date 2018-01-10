@@ -1092,16 +1092,16 @@ var creatureTemplates = [
 		}
 	},
 
-	//	15	AIR ELEMENTAL
+	//	15	WATER ELEMENTAL
 	{
-		name: 'Air Elemental',
+		name: 'Water Elemental',
 		lode: EnumLode.WATER,
 		currentSprite: { x: 8, y: 20},
 		vars: {
 			speed: 0.4,
 			maxHP: 5,
 			currentHP: 5,
-			moveThroughColliders: false,
+			moveThroughColliders: true,
 			foreground: true,
 			score: 175
 		},
@@ -1114,18 +1114,31 @@ var creatureTemplates = [
 				{ x: 9, y: 20 },
 				{ x: 10, y: 20 },
 				{ x: 11, y: 20 },
+				{ x: 14, y: 20 },
+				{ x: 15, y: 20 },
+				{ x: 16, y: 20 },
 				{ x: 8, y: 22 },
 				{ x: 9, y: 22 },
 				{ x: 10, y: 22 },
-				{ x: 11, y: 22 }
+				{ x: 11, y: 22 },
+				{ x: 14, y: 22 },
+				{ x: 15, y: 22 },
+				{ x: 16, y: 22 },
+				{ x: -1, y: -1 },
+				{ x: 12, y: 20},
+				{ x: 13, y: 20},
+				{ x: 12, y: 22},
+				{ x: 13, y: 22}
 			],
 			animations: [
-				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],						//	Resting, facing R
-				[ 400, [100, 200, 300, 400], [4, 5, 6, 7] ],						//	Resting, facing L
-				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],						//	Resting, facing R
-				[ 400, [100, 200, 300, 400], [4, 5, 6, 7] ],						//	Resting, facing L
-				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],						//	Resting, facing R
-				[ 400, [100, 200, 300, 400], [4, 5, 6, 7] ]						//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3 ] ],		//	Resting, facing R
+				[ 400, [100, 200, 300, 400], [7, 8, 9, 10] ],		//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3 ] ],		//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [7, 8, 9, 10] ],		//	Moving, facing L
+				[ 800, [200, 400, 600], [4, 5, 6 ,14] ],			//	Death, facing R
+				[ 800, [200, 400, 600], [11,12,13,14] ],			//	Death, facing L
+				[ 400, [100, 200, 300, 400], [0,15, 2,16 ] ],		//	Casting, facing R
+				[ 400, [100, 200, 300, 400], [7,17, 9,18 ] ]		//	Casting, facing L
 			]
 		},
 		box: {
@@ -1133,13 +1146,17 @@ var creatureTemplates = [
 			height: 25
 		},
 		ai: {
-			type: EnumAi.MINI_GHOST,
+			type: EnumAi.ELEMENTAL,
 		},
+		touchDamage: function() {},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			}
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.WATER_ELEMENTAL_WEAPON;
 		},
 		deathResponse: function() {
 			this.kill();
@@ -1483,7 +1500,7 @@ var creatureTemplates = [
 			attackRate: 1,
 			nextTeleportTime: 0,
 			teleportCooldown: 4000,
-			impCount: 0,
+			summoned: 0,
 			maxImps: 3,
 			score: 400
 		},
@@ -1582,6 +1599,10 @@ var creatureTemplates = [
 			attackRate: 1,
 			nextTeleportTime: 0,
 			teleportCooldown: 4000,
+			hasGrimlin: true,
+			summoned: 0,
+			maxElementals: 2,
+			minFireballs: 5,
 			score: 400
 		},
 		sprite: {
@@ -1632,8 +1653,8 @@ var creatureTemplates = [
 				[ 500, [300, 400], [14, 15] ],											//	Resting, facing L
 				[ 400, [100, 200, 300, 400], [2, 3, 4, 5 ] ],							//	Moving, facing R
 				[ 400, [100, 200, 300, 400], [16,17,18,19] ],							//	Moving, facing L
-				[ 1800, [300, 600, 900, 1200, 1500, 1800], [8 ,9 ,10,11,12,13] ],		//	Death, facing R
-				[ 1800, [300, 600, 900, 1200, 1500, 1800], [22,23,24,25,26,27] ],		//	Death, facing L
+				[ 900, [150, 300, 450, 600, 750, 900], [8 ,9 ,10,11,12,13] ],		//	Death, facing R
+				[ 900, [150, 300, 450, 600, 750, 900], [22,23,24,25,26,27] ],		//	Death, facing L
 				[ 600, [150, 300, 400, 450, 500, 525, 550, 575, 600], [6, 7, 6, 7, 6, 7, 6, 7, 6 ] ],	//	Casting, facing R
 				[ 600, [150, 300, 400, 450, 500, 525, 550, 575, 600], [20,21,20,21,20,21,20,21,20] ],	//	Casting, facing L
 				[ 150, [50, 100, 150], [28,29,30]],			//	Teleport, facing R
@@ -1647,7 +1668,7 @@ var creatureTemplates = [
 			height: 15
 		},
 		ai: {
-			type: EnumAi.BLACK_WIZ,
+			type: EnumAi.RED_WIZ,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -1746,5 +1767,244 @@ var creatureTemplates = [
 			this.kill();
 		}
 	},
+
+	//	23	RED IMP
+	{
+		name: 'Red Imp',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: 0, y: 24},
+		vars: {
+			speed: 1.1,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			moveThroughColliders: true,
+			foreground: true,
+			score: 100
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1.5, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 24 },	//	Moving facing R 1
+				{ x: 1.5, y: 24 },	//	Moving facing R 2
+				{ x: 3, y: 24 },	//	Moving facing R 3
+				{ x: 4.5, y: 24 },	//	Moving facing R 4
+				{ x: 6, y: 24 },	//	Death facing R 1
+				{ x: 7.5, y: 24 },	//	Death facing R 2
+				{ x: 9, y: 24 },	//	Death facing R 3
+				{ x: 10.5, y: 24 },	//	Death facing R 4
+
+				{ x: 0, y: 25 },	//	Moving facing R 1
+				{ x: 1.5, y: 25 },	//	Moving facing R 2
+				{ x: 3, y: 25 },	//	Moving facing R 3
+				{ x: 4.5, y: 25 },	//	Moving facing R 4
+				{ x: 6, y: 25 },	//	Death facing R 1
+				{ x: 7.5, y: 25 },	//	Death facing R 2
+				{ x: 9, y: 25 },	//	Death facing R 3
+				{ x: 10.5, y: 25 }	//	Death facing R 4
+
+			],
+			animations: [
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],			//	Resting, facing R
+				[ 400, [100, 200, 300, 400], [8, 9, 10,11] ],			//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [8, 9, 10,11] ],			//	Moving, facing L
+				[ 800, [200, 400, 600, 800], [4, 5, 6, 7] ],			//	Death, facing R
+				[ 800, [200, 400, 600, 800], [12,13,14,15] ]			//	Death, facing L
+			]
+		},
+		box: {
+			width: 12, 
+			height: 10
+		},
+		movement: {
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.RED_IMP,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 1;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			game.creatures.forEach(function(creature) {
+				if(creature.name === 'Red Wiz') {
+					creature.vars.minFireballs = 1;
+				}
+			});
+			this.kill();
+		}
+	},
+
+	//	24	GRIMLIN
+	{
+		name: 'Grimlin',
+		lode: EnumLode.ACID,
+		currentSprite: { x: 12, y: 24},
+		vars: {
+			speed: 1,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			score: 100
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 12, y: 24 },	//	Resting facing R 1
+				{ x: 13, y: 24 },	//	Resting facing R 2
+				{ x: 14, y: 24 },	//	Moving facing R 1
+				{ x: 15, y: 24 },	//	Moving facing R 2
+				{ x: 16, y: 24 },	//	Moving facing R 3
+				{ x: 17, y: 24 },	//	Death facing R 1
+				{ x: 18, y: 24 },	//	Death facing R 2
+				{ x: 19, y: 24 },	//	Death facing R 3
+				{ x: 20, y: 24 },	//	Death facing R 4
+
+				{ x: 12, y: 25 },	//	Resting facing L 1
+				{ x: 13, y: 25 },	//	Resting facing L 2
+				{ x: 14, y: 25 },	//	Moving facing L 1
+				{ x: 15, y: 25 },	//	Moving facing L 2
+				{ x: 16, y: 25 },	//	Moving facing L 3
+				{ x: 17, y: 25 },	//	Death facing L 1
+				{ x: 18, y: 25 },	//	Death facing L 2
+				{ x: 19, y: 25 },	//	Death facing L 3
+				{ x: 20, y: 25 },	//	Death facing L 4
+
+				{ x: 21, y: 24 },	//	Biting facing R 1
+				{ x: 22, y: 24 },	//	Biting facing R 2
+				{ x: 21, y: 25 },	//	Biting facing L 1
+				{ x: 22, y: 25 }	//	Biting facing L 2
+			],
+			animations: [
+				[ 400, [250, 400], [ 0, 1] ],							//	Resting, facing R
+				[ 400, [250, 400], [ 9, 10] ],							//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 1 ] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 11,12,13,10 ] ],			//	Moving, facing L
+				[ 800, [200, 400, 600, 800], [5, 6, 7, 8 ] ],			//	Death, facing R
+				[ 800, [200, 400, 600, 800], [14,15,16,17] ],			//	Death, facing L
+				[ 400, [100, 200, 400], [18,19,0 ] ],					//	Biting, facing R
+				[ 400, [100, 200, 400], [20,21,9 ] ]					//	Biting, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 13
+		},
+		ai: {
+			type: EnumAi.GRIMLIN,
+		},
+		movement: {
+			bounceOff: true
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 1;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			game.creatures.forEach(function(creature) {
+				if(creature.name === 'Red Wiz') {
+					creature.vars.hasGrimlin = false;
+				}
+			});
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.ZOMBI_BITE;
+		}	
+	},
+
+	//	25	FIRE ELEMENTAL
+	{
+		name: 'Fire Elemental',
+		lode: EnumLode.FIRE,
+		currentSprite: { x: 15, y: 20},
+		vars: {
+			speed: 0.4,
+			maxHP: 5,
+			currentHP: 5,
+			moveThroughColliders: true,
+			foreground: true,
+			score: 175
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 17, y: 20 },
+				{ x: 18, y: 20 },
+				{ x: 19, y: 20 },
+				{ x: 20, y: 20 },
+				{ x: 23, y: 20 },
+				{ x: 24, y: 20 },
+				{ x: 25, y: 20 },
+				{ x: 17, y: 22 },
+				{ x: 18, y: 22 },
+				{ x: 19, y: 22 },
+				{ x: 20, y: 22 },
+				{ x: 23, y: 22 },
+				{ x: 24, y: 22 },
+				{ x: 25, y: 22 },
+				{ x: -1, y: -1 },
+				{ x: 21, y: 20},
+				{ x: 22, y: 20},
+				{ x: 21, y: 22},
+				{ x: 22, y: 22}
+			],
+			animations: [
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3 ] ],		//	Resting, facing R
+				[ 400, [100, 200, 300, 400], [7, 8, 9, 10] ],		//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [0, 1, 2, 3 ] ],		//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [7, 8, 9, 10] ],		//	Moving, facing L
+				[ 800, [200, 400, 600, 800], [4, 5, 6 ,14] ],			//	Death, facing R
+				[ 800, [200, 400, 600, 800], [11,12,13,14] ],			//	Death, facing L
+				[ 400, [50, 100, 200, 250, 300, 400], [0,15,1 ,2 ,16, 3 ] ],	//	Casting, facing R
+				[ 400, [50, 100, 200, 250, 300, 400], [7,17,8 ,9, 18,10 ] ]		//	Casting, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 25
+		},
+		ai: {
+			type: EnumAi.ELEMENTAL,
+		},
+		touchDamage: function() {},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathResponse: function() {
+			game.creatures.forEach(function(creature) {
+				if(creature.name === "Red Wiz") {
+					creature.vars.summoned --;
+				}
+			});
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.FIRE_ELEMENTAL_WEAPON;
+		}	
+	}
 
 ];

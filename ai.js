@@ -996,7 +996,7 @@ setAiAction = function(creature) {
 							} else if(action < 2) {
 								ai.moveAwayFromPlayer(creature, 500, 500, 1);
 							} else {		//	Cast a spell
-								if(creature.vars.impCount < creature.vars.maxImps) {
+								if(creature.vars.summoned < creature.vars.maxImps) {
 									ai.rest(creature, 0, 600, 6);
 									creature.ai.nextAction = 5;
 								} else {
@@ -1047,6 +1047,68 @@ setAiAction = function(creature) {
 				} break;
 			}
 
+			case EnumAi.RED_WIZ: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						//	Next action not specified
+						if(creature.checkIfCollides()) {
+							creature.ai.nextAction = 4;
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 2 && performance.now() > creature.vars.nextTeleportTime) {
+							creature.ai.nextAction = 4;
+						} else {
+							var action = Math.floor(Math.random() * 3);
+							if(action < 1) {
+								ai.moveRandomVector(creature, 500, 500, 1);
+							} else if(action < 2) {
+								ai.moveAwayFromPlayer(creature, 500, 500, 1);
+							} else {		//	Cast a spell
+								if(creature.vars.hasGrimlin && creature.vars.summoned < creature.vars.maxElementals) {
+									ai.rest(creature, 0, 600, 6);
+									creature.ai.nextAction = 5;
+								} else {
+									ai.rest(creature, 0, 600, 6);
+									creature.ai.nextAction = 3;
+								}
+							}
+						}
+						break;
+					}
+					case 1: {	//	Reappear
+						var direction = getPlayerCompassDirection(creature);
+						ai.teleportAwayFromPlayer(creature);
+						ai.rest(creature, 0, 150, 10);
+						creature.ai.nextAction = 2;
+						break;
+					}
+					case 2: {	//	Rest
+						ai.rest(creature, 0, 500, 0);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {	//	Shoot fireballs
+						var direction = getPlayerDirection(creature);
+						if(creature.hasClearPathToPlayer()) {
+							ai.attack(creature, 0, 1000, direction, Math.PI / 16);	
+						} 
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 4: {	//	Teleport
+						ai.rest(creature, 0, 150, 8);
+						creature.ai.nextAction = 1;
+						break;
+					}
+					case 5: {	//	Summon Fire Elemental
+						summon(creature, EnumCreature.FIRE_ELEMENTAL);
+						creature.ai.nextAction = 2;
+						break;
+					}
+					default: {
+						break;
+					}
+				} break;
+			}
+
 			case EnumAi.BLACK_IMP: {
 				switch(creature.ai.nextAction) {
 					case 0: {
@@ -1077,6 +1139,110 @@ setAiAction = function(creature) {
 				}
 				break;
 			}
+
+
+			case EnumAi.RED_IMP: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 3 && creature.hasClearPathToPlayer()) {
+							ai.moveAwayFromPlayer(creature, 0, 400, 1.5);
+						} else {
+							ai.moveRandomVector(creature, 0, 400, 1);
+						}
+						break;
+					}
+					case 1: {
+						ai.moveAwayFromPlayer(creature, 0, 400, 1.5);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+			case EnumAi.GRIMLIN: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 2 && creature.hasClearPathToPlayer()) {
+							var direction = getPlayerDirection(creature);
+							creature.setFacing(direction);
+							if(creature.vars.facingRight) {
+								ai.attack(creature, 0, 400, direction, Math.PI / 8, 6);	//	...attack in player's general direction...
+							} else {
+								ai.attack(creature, 0, 400, direction, Math.PI / 8, 7);	//	...attack in player's general direction...
+							}
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 4 && creature.hasClearPathToPlayer()) {
+							ai.moveAwayFromPlayer(creature, 0, 400, 1.5);
+						} else {
+							var action = Math.floor(Math.random() * 3);
+							if(action < 1) {
+								ai.moveRandomVector(creature, 0, 400, 1);
+							} else {
+								ai.rest(creature, 400, 400);
+							}
+						}
+						break;
+					}
+					case 1: {
+						ai.moveAwayFromPlayer(creature, 0, 400, 1.5);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+			case EnumAi.ELEMENTAL: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 7 && creature.hasClearPathToPlayer()) {
+							var action = Math.floor(Math.random() * 4)
+							if(action < 3) {
+								ai.moveAwayFromPlayer(creature, 250, 250, 1);
+								creature.ai.nextAction = 1;
+							} else {
+								ai.moveRandomVector(creature, 250, 250, 2);
+							}
+						} else {
+							ai.moveRandomVector(creature, 250, 250, 1);
+						}
+						break;				
+					}
+					case 1: {
+						var direction = getPlayerCompassDirection(creature);
+						creature.setFacing(direction);
+						if(creature.vars.facingRight) {
+							ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, 0, 6);
+						} else {
+							ai.aim(creature, 0, creature.weapon.vars.aimTime, direction, 0, 7);
+						}
+						creature.ai.nextAction = 3;
+						break;
+					}
+					case 2: {
+						ai.moveAwayFromPlayer(creature, 250, 250, 2);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 3: {
+						ai.attack(creature, 0, creature.weapon.vars.attackRate, creature.vars.aimDirection, 0);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+
 
 			default: {
 				break;
@@ -1122,7 +1288,7 @@ summon = function(summoner, newCreature) {
 	if(foundSpace) {
 		var summoned = new Creature(creatureTemplates[newCreature]);
 		summoned.summoner = summoner;
-		summoner.vars.impCount++;
+		summoner.vars.summoned++;
 		summoned.position.x = summonX * TILE_SIZE + TILE_SIZE / 2;
 		summoned.position.y = summonY * TILE_SIZE + TILE_SIZE / 2;
 		summoned.grid.x = summonX;

@@ -725,7 +725,7 @@ var creatureWeapons = [
 	},
 	{
 		name: 'Ogr Ax',
-		lode: EnumLode.FIRE,
+		lode: EnumLode.ACID,
 		currentSprite: { x: 12, y: 6},
 		use: function(direction) {
 			this.chop(direction);
@@ -877,7 +877,7 @@ var creatureWeapons = [
 		lode: EnumLode.FIRE,
 		currentSprite: { x: -1, y: -1},
 		use: function(direction) {
-			var fireballs = Math.floor(Math.random() * 4) + 1;
+			var fireballs = this.holder.vars.minFireballs + Math.floor(Math.random() * 2);
 			for(var i = 0; i < fireballs; i++) {
 				this.shoot(direction, this.projectile, false, true);
 			}
@@ -915,7 +915,7 @@ var creatureWeapons = [
 			}
 		},
 		attack: {},
-		projectile: EnumCreatureProjectile.BLACK_WIZ_LIGHTNING
+		projectile: EnumCreatureProjectile.FIRE_ELEMENTAL_BLAST
 	},
 	{
 		name: 'Imp Bite',
@@ -972,7 +972,96 @@ var creatureWeapons = [
 			lifespan: 1,
 			arc: Math.PI / 4,							//	90 degree swipe
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
-		}	},
+		}	
+	},
+	{
+		name: "Fire Elemental's weapon",
+		lode: EnumLode.FIRE,
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			var fireballs = 2;
+			for(var i = 0; i < fireballs; i++) {
+				this.shoot(direction, this.projectile, false, true);
+			}
+		},
+		reset: function() {
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 500,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true,
+			displayTime: 1000,
+			aimTime: 1000
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1 },							//	Right facing
+				{ x: -1, y: -1 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -10/16
+			}
+		},
+		attack: {},
+		projectile: EnumCreatureProjectile.FIRE_ELEMENTAL_BLAST
+	},
+	{
+		name: "Water Elemental's weapon",
+		lode: EnumLode.WATER,
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			var fireballs = 2;
+			for(var i = 0; i < fireballs; i++) {
+				this.shoot(direction, this.projectile, false, true);
+			}
+		},
+		reset: function() {
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 500,								//	Length of time the weapon stays animated after attack
+			attackRate: 1000,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true,
+			displayTime: 1000,
+			aimTime: 1000
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1 },							//	Right facing
+				{ x: -1, y: -1 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -10/16
+			}
+		},
+		attack: {},
+		projectile: EnumCreatureProjectile.WATER_ELEMENTAL_BLAST
+	}
 
 ];
 
@@ -1169,7 +1258,116 @@ var creatureProjectiles = [
 		},
 		type: EnumAttack.FIREBALL,
 		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+	},
+	{
+		name: 'Fire Elemental Blast',
+		lode: EnumLode.FIRE,
+		currentSprite: { x: 9, y: 6 },
+		vars: { 
+			drawOffset: { x: 0, y: 0},
+			displayTime: 1000,
+			damagePlayer: true,
+			damageCreatures: false,
+			animated: true,
+			animation: 0,
+			explodeOnImpact: true,
+			rotation: -Math.PI / 2,
+			spinFactor: 0.02
+		},
+		sprite: { 
+			size: { x:0.5, y:1 },
+			spriteSheet: monsterSprites,
+			y_padding: 1,
+			frames: [
+				{ x: 9, y: 6 },
+				{ x: 9.5, y: 6 },
+				{ x: 10, y: 6 },
+				{ x: 10.5, y: 6 },
+				{ x: 11, y: 6 },
+				{ x: 11.5, y: 6 },
+				{ x: -1, y: -1 }
+			],
+			animations: [
+				[ 200, [50, 100, 150, 200], [0, 1, 2, 3] ],						//	In flight
+				[ 1500, [150, 300, 1500], [4, 5, 6] ]								//	Explosion
+			]
+		},
+		position: { x: 0, y: 0 },
+		box: {
+			width: 4,
+			height: 4,
+			type: EnumBoxtype.PROJECTILE
+		},
+		movement: {
+			speed: 3.5,
+			bounceOff: false
+		},
+		touchDamage: function() {
+			var touch = {
+				baseDamage: 1,
+				criticalMax: 2,
+				lode: EnumLode.FIRE
+			}
+			return touch;
+		},
+		type: EnumAttack.FIREBALL,
+		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+	},
+	{
+		name: 'Water Elemental Blast',
+		lode: EnumLode.WATER,
+		currentSprite: { x: 26, y: 10 },
+		vars: { 
+			drawOffset: { x: 0, y: 0},
+			displayTime: 1000,
+			damagePlayer: true,
+			damageCreatures: false,
+			animated: true,
+			animation: 0,
+			explodeOnImpact: true,
+			rotation: Math.PI / 2,
+			spinFactor: 0.02
+		},
+		sprite: { 
+			size: { x:0.5, y:1 },
+			spriteSheet: monsterSprites,
+			y_padding: 1,
+			frames: [
+				{ x: 26, y: 10 },
+				{ x: 26.5, y: 10 },
+				{ x: 27, y: 10 },
+				{ x: 27.5, y: 10 },
+				{ x: 28, y: 10 },
+				{ x: 28.5, y: 10 },
+				{ x: -1, y: -1 }
+			],
+			animations: [
+				[ 200, [50, 100, 150, 200], [0, 1, 2, 3] ],				//	In flight
+				[ 1500, [150, 300, 1500], [4, 5, 6] ]					//	Explosion
+			]
+		},
+		position: { x: 0, y: 0 },
+		box: {
+			width: 4,
+			height: 4,
+			type: EnumBoxtype.PROJECTILE
+		},
+		movement: {
+			speed: 3.5,
+			bounceOff: false
+		},
+		touchDamage: function() {
+			var touch = {
+				baseDamage: 1,
+				criticalMax: 2,
+				lode: EnumLode.WATER
+			}
+			return touch;
+		},
+		type: EnumAttack.FIREBALL,
+		maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 	}
+
 ];
 
 spinOffProjectile = function(projectile, spinFactor) {

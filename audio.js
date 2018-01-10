@@ -44,6 +44,10 @@ var pickupNoise = new Howl({
 
 var critHitNoise = new Howl({
 	src: ['snd/CS_VocoBitA_Hit-06.wav'],
-	volume: 0.7,
+	volume: 0.5,
 });
 
+var playerDamage = new Howl({
+	src: ['snd/CS_VocoBitC_Hit-01.wav'],
+	volume: 0.5,
+})

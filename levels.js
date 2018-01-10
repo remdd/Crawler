@@ -183,11 +183,11 @@ levelGen.loadLevel = function(levelNumber) {
 				break;
 			}
 		}
-	} else {
+	} else if(sessionVars.lateBossRooms.length > 0) {
 		var rand = Math.floor(session.prng.nextFloat() * sessionVars.lateBossRooms.length);
 		// level.bossRoomType = sessionVars.lateBossRooms[rand];
 		// sessionVars.lateBossRooms.splice(rand, 1);
-		level.bossRoomType = EnumCreature.BLACK_WIZ;
+		level.bossRoomType = EnumCreature.RED_WIZ;
 		//	Add the boss room contents function relevant to type
 		switch(level.bossRoomType) {
 			case EnumCreature.BLACK_WIZ: {
@@ -203,9 +203,9 @@ levelGen.loadLevel = function(levelNumber) {
 			}
 			case EnumCreature.RED_WIZ: {
 				level.bossRoomNumber = 5;
-				level.bossSizeMin = 20;
-				level.bossSizeMax = 20;
-				level.bossSizeRand = 3;
+				level.bossSizeMin = 11;
+				level.bossSizeMax = 11;
+				level.bossSizeRand = 0;
 				sessionVars.rareCreatures.push(EnumCreature.RED_WIZ);
 				sessionVars.specialItems.push(EnumItem.FIRE_SWORD);
 				sessionVars.specialItems.push(EnumItem.WATER_SWORD);
@@ -218,6 +218,8 @@ levelGen.loadLevel = function(levelNumber) {
 				break;
 			}
 		}
+	} else {
+		level.levelNumber = 99;
 	}
 	//	Copy session roomtypes to level roomtypes
 	level.roomTypes = sessionVars.roomTypes.slice();
@@ -225,7 +227,7 @@ levelGen.loadLevel = function(levelNumber) {
 	level.bossRoomContents = function() {
 		level.playerStart = {y: this.origin.y, x: this.origin.x};
 		// levelGen.bossRooms[level.bossRoomNumber](this);
-		levelGen.bossRooms[4](this);
+		levelGen.bossRooms[5](this);
 	};
 	level.exitRoomContents = function() {
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
@@ -235,8 +237,11 @@ levelGen.loadLevel = function(levelNumber) {
 	level.startRoomContents = function() {
 		console.log("Adding start room contents");
 	};
+
+	// level.levelNumber = 99;
+
 	//	Switch level number to set up level variables
-	switch(levelNumber) {
+	switch(level.levelNumber) {
 		case 1: {
 			level.height = 70;
 			level.width = 70;
@@ -272,7 +277,8 @@ levelGen.loadLevel = function(levelNumber) {
 			level.height = 85;
 			level.width = 85;
 			sessionVars.minimumCreatureCount = 45;
-			sessionVars.uncommonCreatures.push(EnumCreature.BLUE_SQUARK);
+			sessionVars.uncommonCreatures.push(EnumCreature.FIRE_ELEMENTAL);
+			sessionVars.uncommonCreatures.push(EnumCreature.WATER_ELEMENTAL);
 			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
 				level.specialItemCount = 0;
@@ -287,6 +293,7 @@ levelGen.loadLevel = function(levelNumber) {
 			level.height = 100;
 			level.width = 85;
 			sessionVars.minimumCreatureCount = 50;
+			sessionVars.uncommonCreatures.push(EnumCreature.BLUE_SQUARK);
 			sessionVars.uncommonCreatures.push(EnumCreature.OGR);
 			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
@@ -326,17 +333,81 @@ levelGen.loadLevel = function(levelNumber) {
 			}
 			break;
 		}
+
+		//	Last level!
+		case 99: {
+			level.height = 130;
+			level.width = 33;
+			sessionVars.minimumCreatureCount = 0;
+			level.specialItemCount = 0;
+			break;
+		}
 		default: {
 			console.log("********** should never be hit! ************");
-			level.height = 100;
-			level.width = 100;
 			break;
 		}
 	}
 	//	Generate level and return it to game
-	this.generateLevel();
+	if(level.levelNumber === 99) {
+		this.generateLastLevel();
+	} else {
+		this.generateLevel();
+	}
 	return level;
 }
+
+
+levelGen.generateLastLevel = function() {
+	this.clearLevel();
+	this.setupInitialGrid(level.height, level.width);
+
+	//	Set up special rooms
+	var startRoom = new Room(123, 14, 5, 5, 'start', level.startRoomContents);
+	var bossRoom = new Room(10, 2, 17, 29, 'boss', level.bossRoomContents);
+	var exitRoom = new Room(2, 14, 5, 5, 'exit', level.exitRoomContents);
+
+	var skeltonRoom = new Room(107, 10, 9, 13, 'skeltonRoom');
+	var urkRoom = new Room(88, 10, 11, 13, 'urkRoom');
+	var kobRoom = new Room(71, 11, 9, 11, 'kobRoom');
+	var ogrRoom = new Room(52, 9, 11, 15, 'ogrRoom');
+
+	level.playerStart.y = 124;
+	level.playerStart.x = 16;
+	level.bossStart.y = 12;
+	level.bossStart.x = 16;
+	level.exit.y = 3;
+	level.exit.x = 16;
+
+	for(var i = 2; i < level.terrainArray.length - 2; i++) {
+		level.terrainArray[i][16] = 0;
+	}
+
+	for(var i = 27; i < 45; i++) {
+		level.terrainArray[i][13] = 0;
+		level.terrainArray[i][14] = 0;
+		level.terrainArray[i][15] = 0;
+		level.terrainArray[i][17] = 0;
+		level.terrainArray[i][18] = 0;
+		level.terrainArray[i][19] = 0;
+	}
+
+	levelGen.addBasicOverlays();
+
+	//	Fill fillArray, starting from start room
+	level.fillArray.length = 0;
+	for(var i = 0; i < level.fillArray.length; i++) {
+		level.fillArray[i] = [];
+	}
+	level.fillArray = cloneArray(level.terrainArray);
+	this.fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
+
+	// //	Add rooms
+	// for(var i = 0; i < levelGen.vars.roomAttempts; i++) {
+	// 	var room = new Room();
+	// }
+}
+
+
 
 levelGen.generateLevel = function() {
 	//	Generate layouts and discard if invalid until a valid one is created
@@ -1284,7 +1355,44 @@ levelGen.bossRooms = [
 
 		// Add boss and other creatures
 		room.addCreature(level.boss);
+	},
+
+	//	Red Wiz
+	function(room) {
+		level.boss = EnumCreature.RED_WIZ;
+		console.log("Adding Red Wiz boss room");
+		room.removeExistingContents();
+
+		//	Add pentagram in centre of floor
+		var rug_y = room.origin.y + Math.floor(room.height / 2) - 1;
+		var rug_x = room.origin.x +Math.floor(room.width / 2) - 2;
+		for(var i = 0; i < 3; i++) {
+			for(var j = 0; j < 3; j++) {
+				new Decor(uniqueFloorDecor[2][(3*i)+j].y, uniqueFloorDecor[2][(3*i)+j].x, rug_y + i, rug_x + j, 0, 0);
+			}
+		}
+		new Obstacle(EnumObstacle.WIZ_DESK_2, room);
+		new Obstacle(EnumObstacle.WIZ_DESK_3, room);
+		new Obstacle(EnumObstacle.RED_SPHERE, room);
+
+		//	Add room floor and decor
+		var rand = Math.floor(session.prng.nextFloat() * 3);
+		if(rand < 1) {
+			room.addFloor(level.tiles.squareTileFloor, null, null, true);
+		} else if(rand < 2) {
+			room.addFloor(level.tiles.pavedFloor);
+		} else {
+			room.addFloor(level.tiles.floorboards);
+		}
+		room.addWallDecor(false, 4);
+		room.addFloorDecor(2, [EnumDecortype.SPLATS, EnumDecortype.BONES, EnumDecortype.MISC] );
+
+		// Add boss and other creatures
+		room.addCreature(level.boss);
+		room.addCreature(EnumCreature.RED_IMP);
+		room.addCreature(EnumCreature.GRIMLIN);
 	}
+
 ];
 
 Corridor = function(y, x) {

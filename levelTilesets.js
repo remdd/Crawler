@@ -202,7 +202,10 @@ var obstacleTiles = [
 		{y:7,x:14},	//	56	Bookcase Wide
 		{y:7,x:9},	//	57	Candles-5
 		{y:7,x:10},	//	58	Candles-3
-		{y:7,x:11}	//	59	Blue Sphere
+		{y:7,x:11},	//	59	Blue Sphere
+		{y:7,x:12},	//	60	Red Sphere
+		{y:8,x:7},	//	61	Wiz Desk 2
+		{y:9,x:10}	//	62	Wiz Desk 3
 	]
 ];
 
@@ -275,5 +278,16 @@ var uniqueFloorDecor = [
 		{y:15,x:5},
 		{y:15,x:6},
 		{y:15,x:7}
+	],
+	[	//	Red Wiz's rug
+		{y:13,x:1},
+		{y:13,x:2},
+		{y:13,x:3},
+		{y:14,x:1},
+		{y:14,x:2},
+		{y:14,x:3},
+		{y:15,x:1},
+		{y:15,x:2},
+		{y:15,x:3}
 	]
 ]

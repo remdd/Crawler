@@ -2,13 +2,13 @@ var level;											//	Current level object, loaded from levels.js
 
 var master = {
 	interactDistance: 15,							//	Distance at which player can interact with interactables
-	defaultDropFrequency: 7,						//	Average number of default death drops per pickup drop
+	defaultDropFrequency: 5,						//	Average number of default death drops per pickup drop
 	defaultMushroomFactor: 90000,					//	Multiplier for default mushroom effect duration
 	defaultMushroomMin: 30000,						//	Base minimum default mushroom effect duration
 	dropFrequency: [
 		[EnumItem.HEALTH_HEART, 5],
 		[EnumItem.PURPLE_MUSHROOM, 2],
-		[EnumItem.GREEN_MUSHROOM, 1]
+		[EnumItem.GREEN_MUSHROOM, 100]
 	],
 	debugs: false
 }
@@ -1751,7 +1751,6 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			) {
 				//	If player comes into contact with a collider dealing touch damage, execute its touchDamage function
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
-					// debugger;
 					obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
 					var touch = obj.touchDamage();
 					console.log(touch);

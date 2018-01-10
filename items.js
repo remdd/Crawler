@@ -709,18 +709,66 @@ function Effect(type) {
 	switch(type) {
 		case EnumItem.GREEN_MUSHROOM: {
 			this.color = EnumColor.GREEN;
-			var rand = Math.floor(Math.random() * 1);
+			var rand = Math.floor(Math.random() * 4);
 			switch(rand) {
 				case 0: {
 					this.name = "Extra Invulnerability time";
 					this.message1 = "Not bad! A bit like chicken.";
-					this.message2 = "Your peripheral vision seesm sharper...";
+					this.message2 = "Your peripheral vision seems sharper, somehow...";
 					this.message3 = "";
 					this.apply = function() {
 						player.vars.invulnerableTime = player.vars.invulnerableTime * 5;
 					};
 					this.remove = function() {
 						player.vars.invulnerableTime = player.vars.invulnerableTime / 5;
+					}
+					break;
+				}
+				case 1: {
+					this.name = "Recover health if injured, or deduct if at max HP";
+					this.message1 = "A peculiar, strong, yeasty flavour...";
+					this.message2 = "You either love it or hate it.";
+					this.message3 = "";
+					this.duration = 1000;
+					this.apply = function() {
+						if(player.vars.currentHP === player.vars.maxHP) {
+							player.vars.currentHP -= 5;
+						} else {
+							var rand = Math.floor(Math.random() * 3) + 1;
+							if(player.vars.currentHP + rand > player.vars.maxHP) {
+								player.vars.currentHP = player.vars.maxHP;
+							} else {
+								player.vars.currentHP += rand;
+							}
+						}
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 2: {
+					this.name = "Increase death drop frequency";
+					this.message1 = "Not a bad taste, considering the colour...";
+					this.message2 = "";
+					this.message3 = "";
+					this.apply = function() {
+						session.vars.defaultDropFrequency = 2;
+					};
+					this.remove = function() {
+						session.vars.defaultDropFrequency = master.defaultDropFrequency;
+					}
+					break;
+				}
+				case 3: {
+					this.name = "Reduced attack rate";
+					this.message1 = "The mushroom tastes rancid and bitter.";
+					this.message2 = "You feel drained and listless.";
+					this.message3 = "";
+					this.apply = function() {
+						player.vars.attackRate = player.vars.attackRate * 2;
+					};
+					this.remove = function() {
+						player.vars.attackRate = player.vars.attackRate / 2;
 					}
 					break;
 				}

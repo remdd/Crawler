@@ -78,6 +78,7 @@ var playerTemplates = [
 		},
 		inflictDamage: function(damage) {
 			if(performance.now() > this.vars.invulnerableTo) {
+				playerDamage.play();
 				this.vars.currentHP -= damage;
 				this.vars.invulnerableTo = performance.now() + this.vars.invulnerableTime;
 				$('.healthSpan').text(this.vars.currentHP + ' / ' + this.vars.maxHP);
