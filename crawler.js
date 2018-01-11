@@ -8,7 +8,7 @@ var master = {
 	dropFrequency: [
 		[EnumItem.HEALTH_HEART, 5],
 		[EnumItem.PURPLE_MUSHROOM, 2],
-		[EnumItem.GREEN_MUSHROOM, 100]
+		[EnumItem.GREEN_MUSHROOM, 1]
 	],
 	debugs: false
 }
@@ -29,7 +29,6 @@ var game = {
 	scoreStartTime: 0,
 	scoreOffset: 0,
 	redrawBackground: false,				//	Set to true only when background redraw is required - on viewport move or animated obstacle
-	redrawObstaclesTo: 0,					//	Holds time to which obstacles should be animated
 	viewport_offset_x: 0,					//	Holds current horizontal viewport offset
 	viewport_offset_y: 0,					//	Holds current vertical viewport offset
 	creatures: [],							//	Holds creatures currently present in game
@@ -137,8 +136,8 @@ function addBackground() {
 
 function setUpLevel() {
 	level.obstacles.forEach(function(obstacle) {
-		if(!obstacle.vars.drawY) {
-			obstacle.vars.drawY = obstacle.box.bottomRight.y;
+		if(!obstacle.drawY) {
+			obstacle.drawY = obstacle.box.bottomRight.y;
 		}
 		if(obstacle.box) {
 			game.colliders.push(obstacle);								//	If obstacle has a collider, push to the collider array
@@ -219,7 +218,8 @@ function setUpCreatures() {
 	// 		level.creatureArray[i][j] = undefined;
 	// 	}
 	// };
-	level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.GREEN_SLUDGIE;
+	// level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.GIGA_KOB;
+	// level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.MINI_KOB;
 
 	for(var i = 0; i < level.creatureArray.length; i++) {
 		for(var j = 0; j < level.creatureArray[i].length; j++) {
@@ -383,7 +383,7 @@ function Item(itemTemplate) {
 		x: 0,
 		y: 4
 	}
-	this.vars.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
+	this.drawY = this.position.y + this.sprite.size.y * TILE_SIZE / 2;
 	this.currentSprite = itemTemplate.currentSprite;
 	if(itemTemplate.interact) {
 		this.interact = itemTemplate.interact;
@@ -757,6 +757,9 @@ function Creature(creatureTemplate) {
 	// this.movement.bounceRandom = true;
 	if(creatureTemplate.addWeapon) {
 		var weapon = new Weapon(creatureWeapons[creatureTemplate.addWeapon()], this);
+		if(this.name === "Mumi" || this.name === "Grey Goblin") {
+			weapon.lode = EnumLode.CRYSTAL;
+		}
 		weapon.setUpLode();
 		this.weapon = weapon;
 	}
@@ -813,7 +816,7 @@ Creature.prototype.move = function(direction, speed) {
 	this.collidedWith = newCoords.collidedWith;
 	if(this.updateBox) {
 		this.updateBox();
-		this.vars.drawY = this.box.bottomRight.y;
+		this.drawY = this.box.bottomRight.y;
 	}
 }
 Creature.prototype.attack = function(direction) {
@@ -979,6 +982,9 @@ Creature.prototype.hasClearPathToPlayer = function() {
 Creature.prototype.addHealth = function(health) {
 	console.log("Adding health!");
 	this.vars.currentHP += health;
+	if(this.vars.currentHP > this.vars.maxHP) {
+		this.vars.currentHP = this.vars.maxHP;
+	}
 }
 Creature.prototype.checkIfCollides = function() {
 	var collides = false;
@@ -1023,7 +1029,7 @@ interact = function() {
 	level.obstacles.forEach(function(obstacle) {
 		if(inViewport(obstacle.grid.x * TILE_SIZE, obstacle.grid.y * TILE_SIZE) && obstacle.interact) {
 			if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < master.interactDistance) {
-				game.redrawObstaclesTo = performance.now() + obstacle.interact();
+				obstacle.interact();
 			}
 		}
 	});
@@ -1176,7 +1182,7 @@ function updateDrawables() {
 		}
 	});
 	level.obstacles.forEach(function(obstacle) {
-		if(inViewport(obstacle.position.x, obstacle.position.y) && obstacle.foreground) {
+		if(inViewport(obstacle.position.x, obstacle.position.y)) {
 			game.drawables.push(obstacle);
 		}
 	});
@@ -1185,9 +1191,26 @@ function updateDrawables() {
 			game.drawables.push(item);
 		}
 	});
-	game.drawables.sort(function(a, b) {
-		return a.vars.drawY-b.vars.drawY;
-	});
+	game.drawables = sort_by_key_value(game.drawables, 'drawY');
+}
+
+function sort_by_key_value(arr, key) {
+  var to_s = Object.prototype.toString;
+  var valid_arr = to_s.call(arr) === '[object Array]';
+  var valid_key = typeof key === 'string';
+
+  if (!valid_arr || !valid_key) {
+    return;
+  }
+
+  arr = arr.slice();
+
+  return arr.sort(function(a, b) {
+    var a_key = String(a[key]);
+    var b_key = String(b[key]);
+    var n = a_key - b_key;
+    return !isNaN(n) ? n : a_key.localeCompare(b_key);
+  });
 }
 
 //	Update player movement
@@ -1255,8 +1278,6 @@ function updatePlayer() {
 		//	If effect array is empty, color the player normally
 		colorPlayer(EnumColor.NORMAL);
 	}
-	player.vars.drawY = player.box.bottomRight.y
-
 	player.animate();
 	player.updateGear();
 }
@@ -1866,9 +1887,10 @@ function drawDecor() {
 function updateObstacles() {
 	level.obstacles.forEach(function(obstacle) {
 		if(obstacle.animated) {
-			if(performance.now() > obstacle.animStart + obstacle.animTime) {
+			if(performance.now() > obstacle.animEnd) {
 				obstacle.interactionEnd();
-				game.redrawObstaclesTo = performance.now() + 1;
+			} else {
+				Entity.prototype.animate.call(obstacle);
 			}
 		}
 	});
@@ -1961,14 +1983,14 @@ function drawDebugCanvas() {
 	level.obstacles.forEach(function(obstacle) {
 		// var debug = { x: obstacle.position.x, y: obstacle.position.y, color: 'pink'};
 		// game.debugs.push(debug);
-		var debug2 = { x: obstacle.position.x, y: obstacle.vars.drawY, color: 'blue'};
+		var debug2 = { x: obstacle.position.x, y: obstacle.drawY, color: 'blue'};
 		game.debugs.push(debug2);
 	});
 	game.creatures.forEach(function(creature) {
-		var debug = {x:creature.position.x, y:creature.vars.drawY, color: 'red'}
+		var debug = {x:creature.position.x, y:creature.drawY, color: 'red'}
 		game.debugs.push(debug);
 	});
-	var debug = {x:player.position.x, y:player.vars.drawY, color: 'orange'}
+	var debug = {x:player.position.x, y:player.drawY, color: 'orange'}
 	game.debugs.push(debug);
 	// game.creatures.forEach(function(creature) {
 	// 	if(creature.weapon) {
@@ -1985,13 +2007,26 @@ function drawDebugCanvas() {
 
 function playerDeath() {
 	console.log("The player has died!");
+	console.log(game.creatures);
 	game.creatures.forEach(function(creature) {
 		creature.ai.nextAction = -1;
 		creature.movement.speed = 0;
-		if(creature.vars.facingRight) {
-			creature.vars.animation = 0;
+		if(creature.name === "Zombi") {
+			if(creature.vars.facingRight && creature.vars.dead) {
+				creature.vars.animation = 0;
+			} else if(creature.vars.facingRight && !creature.vars.dead) {
+				creature.vars.animation = 12;
+			} else if(!creature.vars.facingRight && creature.vars.dead) {
+				creature.vars.animation = 1;
+			} else {
+				creature.vars.animation = 13;
+			}
 		} else {
-			creature.vars.animation = 1;
+			if(creature.vars.facingRight) {
+				creature.vars.animation = 0;
+			} else {
+				creature.vars.animation = 1;
+			}
 		}
 	});
 	player.vars.dead = true;
@@ -2031,7 +2066,7 @@ function update(delta) {
 
 //	Master game draw function
 function draw(interpolationPercentage) {
-	if(game.redrawBackground || game.redrawObstaclesTo > performance.now()) {
+	if(game.redrawBackground) {
 		bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 		drawOverlays();
 		drawDecor();
@@ -2075,6 +2110,9 @@ $('.startBtn').click(function() {
 });
 
 function endLevel() {
+	player.effects.forEach(function(effect) {
+		effect.endTime = 1;
+	});
 	MainLoop.stop();
 	$('#messageDiv').fadeOut('fast');
 	$.when($('canvas').fadeOut('slow')).then(function() {
@@ -2104,7 +2142,6 @@ function initializeGame() {
 	game.scoreStartTime = 0;
 	game.scoreOffset = 0;
 	game.redrawBackground = true;
-	game.redrawObstaclesTo = performance.now() + 1000;
 	game.viewport_offset_x = 0;
 	game.viewport_offset_y = 0;
 	game.creatures.length = 0;

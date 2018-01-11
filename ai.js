@@ -1254,6 +1254,75 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.YELLOW_SLUDGIE: {
+				creature.vars.touchDamage = false;								//	Reset to stop touch damage
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) > TILE_SIZE * 6) {
+							ai.rest(creature, 1000, 500);
+						} else {
+							var action = Math.floor(Math.random() * 2);
+							if(action < 1 && creature.hasClearPathToPlayer()) {
+								creature.vars.touchDamage = true;				//	Set to cause touch damage when moving
+								ai.moveTowardsPlayer(creature, 0, 1000, 1);
+								creature.ai.nextAction = 1;
+							} else {
+								ai.rest(creature, 500, 500);
+							}
+						}
+						break;
+					}
+					case 1: {
+						ai.rest(creature, 0, 1000);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+			case EnumAi.GREY_GOBLIN: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						//	Next action not specified
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 2 && creature.hasClearPathToPlayer()) {					//	If player is within 3x attack reach...
+							var direction = getPlayerDirection(creature);
+							ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);	//	...attack in player's general direction...
+							creature.ai.nextAction = 1;															//	...and set next action to 1.
+						} else if(getPlayerDistance(creature) < creature.weapon.attack.reach * 4 && creature.hasClearPathToPlayer()) {
+							ai.moveTowardsPlayer(creature, 0, 200, 2);
+						} else {							
+							var action = Math.floor(Math.random() * 3);											//	Otherwise, randomly choose to...
+							if(action < 2) {
+								ai.rest(creature, 500, 250);													//	...rest...
+							} else {
+								ai.moveRandomVector(creature, 1500, 100, 1);									//	...or move in a random direction.
+							}
+							creature.ai.nextAction = 0;
+						}
+						break;
+					}
+					case 1: {
+						ai.moveAwayFromPlayer(creature, 0, 500, 1);											//	...move away from player for 500ms, at 1x speed
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 2: {
+						ai.moveAwayFromPlayer(creature, 0, 500, 2);											//	...move away from player for 500ms, at 1x speed
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+
 
 
 			default: {

@@ -219,7 +219,6 @@ var creatureWeapons = [
 	},
 		//	5
 	{
-
 		name: 'Urk Sword',
 		lode: EnumLode.IRON,
 		currentSprite: { x: 2, y: 7},
@@ -377,7 +376,8 @@ var creatureWeapons = [
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
 	},
-		//	8
+	
+	//	8
 	{
 		name: 'Kob Mace',
 		lode: EnumLode.IRON,
@@ -1061,8 +1061,117 @@ var creatureWeapons = [
 		},
 		attack: {},
 		projectile: EnumCreatureProjectile.WATER_ELEMENTAL_BLAST
+	},
+	{
+		name: 'Albino Urk Sword',
+		lode: EnumLode.CRYSTAL,
+		currentSprite: { x: 31, y: 24},
+		use: function(direction) {
+			var rand = Math.floor(Math.random() * 4);
+			if(rand < 1) {
+				urkGrunts.play('grunt1');
+			} else if(rand < 2) {
+				urkGrunts.play('grunt2');
+			} else if(rand < 3) {
+				urkGrunts.play('grunt3');
+			} else if(rand < 4) {
+				urkGrunts.play('grunt4');
+			}
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 200,								//	Length of time the weapon stays animated after attack
+			attackRate: 400,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 31, y: 24 },							//	Right facing
+				{ x: 31.5, y: 24 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -10/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 1.125,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 150,
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 2,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},
+	{
+		name: 'Mini Kob Knife',
+		lode: EnumLode.IRON,
+		currentSprite: { x: 17, y: 4},
+		use: function(direction) {
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 200,								//	Length of time the weapon stays animated after attack
+			attackRate: 500,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: 17, y: 4 },							//	Right facing
+				{ x: 17.5, y: 4 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -2/16,
+				y: TILE_SIZE * -1/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * 0,
+				y: TILE_SIZE * -8/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 10/16,					//	Reach of attack from centre of player object position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 80,
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 1 * Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
 	}
-
 ];
 
 var creatureProjectiles = [

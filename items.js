@@ -30,7 +30,8 @@ var itemTemplates = [
 				this.vars.collected = true;
 				pickupNoise.play();
 				console.log("Picking up health heart!");
-				player.addHealth(1);
+				var rand = Math.floor(Math.random() * 3) + 1;
+				player.addHealth(rand);
 				$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
 				game.items.splice(game.items.indexOf(this), 1);
 				return true;
@@ -734,7 +735,7 @@ function Effect(type) {
 						if(player.vars.currentHP === player.vars.maxHP) {
 							player.vars.currentHP -= 5;
 						} else {
-							var rand = Math.floor(Math.random() * 3) + 1;
+							var rand = Math.floor(Math.random() * 5) + 1;
 							if(player.vars.currentHP + rand > player.vars.maxHP) {
 								player.vars.currentHP = player.vars.maxHP;
 							} else {

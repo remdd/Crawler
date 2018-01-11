@@ -205,6 +205,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.SKELTON,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -983,7 +986,9 @@ var creatureTemplates = [
 				[ 200, [200], [6] ],											//	Dead, facing R
 				[ 600, [200], [13] ],											//	Dead, facing L
 				[ 600, [200, 400, 600], [6, 5, 4] ],							//	Reanimate, facing R
-				[ 600, [200, 400, 600], [13,12,11] ]							//	Reanimate, facing L
+				[ 600, [200, 400, 600], [13,12,11] ],							//	Reanimate, facing L
+				[ 200, [200], [0] ],											//	Standing, facing R
+				[ 200, [200], [7] ],											//	Standing, facing L
 			]
 		},
 		box: {
@@ -1396,6 +1401,9 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumAi.BLACK_KNIGHT,
+		},
+		movement: {
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -2015,6 +2023,359 @@ var creatureTemplates = [
 		addWeapon: function() {
 			return EnumCreatureWeapon.FIRE_ELEMENTAL_WEAPON;
 		}	
-	}
+	},
+
+	//	26	YELLOW SLUDGIE
+	{
+		name: 'Yellow Sludgie',
+		lode: EnumLode.ACID,
+		currentSprite: { x: 9, y: 4 },
+		vars: {
+			speed: 2,
+			maxHP: 3,
+			currentHP: 3,
+			minFacingChangeTime: 50,
+			score: 100
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{x:9,y:8}, {x:10,y:8}, {x:11,y:8}, {x:12,y:8}, {x:13,y:8}, {x:14,y:8},
+				{x:9,y:9}, {x:10,y:9}, {x:11,y:9}, {x:12,y:9}, {x:13,y:9}, {x:14,y:9},
+				{x:15,y:8}, {x:16,y:8}, {x:17,y:8}, {x:15,y:9},	{x:16,y:9}, {x:17,y:9}
+			],
+			animations: [
+				[ 1800, [300, 600, 900, 1200, 1500, 1800], [0, 1, 2, 1, 0, 1] ],		//	Resting, facing R
+				[ 1800, [300, 600, 900, 1200, 1500, 1800], [6, 7, 8, 7, 6, 7] ],		//	Resting, facing L
+				[ 1000, [150, 300, 700, 850, 1000], [3, 4, 5, 4, 3] ],					//	Moving, facing R
+				[ 1000, [150, 300, 700, 850, 1000], [9, 10, 11, 10, 9] ],				//	Moving, facing L
+				[ 2400, [800, 1600, 2400], [12, 13, 14]],								//	Death, facing R
+				[ 2400, [800, 1600, 2400], [15, 16, 17]]								//	Death, facing L
+			]
+		},
+		box: {
+			width: 14, 
+			height: 7
+		},
+		ai: {
+			type: EnumAi.YELLOW_SLUDGIE,
+		},
+		movement: {
+			bounceOff: true
+		},
+		touchDamage: function() {
+			var touchDamage = {
+				baseDamage: 1,
+				criticalMax: 3,
+				lode: EnumLode.ACID
+			}
+			return touchDamage;
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		}
+	},
+
+	//	27	GREY GOBLIN
+	{
+		name: 'Grey Goblin',
+		lode: EnumLode.NONE,
+		currentSprite: { x: 0, y: 0},
+		vars: {
+			speed: 0.8,
+			maxHP: 3,
+			currentHP: 3,
+			score: 100
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 6, y: 0 },	//	Facing R 1
+				{ x: 7, y: 0 },	//	Facing R 2
+				{ x: 8, y: 0 },	//	Facing R 3
+				{ x: 9, y: 0 },	//	Facing R 4
+				{ x: 6, y: 1 },	//	Facing L 1
+				{ x: 7, y: 1 },	//	Facing L 2
+				{ x: 8, y: 1 },	//	Facing L 3
+				{ x: 9, y: 1 },	//	Facing L 4
+				{ x: 10, y: 0 },	//	Death facing R 1
+				{ x: 11, y: 0 },	//	Death facing R 2
+				{ x: 10, y: 1 },	//	Death facing L 1
+				{ x: 11, y: 1 }	//	Death facing L 2
+			],
+			animations: [
+				[ 800, [600, 800], [ 0, 1] ],												//	Resting, facing R
+				[ 800, [600, 800], [ 4, 5] ],												//	Resting, facing L
+				[ 250, [50, 100, 150, 200, 250], [ 0, 1, 2, 3, 1 ] ],						//	Moving, facing R
+				[ 250, [50, 100, 150, 200, 250], [ 4, 5, 6, 7, 5 ] ],						//	Moving, facing L
+				[ 1000, [500, 1000], [8, 9] ],												//	Death, facing R
+				[ 1000, [500, 1000], [10, 11] ]												//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 10
+		},
+		ai: {
+			type: EnumAi.GREY_GOBLIN,
+		},
+		movement: {
+			bounceOff: true
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.GREEN_GOBLIN_CLAW;
+		}	
+	},
+
+	//	28	ALBINO URK
+	{
+		name: 'Albino Urk',
+		lode: EnumLode.CRYSTAL,
+		currentSprite: { x: 23, y: 24},
+		vars: {
+			speed: 0.6,
+			maxHP: 5,
+			currentHP: 5,
+			restingWeaponAnimation: true,
+			attackRate: 0.8,
+			score: 70
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 23, y: 24 },	//	Resting facing R 1
+				{ x: 24, y: 24 },	//	Resting facing R 2
+				{ x: 25, y: 24 },	//	Moving facing R 1
+				{ x: 26, y: 24 },	//	Moving facing R 2
+				{ x: 27, y: 24 },	//	Moving facing R 3
+				{ x: 28, y: 24 },	//	Death facing R 1
+				{ x: 29, y: 24 },	//	Death facing R 2
+				{ x: 30, y: 24 },	//	Death facing R 3
+				{ x: 23, y: 25 },	//	Resting facing L 1
+				{ x: 24, y: 25 },	//	Resting facing L 2
+				{ x: 25, y: 25 },	//	Moving facing L 1
+				{ x: 26, y: 25 },	//	Moving facing L 2
+				{ x: 27, y: 25 },	//	Moving facing L 3
+				{ x: 28, y: 25 },	//	Death facing L 1
+				{ x: 29, y: 25 },	//	Death facing L 2
+				{ x: 30, y: 25 }		//	Death facing L 3
+			],
+			animations: [
+				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
+				[ 800, [500, 800], [ 8, 9] ],											//	Resting, facing L
+				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [ 10,11,12,9 ] ],							//	Moving, facing L
+				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
+				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 15
+		},
+		movement: {
+			bounceOff: true
+		},
+		ai: {
+			type: EnumAi.URK_VETERAN,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				var rand = Math.floor(Math.random() * 3);
+				if(rand < 1) {
+					urkGrunts.play('grunt5');
+				} else if(rand < 2) {
+					urkGrunts.play('grunt6');
+				} else {
+					urkGrunts.play('grunt7');
+				}
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			var rand = Math.floor(Math.random() * 2);
+			if(rand < 1) {
+				urkGrunts.play('death1');
+			} else {
+				urkGrunts.play('death2');
+			}
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.ALBINO_URK_SWORD;
+		}	
+	},	
+
+	//	29	MINI KOB
+	{
+		name: 'Mini Kob',
+		lode: EnumLode.NONE,
+		currentSprite: { x: 0, y: 22},
+		vars: {
+			speed: 1,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: true,
+			score: 60
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 22 },	//	Resting facing R 1
+				{ x: 1, y: 22 },	//	Resting facing R 2
+				{ x: 2, y: 22 },	//	Moving facing R 1
+				{ x: 3, y: 22 },	//	Moving facing R 2
+				{ x: 4, y: 22 },	//	Moving facing R 3
+				{ x: 5, y: 22 },	//	Death facing R 1
+				{ x: 6, y: 22 },	//	Death facing R 2
+				{ x: 7, y: 22 },	//	Death facing R 3
+				{ x: 0, y: 23 },	//	Resting facing L 1
+				{ x: 1, y: 23 },	//	Resting facing L 2
+				{ x: 2, y: 23 },	//	Moving facing L 1
+				{ x: 3, y: 23 },	//	Moving facing L 2
+				{ x: 4, y: 23 },	//	Moving facing L 3
+				{ x: 5, y: 23 },	//	Death facing L 1
+				{ x: 6, y: 23 },	//	Death facing L 2
+				{ x: 7, y: 23 }		//	Death facing L 3
+			],
+			animations: [
+				[ 400, [250, 400], [ 0, 1] ],											//	Resting, facing R
+				[ 400, [250, 400], [ 8, 9] ],											//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 1 ] ],							//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 10,11,12,9 ] ],							//	Moving, facing L
+				[ 900, [300, 600, 900], [5, 6, 7 ] ],									//	Death, facing R
+				[ 900, [300, 600, 900], [13,14,15] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 8, 
+			height: 11
+		},
+		ai: {
+			type: EnumAi.KOB,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.MINI_KOB_KNIFE;
+		}	
+	},
+	//	30	GIGA KOB
+	{
+		name: 'Giga Kob',
+		lode: EnumLode.NONE,
+		currentSprite: { x: 0, y: 26},
+		vars: {
+			speed: 0.6,
+			maxHP: 12,
+			currentHP: 12,
+			restingWeaponAnimation: true,
+			score: 200
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 2, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 26 },	//	Resting facing R 1
+				{ x: 2, y: 26 },	//	Resting facing R 2
+				{ x: 4, y: 26 },	//	Moving facing R 1
+				{ x: 6, y: 26 },	//	Moving facing R 2
+				{ x: 8, y: 26 },	//	Moving facing R 3
+				{ x: 10, y: 26 },	//	Moving facing R 4
+				{ x: 12, y: 26 },	//	Death facing R 1
+				{ x: 14, y: 26 },	//	Death facing R 2
+				{ x: 16, y: 26 },	//	Death facing R 3
+				{ x: 18, y: 26 },	//	Death facing R 4
+				{ x: 20, y: 26 },	//	Death facing R 5
+				{ x: 22, y: 26 },	//	Death facing R 6
+				{ x: 24, y: 26 },	//	Death facing R 7
+
+				{ x: 0, y: 28 },	//	Resting facing R 1
+				{ x: 2, y: 28 },	//	Resting facing R 2
+				{ x: 4, y: 28 },	//	Moving facing R 1
+				{ x: 6, y: 28 },	//	Moving facing R 2
+				{ x: 8, y: 28 },	//	Moving facing R 3
+				{ x: 10, y: 28 },	//	Moving facing R 4
+				{ x: 12, y: 28 },	//	Death facing R 1
+				{ x: 14, y: 28 },	//	Death facing R 2
+				{ x: 16, y: 28 },	//	Death facing R 3
+				{ x: 18, y: 28 },	//	Death facing R 1
+				{ x: 20, y: 28 },	//	Death facing R 2
+				{ x: 22, y: 28 },	//	Death facing R 3
+				{ x: 24, y: 28 }	//	Death facing R 3
+			],
+			animations: [
+				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
+				[ 800, [500, 800], [ 13,14] ],											//	Resting, facing L
+				[ 750, [150, 300, 450, 600, 750], [ 2, 3, 4, 5, 1 ] ],							//	Moving, facing R
+				[ 750, [150, 300, 450, 600, 750], [ 15,16,17,18,13] ],							//	Moving, facing L
+				[ 2100, [300, 600, 900, 1200, 1500, 1800, 2100], [6, 7, 8, 9, 10,11,12] ],		//	Death, facing R
+				[ 2100, [300, 600, 900, 1200, 1500, 1800, 2100], [19,20,21,22,23,24,25] ]		//	Death, facing L
+			]
+		},
+		box: {
+			width: 20, 
+			height: 30
+		},
+		ai: {
+			type: EnumAi.KOB,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.OGR_SWORD;
+		}	
+	},
 
 ];

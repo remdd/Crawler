@@ -97,7 +97,7 @@ levelGen.loadLevel = function(levelNumber) {
 	if(level.levelNumber === 1) {
 		sessionVars = Object.create({});
 		sessionVars.earlyBossRooms = [];
-		// sessionVars.earlyBossRooms = levelGen.earlyBossRooms.slice();
+		sessionVars.earlyBossRooms = levelGen.earlyBossRooms.slice();
 		sessionVars.lateBossRooms = [];
 		sessionVars.lateBossRooms = levelGen.lateBossRooms.slice();
 		sessionVars.roomTypes = levelGen.startingRoomTypes.slice();
@@ -185,9 +185,9 @@ levelGen.loadLevel = function(levelNumber) {
 		}
 	} else if(sessionVars.lateBossRooms.length > 0) {
 		var rand = Math.floor(session.prng.nextFloat() * sessionVars.lateBossRooms.length);
-		// level.bossRoomType = sessionVars.lateBossRooms[rand];
-		// sessionVars.lateBossRooms.splice(rand, 1);
-		level.bossRoomType = EnumCreature.RED_WIZ;
+		level.bossRoomType = sessionVars.lateBossRooms[rand];
+		sessionVars.lateBossRooms.splice(rand, 1);
+		// level.bossRoomType = EnumCreature.RED_WIZ;
 		//	Add the boss room contents function relevant to type
 		switch(level.bossRoomType) {
 			case EnumCreature.BLACK_WIZ: {
@@ -225,13 +225,14 @@ levelGen.loadLevel = function(levelNumber) {
 	level.roomTypes = sessionVars.roomTypes.slice();
 	//	Add boss room setup function
 	level.bossRoomContents = function() {
-		// level.playerStart = {y: this.origin.y, x: this.origin.x};
+		level.playerStart = {y: this.origin.y, x: this.origin.x};
 		// levelGen.bossRooms[level.bossRoomNumber](this);
-		levelGen.bossRooms[4](this);
+		levelGen.bossRooms[1](this);
 	};
 	level.exitRoomContents = function() {
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
 		new Obstacle(EnumObstacle.EXIT_STAIRS, null, this.origin.y + 1, this.origin.x + 1);
+		// level.itemArray[this.origin.y][this.origin.x + 1] = EnumItem.GREEN_MUSHROOM;
 	};
 	//	Default startRoom contents function
 	level.startRoomContents = function() {
@@ -279,6 +280,8 @@ levelGen.loadLevel = function(levelNumber) {
 			sessionVars.minimumCreatureCount = 45;
 			sessionVars.uncommonCreatures.push(EnumCreature.FIRE_ELEMENTAL);
 			sessionVars.uncommonCreatures.push(EnumCreature.WATER_ELEMENTAL);
+			sessionVars.rareCreatures.push(EnumCreature.GREY_GOBLIN);
+			sessionVars.rareCreatures.push(EnumCreature.ALBINO_URK);
 			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
 				level.specialItemCount = 0;
@@ -295,6 +298,7 @@ levelGen.loadLevel = function(levelNumber) {
 			sessionVars.minimumCreatureCount = 50;
 			sessionVars.uncommonCreatures.push(EnumCreature.BLUE_SQUARK);
 			sessionVars.uncommonCreatures.push(EnumCreature.OGR);
+			sessionVars.rareCreatures.push(EnumCreature.YELLOW_SLUDGIE);
 			var rand = Math.floor(session.prng.nextFloat() * 3);
 			if(rand < 1) {
 				level.specialItemCount = 0;

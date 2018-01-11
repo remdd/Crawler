@@ -182,7 +182,6 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		}
 	}
 
-	this.foreground = true;
 	this.vars = {
 		drawOffset: {y:0,x:0}
 	};
@@ -210,6 +209,8 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.sprite.spriteSheet = level.img;
 			this.closed = true;
 			this.currentSprite = level.tiles.door[0 + this.doorType * 3];
+			this.sprite.frames = [level.tiles.door[0 + this.doorType * 3], level.tiles.door[1 + this.doorType * 3], level.tiles.door[2 + this.doorType * 3]];
+			this.sprite.animations = [[200, [1, 100, 200], [0, 1, 2]]];
 			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
 			this.box.topLeft = {
 				y: this.grid.y * TILE_SIZE + TILE_SIZE * 1.2,
@@ -223,16 +224,15 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				if(!this.open) {
 					this.open = true;
 					this.animated = true;
-					this.animTime = 100;
-					this.animStart = performance.now();
-					this.currentSprite = level.tiles.door[1 + this.doorType * 3];
+					this.vars.animStart = performance.now();
+					this.vars.animation = 0;
+					this.vars.pointInAnimLoop = 0;
+					this.animEnd = performance.now() + 200;
 					level.terrainArray[this.grid.y+1][this.grid.x] = 0;
-					return this.animTime;
 				}
 			}
 			this.interactionEnd = function() {
 				this.animated = false;
-				this.ctx = bgCtx;
 				this.currentSprite = level.tiles.door[2 + this.doorType * 3];
 			}
 			this.position = {				//	Centre of sprite
@@ -244,6 +244,8 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.EXIT_STAIRS: {
 			this.closed = true;
 			this.sprite.spriteSheet = level.img;
+			this.sprite.frames = [level.tiles.exitStairs[0], level.tiles.exitStairs[1], level.tiles.exitStairs[2]]
+			this.sprite.animations = [[1000, [1, 500, 1000], [0, 1, 2]]]
 			this.currentSprite = level.tiles.exitStairs[0];
 			this.interact = function() {
 				var hasKey = false;
@@ -257,10 +259,10 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 					displayMessage(3000, "Your key unlocks the trapdoor!");
 					this.open = true;
 					this.animated = true;
-					this.animTime = 500;
-					this.animStart = performance.now();
-					this.currentSprite = level.tiles.exitStairs[1];
-					return this.animTime;
+					this.vars.animStart = performance.now();
+					this.vars.animation = 0;
+					this.vars.pointInAnimLoop = 0;
+					this.animEnd =  performance.now() + 1000;
 				} else if(!this.open) {
 					displayMessage(3000, "The trapdoor is locked!", "You need to find the key...");
 				} else {
@@ -276,7 +278,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				y: TILE_SIZE,
 				x: 0
 			}
-			this.vars.drawY = 1;
+			this.drawY = 1;
 			this.position = {
 				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
 				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
