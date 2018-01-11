@@ -619,7 +619,7 @@ var creatureWeapons = [
 			this.vars.attacking = false;
 		},
 		vars: {
-			animTime: 500,								//	Length of time the weapon stays animated after attack
+			animTime: 300,								//	Length of time the weapon stays animated after attack
 			attackRate: 1500,							//	Time to rest after attack
 			drawOffset: { x: 0, y: 0 },
 			foreground: true,
@@ -879,7 +879,7 @@ var creatureWeapons = [
 		use: function(direction) {
 			var fireballs = this.holder.vars.minFireballs + Math.floor(Math.random() * 2);
 			for(var i = 0; i < fireballs; i++) {
-				this.shoot(direction, this.projectile, false, true);
+				this.shoot(direction, this.projectile);
 			}
 			return false;
 		},
@@ -981,14 +981,14 @@ var creatureWeapons = [
 		use: function(direction) {
 			var fireballs = 2;
 			for(var i = 0; i < fireballs; i++) {
-				this.shoot(direction, this.projectile, false, true);
+				this.shoot(direction, this.projectile);
 			}
 		},
 		reset: function() {
 			this.vars.attacking = false;
 		},
 		vars: {
-			animTime: 500,								//	Length of time the weapon stays animated after attack
+			animTime: 300,								//	Length of time the weapon stays animated after attack
 			attackRate: 1000,							//	Time to rest after attack
 			drawOffset: { x: 0, y: 0 },
 			foreground: true,
@@ -1025,14 +1025,14 @@ var creatureWeapons = [
 		use: function(direction) {
 			var fireballs = 2;
 			for(var i = 0; i < fireballs; i++) {
-				this.shoot(direction, this.projectile, false, true);
+				this.shoot(direction, this.projectile);
 			}
 		},
 		reset: function() {
 			this.vars.attacking = false;
 		},
 		vars: {
-			animTime: 500,								//	Length of time the weapon stays animated after attack
+			animTime: 300,								//	Length of time the weapon stays animated after attack
 			attackRate: 1000,							//	Time to rest after attack
 			drawOffset: { x: 0, y: 0 },
 			foreground: true,

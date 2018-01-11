@@ -225,9 +225,9 @@ levelGen.loadLevel = function(levelNumber) {
 	level.roomTypes = sessionVars.roomTypes.slice();
 	//	Add boss room setup function
 	level.bossRoomContents = function() {
-		level.playerStart = {y: this.origin.y, x: this.origin.x};
+		// level.playerStart = {y: this.origin.y, x: this.origin.x};
 		// levelGen.bossRooms[level.bossRoomNumber](this);
-		levelGen.bossRooms[5](this);
+		levelGen.bossRooms[4](this);
 	};
 	level.exitRoomContents = function() {
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
@@ -1292,7 +1292,7 @@ levelGen.bossRooms = [
 
 		//	Add desk and special obstacles
 		var desk_y, shelves_y;
-		var rand = Math.floor(session.prng.nextFloat() * 1) + 3;
+		var rand = Math.floor(session.prng.nextFloat() * 4);
 		if(rand < 1) {			//	Desk top left
 			shelves_y = pentagram_y + 4;
 			desk_y = room.origin.y + 1;
@@ -1363,7 +1363,7 @@ levelGen.bossRooms = [
 		console.log("Adding Red Wiz boss room");
 		room.removeExistingContents();
 
-		//	Add pentagram in centre of floor
+		//	Add rug in centre of floor
 		var rug_y = room.origin.y + Math.floor(room.height / 2) - 1;
 		var rug_x = room.origin.x +Math.floor(room.width / 2) - 2;
 		for(var i = 0; i < 3; i++) {
@@ -1371,9 +1371,60 @@ levelGen.bossRooms = [
 				new Decor(uniqueFloorDecor[2][(3*i)+j].y, uniqueFloorDecor[2][(3*i)+j].x, rug_y + i, rug_x + j, 0, 0);
 			}
 		}
-		new Obstacle(EnumObstacle.WIZ_DESK_2, room);
-		new Obstacle(EnumObstacle.WIZ_DESK_3, room);
-		new Obstacle(EnumObstacle.RED_SPHERE, room);
+		//	Add desk and special obstacles
+		var desk_y, shelves_y;
+		var rand = Math.floor(session.prng.nextFloat() * 4);
+		if(rand < 1) {			//	Desk top left
+			shelves_y = rug_y + 4;
+			desk_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK_2, room, desk_y, room.origin.x + 2);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 3);
+			new Obstacle(EnumObstacle.WIZ_DESK_3, room, desk_y + 3, room.origin.x + 8);
+			new Obstacle(EnumObstacle.RED_SPHERE, room, desk_y + 1, room.origin.x + 6);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 5, room.origin.x + 1);
+			new Obstacle(EnumObstacle.BARREL, room, desk_y, room.origin.x + 9);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 4, room.origin.x + 7);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y + 3, room.origin.x + 2);
+		} else if(rand < 2) {	//	Desk top right
+			shelves_y = rug_y + 4;
+			desk_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK_2, room, desk_y, room.origin.x + 6);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 7);
+			new Obstacle(EnumObstacle.WIZ_DESK_3, room, desk_y + 2, room.origin.x + 1);
+			new Obstacle(EnumObstacle.RED_SPHERE, room, desk_y + 4, room.origin.x + 6);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 5, room.origin.x + 1);
+			new Obstacle(EnumObstacle.SACK, room, desk_y + 3, room.origin.x + 8);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 5, room.origin.x + 9);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y, room.origin.x + 4);
+		} else if(rand < 3) {	//	Desk bottom left
+			desk_y = rug_y + 3;
+			shelves_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK_2, room, desk_y, room.origin.x + 2);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 3);
+			new Obstacle(EnumObstacle.WIZ_DESK_3, room, desk_y-3, room.origin.x + 1);
+			new Obstacle(EnumObstacle.RED_SPHERE, room, desk_y + 1, room.origin.x + 7);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y -2, room.origin.x + 6);
+			new Obstacle(EnumObstacle.BARRELSx2, room, desk_y -1, room.origin.x + 8);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y + 1, room.origin.x + 5);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y -4, room.origin.x + 8);
+		} else {				//	Desk bottom right
+			desk_y = rug_y + 3;
+			shelves_y = room.origin.y + 1;
+			new Obstacle(EnumObstacle.WIZ_DESK_2, room, desk_y, room.origin.x + 6);
+			new Obstacle(EnumObstacle.STOOL, room, desk_y + 2, room.origin.x + 7);
+			new Obstacle(EnumObstacle.WIZ_DESK_3, room, desk_y, room.origin.x + 4);
+			new Obstacle(EnumObstacle.RED_SPHERE, room, desk_y, room.origin.x + 1);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y - 3, room.origin.x + 2);
+			new Obstacle(EnumObstacle.SACKx2, room, desk_y -1, room.origin.x + 9);
+			new Obstacle(EnumObstacle.CANDLES, room, desk_y - 2, room.origin.x + 7);
+			new Obstacle(EnumObstacle.SKULL_SPIKE, room, desk_y - 4, room.origin.x + 6);
+		}
+		//	Add shelves
+		new Obstacle(EnumObstacle.BOOKCASE_WIDE, room, shelves_y, room.origin.x + 1);
+		new Obstacle(EnumObstacle.NARROW_SHELVES, room, shelves_y, room.origin.x + 3);
+		new Obstacle(EnumObstacle.BOOKCASE, room, shelves_y, room.origin.x + 5);
+		new Obstacle(EnumObstacle.WIDE_SHELVES, room, shelves_y, room.origin.x + 7);
+		new Obstacle(EnumObstacle.NARROW_SHELVES, room, shelves_y, room.origin.x + 9);
 
 		//	Add room floor and decor
 		var rand = Math.floor(session.prng.nextFloat() * 3);
@@ -1385,7 +1436,7 @@ levelGen.bossRooms = [
 			room.addFloor(level.tiles.floorboards);
 		}
 		room.addWallDecor(false, 4);
-		room.addFloorDecor(2, [EnumDecortype.SPLATS, EnumDecortype.BONES, EnumDecortype.MISC] );
+		// room.addFloorDecor(1, [EnumDecortype.SPLATS, EnumDecortype.BONES, EnumDecortype.MISC] );
 
 		// Add boss and other creatures
 		room.addCreature(level.boss);

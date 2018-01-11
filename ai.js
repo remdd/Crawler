@@ -630,7 +630,7 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 4: {																//	Bezerk!
-						creature.movement.bounceOff = true;
+						// creature.movement.bounceOff = true;
 						creature.vars.bezerkAttacks = Math.floor(Math.random() * 5) + 5;
 						creature.weapon.vars.attackRate = 200;
 						creature.weapon.vars.animTime = 150;
@@ -662,7 +662,7 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 7: {																//	Exhausted...
-						creature.movement.bounceOff = false;
+						// creature.movement.bounceOff = false;
 						if(creature.vars.facingRight) {
 							animation = 8;
 						} else {
@@ -997,16 +997,22 @@ setAiAction = function(creature) {
 								ai.moveAwayFromPlayer(creature, 500, 500, 1);
 							} else {		//	Cast a spell
 								if(creature.vars.summoned < creature.vars.maxImps) {
-									ai.rest(creature, 0, 600, 6);
+									if(creature.vars.facingRight) {
+										ai.rest(creature, 0, 600, 6);
+									} else {
+										ai.rest(creature, 0, 600, 7);
+									}
 									creature.ai.nextAction = 5;
-								} else {
-									ai.rest(creature, 0, 600, 6);
+								} else if(creature.hasClearPathToPlayer()) {
+									if(creature.vars.facingRight) {
+										ai.rest(creature, 0, 600, 6);
+									} else {
+										ai.rest(creature, 0, 600, 7);
+									}
 									creature.ai.nextAction = 3;
+								} else {
+									ai.moveRandomVector(creature, 500, 500, 1);
 								}
-								// if(getPlayerDistance(creature) > TILE_SIZE * 3) {		//	Cast lightning
-								// 	ai.rest(creature, 0, 600, 6);
-								// 	creature.ai.nextAction = 3;
-								// }
 							}
 						}
 						break;
@@ -1025,9 +1031,7 @@ setAiAction = function(creature) {
 					}
 					case 3: {	//	Shoot lightning
 						var direction = getPlayerDirection(creature);
-						if(creature.hasClearPathToPlayer()) {
-							ai.attack(creature, 0, 1000, direction, Math.PI / 16);	
-						} 
+						ai.attack(creature, 0, 1000, direction, Math.PI / 16);	
 						creature.ai.nextAction = 0;
 						break;
 					}
@@ -1063,11 +1067,21 @@ setAiAction = function(creature) {
 								ai.moveAwayFromPlayer(creature, 500, 500, 1);
 							} else {		//	Cast a spell
 								if(creature.vars.hasGrimlin && creature.vars.summoned < creature.vars.maxElementals) {
-									ai.rest(creature, 0, 600, 6);
+									if(creature.vars.facingRight) {
+										ai.rest(creature, 0, 600, 6);
+									} else {
+										ai.rest(creature, 0, 600, 7);
+									}
 									creature.ai.nextAction = 5;
-								} else {
-									ai.rest(creature, 0, 600, 6);
+								} else if(creature.hasClearPathToPlayer()) {
+									if(creature.vars.facingRight) {
+										ai.rest(creature, 0, 600, 6);
+									} else {
+										ai.rest(creature, 0, 600, 7);
+									}
 									creature.ai.nextAction = 3;
+								} else {
+									ai.moveRandomVector(creature, 500, 500, 1);
 								}
 							}
 						}
@@ -1087,9 +1101,7 @@ setAiAction = function(creature) {
 					}
 					case 3: {	//	Shoot fireballs
 						var direction = getPlayerDirection(creature);
-						if(creature.hasClearPathToPlayer()) {
-							ai.attack(creature, 0, 1000, direction, Math.PI / 16);	
-						} 
+						ai.attack(creature, 0, 1000, direction, Math.PI / 16);	
 						creature.ai.nextAction = 0;
 						break;
 					}
@@ -1226,7 +1238,7 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 2: {
-						ai.moveAwayFromPlayer(creature, 250, 250, 2);
+						ai.moveAwayFromPlayer(creature, 250, 250, 5);
 						creature.ai.nextAction = 0;
 						break;
 					}
@@ -1288,7 +1300,7 @@ summon = function(summoner, newCreature) {
 	if(foundSpace) {
 		var summoned = new Creature(creatureTemplates[newCreature]);
 		summoned.summoner = summoner;
-		summoner.vars.summoned++;
+		summoned.vars.score = 0;
 		summoned.position.x = summonX * TILE_SIZE + TILE_SIZE / 2;
 		summoned.position.y = summonY * TILE_SIZE + TILE_SIZE / 2;
 		summoned.grid.x = summonX;
@@ -1296,6 +1308,7 @@ summon = function(summoner, newCreature) {
 		summoned.updateBox();
 		summoned.type = newCreature;
 		if(!summoned.checkIfCollides()) {
+			summoner.vars.summoned ++;
 			game.creatures.push(summoned);
 		}
 	}

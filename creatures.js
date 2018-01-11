@@ -452,6 +452,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.URK,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -1153,6 +1156,9 @@ var creatureTemplates = [
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
 			}
 		},
 		addWeapon: function() {
@@ -1751,6 +1757,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.BLACK_IMP,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		deathDrop: function() {
 		},
 		addWeapon: function() {
@@ -1763,7 +1772,7 @@ var creatureTemplates = [
 			}
 		},
 		deathResponse: function() {
-			this.summoner.vars.impCount--;
+			this.summoner.vars.summoned--;
 			this.kill();
 		}
 	},
@@ -1774,7 +1783,7 @@ var creatureTemplates = [
 		lode: EnumLode.SHADOW,
 		currentSprite: { x: 0, y: 24},
 		vars: {
-			speed: 1.1,
+			speed: 0.9,
 			maxHP: 3,
 			currentHP: 3,
 			restingWeaponAnimation: false,
@@ -1992,14 +2001,15 @@ var creatureTemplates = [
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
-			game.creatures.forEach(function(creature) {
-				if(creature.name === "Red Wiz") {
-					creature.vars.summoned --;
-				}
-			});
+			if(this.summoner) {
+				this.summoner.vars.summoned--;				
+			}
 			this.kill();
 		},
 		addWeapon: function() {
