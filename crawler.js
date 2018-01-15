@@ -7,8 +7,12 @@ var master = {
 	defaultMushroomMin: 30000,						//	Base minimum default mushroom effect duration
 	dropFrequency: [
 		[EnumItem.HEALTH_HEART, 5],
-		[EnumItem.PURPLE_MUSHROOM, 2],
-		[EnumItem.GREEN_MUSHROOM, 1]
+		[EnumItem.GOLD_HEART, 1],
+		[EnumItem.PURPLE_MUSHROOM, 3],
+		[EnumItem.GREEN_MUSHROOM, 1],
+		[EnumItem.LOOT_NECKLACE, 1],
+		[EnumItem.LOOT_BLUE_JEWEL, 2],
+		[EnumItem.LOOT_GREEN_JEWEL, 1]
 	],
 	debugs: false
 }
@@ -20,7 +24,10 @@ var session = {
 	levelNumber: 1,									//	Initial level
 	loadingLevel: false,
 	score: 0,
-	vars: {}
+	vars: {
+		musicVol: 0.4,
+		soundVol: 1
+	}
 }
 
 session.prng = new Random(session.seed);
@@ -117,10 +124,12 @@ window.addEventListener('keyup', function(event) {
 	Key.onKeyup(event);
 }, false);
 window.addEventListener('keydown', function(event) {
-	if(event.code === 'Space') {
-		interact();
-	} else {
-		Key.onKeydown(event);
+	if(MainLoop.isRunning()) {
+		if(event.code === 'Space') {
+			interact();
+		} else {
+			Key.onKeydown(event);
+		}
 	}
 }, false);
 
@@ -183,7 +192,7 @@ function setUpPlayer() {
 	player = new Creature(playerTemplates[playerType], level.playerStart.x, level.playerStart.y);			//	Construct player from playerType
 	player.weapon = new Weapon(playerWeapons[EnumPlayerWeapon.KNIFE], player);								//	Assign starting weapon
 	player.weapon.type = EnumPlayerWeapon.KNIFE;
-	player.weapon.setUpLode(EnumLode.IRON);
+	player.weapon.setUpLode();
 	player.vars.lastAttackTime = 0;																			//	Initialize to zero
 	player.vars.attackRate = playerTemplates[playerType].vars.attackRate;									//	Time between attacks
 	// player.movement.bounceOff = true;
@@ -212,14 +221,16 @@ function setUpPlayer() {
 }
 
 function setUpCreatures() {
-	console.log(player.grid);
 	// for(var i = 0; i < level.creatureArray.length; i++) {
 	// 	for(var j = 0; j < level.creatureArray[i].length; j++) {
 	// 		level.creatureArray[i][j] = undefined;
 	// 	}
 	// };
-	// level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.GIGA_KOB;
-	// level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.MINI_KOB;
+	// level.creatureArray[player.grid.y+2][player.grid.x+1] = EnumCreature.GIGA_KOB;
+	// level.creatureArray[player.grid.y][player.grid.x+1] = EnumCreature.BADBUG;
+	// level.creatureArray[player.grid.y][player.grid.x+2] = EnumCreature.BADBUG;
+	// level.creatureArray[player.grid.y+1][player.grid.x+1] = EnumCreature.BADBUG;
+	// level.creatureArray[player.grid.y+1][player.grid.x+2] = EnumCreature.BADBUG;
 
 	for(var i = 0; i < level.creatureArray.length; i++) {
 		for(var j = 0; j < level.creatureArray[i].length; j++) {
@@ -298,10 +309,12 @@ function Entity(entityTemplate, x, y) {
 	this.vars = {};
 	Object.assign(this.vars, entityTemplate.vars);				//	Copy vars object
 	this.vars.drawOffset = { x: 0, y: 0 };
-	// this.vars.touchDamage = false;								//	Default - does not damage player on contact
 	this.box = {};
 	this.box.topLeft = {}; this.box.bottomRight = {};
 	Object.assign(this.box, entityTemplate.box);				//	Copy box object
+	if(!this.box.base_offset) {
+		this.box.base_offset = 0;
+	}
 	this.updateBox();											//	Update box co-ordinates
 	this.vars.animStart = performance.now();
 }
@@ -356,6 +369,7 @@ Entity.prototype.updateBox = function() {
 	this.box.topLeft.y = this.position.y + (this.sprite.size.y * TILE_SIZE / 2) - this.box.height + 1;
 	this.box.bottomRight.x = this.position.x + this.box.width / 2 - 1;
 	this.box.bottomRight.y = this.position.y + (this.sprite.size.y * TILE_SIZE / 2) - 1;
+	this.box.bottomRight.y += this.box.base_offset;
 	// debugs.push(this.box.topLeft, this.box.bottomRight);
 }
 Entity.prototype.getGridOffsetFromPlayer = function() {
@@ -774,7 +788,6 @@ function Creature(creatureTemplate) {
 		this.deathDrop = creatureTemplate.deathDrop;
 	} else {
 		this.deathDrop = function() {
-			console.log("Dropping!");
 			//	First use the overall default death drop frequency to determine whether a drop is created.
 			var rand = Math.floor(Math.random() * session.vars.defaultDropFrequency);
 			if(rand < 1) {
@@ -785,7 +798,7 @@ function Creature(creatureTemplate) {
 					dropFrequencySum += droptype[1];
 				});
 				//	Then pick a random number between 0 and the frequency sum, and loop the drop types until that number is reached
-				var rand2 = Math.floor(Math.random() * dropFrequencySum);
+				var rand2 = Math.floor(Math.random() * dropFrequencySum) + 1;
 				while(rand2 > dropTypes[0][1]) {
 					rand2 -= dropTypes[0][1];
 					dropTypes.splice(0, 1);
@@ -826,9 +839,30 @@ Creature.prototype.attack = function(direction) {
 		this.weapon.vars.attacking = true;
 		//	Use weapon, and if it returns an attack object, create an attack with it
 		if(this.weapon.use(direction)) {
+			if(this === player && player.vars.attackLodeLottery) {
+				player.vars.revertLode = player.weapon.lode;
+				var lodes = [
+					EnumLode.ACID,
+					EnumLode.CRYSTAL,
+					EnumLode.SHADOW,
+					EnumLode.FIRE,
+					EnumLode.WATER,
+					EnumLode.LIGHTNING
+				];
+				var rand = Math.floor(Math.random() * lodes.length);
+				player.weapon.lode = lodes[rand];
+				player.weapon.setUpLode();
+			}
 			var attack = this.weapon.use(direction);
 			attack.attacker = this;
 			new Attack(attack, direction);
+			if(this === player && player.vars.attackLodeLottery) {
+				player.weapon.lode = player.vars.revertLode;
+				player.weapon.setUpLode();
+			}
+		}
+		if(this === player) {
+			playSwish();
 		}
 	}
 }
@@ -985,6 +1019,9 @@ Creature.prototype.addHealth = function(health) {
 	if(this.vars.currentHP > this.vars.maxHP) {
 		this.vars.currentHP = this.vars.maxHP;
 	}
+	if(this === player) {
+		$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+	}
 }
 Creature.prototype.checkIfCollides = function() {
 	var collides = false;
@@ -1026,20 +1063,25 @@ Creature.prototype.checkIfCollides = function() {
 }
 
 interact = function() {
-	level.obstacles.forEach(function(obstacle) {
-		if(inViewport(obstacle.grid.x * TILE_SIZE, obstacle.grid.y * TILE_SIZE) && obstacle.interact) {
-			if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < master.interactDistance) {
-				obstacle.interact();
-			}
+	if(MainLoop.isRunning()) {
+		if(game.displayedMessage) {
+			game.messageHideTime = performance.now();
 		}
-	});
-	game.items.forEach(function(item) {
-		if(inViewport(item.position.x, item.position.y) && item.interact && performance.now() > item.dropTime + 500) {
-			if(getDistanceToPlayer(item.position.x, item.position.y) < master.interactDistance) {
-				item.interact();
+		level.obstacles.forEach(function(obstacle) {
+			if(inViewport(obstacle.grid.x * TILE_SIZE, obstacle.grid.y * TILE_SIZE) && obstacle.interact) {
+				if(getDistanceToPlayer(obstacle.position.x, obstacle.position.y) < master.interactDistance) {
+					obstacle.interact();
+				}
 			}
-		}
-	})
+		});
+		game.items.forEach(function(item) {
+			if(inViewport(item.position.x, item.position.y) && item.interact && performance.now() > item.dropTime + 500) {
+				if(getDistanceToPlayer(item.position.x, item.position.y) < master.interactDistance) {
+					item.interact();
+				}
+			}
+		});
+	}
 }
 
 function getDistanceToPlayer(x, y) {
@@ -1218,6 +1260,8 @@ function updatePlayer() {
 	//	Assign current player animation
 	if(player.vars.dead) {
 		if(game.playerDeathTime && performance.now() > game.playerDeathTime + 3000) {
+			$('.finalScoreSpan').text(session.score);
+			MainLoop.stop();
 			deathScreen();
 		} else {
 			if(player.vars.facingRight) {
@@ -1255,6 +1299,7 @@ function updatePlayer() {
 			else if(player.vars.moving && player.vars.facingRight) { player.vars.animation = EnumState.MOVING_R; }
 			else if(player.vars.moving && !player.vars.facingRight) { player.vars.animation = EnumState.MOVING_L; }
 		}
+
 	}
 
 	if(player.effects.length > 0) {
@@ -1619,7 +1664,7 @@ function resolveHit(attack, target) {
 			if(critRoll < criticalChance) {
 				damage += Math.floor(Math.random() * criticalMax) + 1;
 				console.log("Critical hit! " + damage + " damage...");
-				critHitNoise.play();
+				gameEffects.play('criticalHit');
 			}
 		}
 		target.inflictDamage(damage, attack.lode);
@@ -1776,8 +1821,8 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 			} else {
-				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height;
-				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2);
+				var newTop = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) - obj.box.height + obj.box.base_offset;
+				var newBtm = returnCoords.y + (obj.sprite.size.y * TILE_SIZE / 2) + obj.box.base_offset;
 				var newL = returnCoords.x - (obj.box.width / 2 );
 				var newR = returnCoords.x + (obj.box.width / 2 );
 			}
@@ -1826,9 +1871,7 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			if(overlap) {
 				//	If player comes into contact with a collider dealing touch damage, execute its touchDamage function
 				if(obj.vars.touchDamage && game.nearbyColliders[i] === player) {
-					obj.vars.touchDamage = false;			//	Turn off touch damage to prevent multiple contact attacks
 					var touch = obj.touchDamage();
-					console.log(touch);
 					resolveHit(touch, player);
 				}
 				//	If player comes into contact with a pickup, execute its pickup function
@@ -1968,12 +2011,12 @@ function drawDebugCanvas() {
 		var debug = { x: projectile.position.x, y: projectile.position.y, color: 'orange'};
 		game.debugs.push(debug);
 	});
-	// game.colliders.forEach(function(collider) {
-	// 	var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
-	// 	game.debugs.push(debug);
-	// 	var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
-	// 	game.debugs.push(debug2);
-	// });
+	game.colliders.forEach(function(collider) {
+		var debug = { x: collider.box.topLeft.x, y: collider.box.topLeft.y, color: 'blue'};
+		game.debugs.push(debug);
+		var debug2 = { x: collider.box.bottomRight.x, y: collider.box.bottomRight.y, color: 'blue'};
+		game.debugs.push(debug2);
+	});
 	// game.attacks.forEach(function(attack) {
 	// 	attack.contactPoints.forEach(function(contactPoint) {
 	// 		var debug = { x: contactPoint.x, y: contactPoint.y, color: 'green'};
@@ -2037,18 +2080,6 @@ function playerDeath() {
 	game.playerDeathTime = performance.now();
 }
 
-function deathScreen() {
-	MainLoop.stop();
-	$('.finalScoreSpan').text(session.score);
-	$.when($('canvas').fadeOut('slow')).then(function() {
-		$('#gameMenuDiv').fadeIn('slow', function() {
-			$('#deathScreen').fadeIn('slow', function() {
-				clearCanvases();
-			});
-		});
-	});
-}
-
 //	Master game update function
 function update(delta) {
 	updateColliders();
@@ -2092,47 +2123,30 @@ function clearCanvases() {
 	}
 }
 
-function startScreen() {
-	$('canvas').css('width', CANVAS_WIDTH * SCALE_FACTOR);
-	$('canvas').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
-	$('canvas').attr('hidden', true);
-	$('#gameMenuDiv').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
-	$('#gameMenuDiv').css('width', CANVAS_WIDTH * SCALE_FACTOR);
-	$('#messageDiv').css('height', CANVAS_HEIGHT * SCALE_FACTOR);
-	$('#messageDiv').css('width', CANVAS_WIDTH * SCALE_FACTOR);
-}
-
-$('.startBtn').click(function() {
-	if(!session.loadingLevel) {
-		session.loadingLevel = true;
-		start(true);
-	}
-});
-
 function endLevel() {
 	player.effects.forEach(function(effect) {
 		effect.endTime = 1;
 	});
+	//	Get index of exit key in player's items and remove it
+	var keyIndex = player.items.map(function(item) { 
+		return item.name;
+	}).indexOf('Exit Key');
+	player.items.splice(keyIndex, 1);
+	//	Stop main loop
 	MainLoop.stop();
+ 	bgMusic.fade(session.vars.musicVol, 0, 2000);
 	$('#messageDiv').fadeOut('fast');
 	$.when($('canvas').fadeOut('slow')).then(function() {
 		$('#completedLevelSpan').text(session.levelNumber);
 		$('#nextLevelSpan').text(session.levelNumber + 1);
 		$('#gameMenuDiv').fadeIn('slow', function() {
 			$('#endLevelScreen').fadeIn('slow');
-			clearCanvases();
 			MainLoop.stop();
 			session.loadingLevel = false;
 			session.levelNumber++;
 			session.score -= game.scoreOffset;
 			game.scoreOffset = 0;
-			$('.nextLevelBtn').click(function() {
-				if(!session.loadingLevel) {
-					session.loadingLevel = true;
-					console.log("Loading level " + session.levelNumber);
-					start();
-				}
-			});
+			endLevelScreen();
 		});
 	});
 }
@@ -2191,7 +2205,6 @@ function initializeLevel() {
 //	Start routines
 function start(newGame) {
 	if(newGame) {
-		startSound.play();
 		session.levelNumber = 1;
 		session.score = 0;
 		session.vars.defaultDropFrequency = master.defaultDropFrequency;
@@ -2202,7 +2215,17 @@ function start(newGame) {
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
 		// session.prng = new Random(617547);
-	}
+ 	}
+ 	bgMusic.stop();
+ 	if(session.levelNumber % 3 === 0) {
+	 	bgMusic.play('music3');
+ 	} else if(session.levelNumber % 3 === 1) {
+	 	bgMusic.play('music1');
+ 	} else {
+	 	bgMusic.play('music2');
+ 	}
+ 	bgMusic.volume(0);
+ 	bgMusic.fade(0, session.vars.musicVol, 2000);
 	console.log("Seed: " + session.seed);
 	initializeLevel();
 	level = levelGen.loadLevel(session.levelNumber);
@@ -2217,7 +2240,7 @@ function start(newGame) {
 		player.position.y = player.grid.y * TILE_SIZE + TILE_SIZE / 2;
 	}
 	setViewportOffset();
-	addBackground();
+	// addBackground();
 	setUpLevel();
 	drawOverlays();
 	setUpCreatures();
@@ -2226,7 +2249,6 @@ function start(newGame) {
 			creature.weapon.reset();
 		}
 	});
-	// bgMusic.play();
 	game.scoreStartTime = performance.now();
 	$('#gameMenuDiv').fadeOut('slow', function() {
 		if(newGame) {
@@ -2235,10 +2257,11 @@ function start(newGame) {
 		console.log("Starting game - level: " + level.levelNumber);
 		drawMap();
 		$('canvas').fadeIn('slow', function() {
+			$('#interfaceDivLeft').fadeIn('slow');
 			$('.gameMenuScreen').hide();
-			if(newGame) {
-				displayMessage(3000, "Clutching your trusty knife in your sweaty palms,", "you enter the Baron's dungeon...")
-			}
+			// if(newGame) {
+			// 	displayMessage(3000, "Clutching your trusty knife in your sweaty palms,", "you enter the Baron's dungeon...")
+			// }
 			MainLoop.setUpdate(update).setDraw(draw).start();
 		});
 	});
@@ -2247,16 +2270,16 @@ function start(newGame) {
 //	Pause & restart game when browser tab loses & regains focus
 window.onfocus = function() {
 	session.focused = true;
-	// bgMusic.play();
 	MainLoop.start();
 	game.scoreStartTime = performance.now();
+	bgMusic.play();
 	if(player && !player.vars.dead) {
 		session.score -= 1;
 	}
 }
 window.onblur = function() {
 	session.focused = false;
-	// bgMusic.pause();
+	bgMusic.pause();
 	Key.clearPressed();
 	MainLoop.stop();
 	session.score -= (game.scoreOffset);
@@ -2284,7 +2307,5 @@ function drawMap() {
 	}
 }
 
-
-
 //	Show game start screen on load
-startScreen();
+firstLoad();

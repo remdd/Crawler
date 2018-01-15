@@ -28,11 +28,9 @@ var itemTemplates = [
 		pickup: function() {
 			if(player.vars.currentHP < player.vars.maxHP && !this.vars.collected) {
 				this.vars.collected = true;
-				pickupNoise.play();
+				gameEffects.play('healthHeart');
 				console.log("Picking up health heart!");
-				var rand = Math.floor(Math.random() * 3) + 1;
-				player.addHealth(rand);
-				$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+				player.addHealth(1);
 				game.items.splice(game.items.indexOf(this), 1);
 				return true;
 			}
@@ -65,7 +63,7 @@ var itemTemplates = [
 		pickup: function() {
 			if(!this.vars.collected) {
 				this.vars.collected = true;
-				pickupNoise.play();
+				gameEffects.play('exitKey');
 				console.log("Picking up exit key!");
 				player.addItem(this);
 				game.items.splice(game.items.indexOf(this), 1);
@@ -102,7 +100,6 @@ var itemTemplates = [
 		pickup: function() {
 			if(!this.vars.collected) {
 				this.vars.collected = true;
-				pickupNoise.play();
 				player.effects.push(new Effect(EnumItem.PURPLE_MUSHROOM));
 				console.log(this);
 				game.items.splice(game.items.indexOf(this), 1);
@@ -139,7 +136,6 @@ var itemTemplates = [
 		pickup: function() {
 			if(!this.vars.collected) {
 				this.vars.collected = true;
-				pickupNoise.play();
 				player.effects.push(new Effect(EnumItem.GREEN_MUSHROOM));
 				console.log(this);
 				game.items.splice(game.items.indexOf(this), 1);
@@ -176,7 +172,6 @@ var itemTemplates = [
 		pickup: function() {
 			if(!this.vars.collected) {
 				this.vars.collected = true;
-				pickupNoise.play();
 				player.effects.push(new Effect(EnumItem.ORANGE_MUSHROOM));
 				console.log(this);
 				game.items.splice(game.items.indexOf(this), 1);
@@ -566,7 +561,222 @@ var itemTemplates = [
 			game.items.splice(game.items.indexOf(this), 1);
 			return true;
 		}
-	}
+	},
+	{
+		name: 'Gold heart',
+		currentSprite: {x:2,y:5},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 2, y: 5 },
+				{ x: 2.5, y: 5 },		
+				{ x: 2, y: 5.5 },
+				{ x: 2.5, y: 5.5 }		
+			],
+			animations: [
+				[ 3000, [2850, 2900, 2950, 3000], [0, 1, 2, 3] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		pickup: function() {
+			if(player.vars.currentHP < player.vars.maxHP && !this.vars.collected) {
+				this.vars.collected = true;
+				gameEffects.play('healthHeart');
+				console.log("Picking up gold heart!");
+				player.addHealth(3);
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
+		}
+	},
+	{
+		name: 'Gold Key',
+		type: EnumItem.GOLD_KEY,
+		currentSprite: {x:1,y:5},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 1,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 1, y: 5 },
+				{ x: 1, y: 5.5 }		
+			],
+			animations: [
+				[ 3000, [2750, 2800, 2850, 2900, 2950, 3000], [0, 1, 0, 1, 0, 1] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				this.vars.collected = true;
+				gameEffects.play('exitKey');
+				console.log("Picking up gold key!");
+				// player.addItem(this);
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
+		}
+	},
+	{
+		name: 'Loot Necklace',
+		type: EnumItem.LOOT_NECKLACE,
+		currentSprite: {x:3,y:5},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 3, y: 5 },
+				{ x: 3, y: 5.5 }		
+			],
+			animations: [
+				[ 3000, [2750, 2800, 2850, 2900, 2950, 3000], [0, 1, 0, 1, 0, 1] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				this.vars.collected = true;
+				// gameEffects.play('exitKey');
+				gameEffects.play('gem3');
+				session.score += 150;
+				console.log("Picking up loot necklace!");
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
+		}
+	},
+	{
+		name: 'Green Jewel',
+		type: EnumItem.LOOT_GREEN_JEWEL,
+		currentSprite: {x:3.5,y:5},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 3.5, y: 5 },
+				{ x: 3.5, y: 5.5 }		
+			],
+			animations: [
+				[ 3000, [2750, 2800, 2850, 2900, 2950, 3000], [0, 1, 0, 1, 0, 1] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				this.vars.collected = true;
+				// gameEffects.play('exitKey');
+				session.score += 100;
+				gameEffects.play('gem2');
+				console.log("Picking up green jewel!");
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
+		}
+	},
+	{
+		name: 'Blue Jewel',
+		type: EnumItem.LOOT_BLUE_JEWEL,
+		currentSprite: {x:9.5,y:4},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 9.5, y: 4 },
+				{ x: 9.5, y: 4.5 }		
+			],
+			animations: [
+				[ 3000, [2750, 2800, 2850, 2900, 2950, 3000], [0, 1, 0, 1, 0, 1] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				this.vars.collected = true;
+				// gameEffects.play('exitKey');
+				session.score += 50;
+				gameEffects.play('gem1');
+				console.log("Picking up blue jewel!");
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
+		}
+	},
+	{
+		name: 'Red Jewel',
+		type: EnumItem.LOOT_RED_JEWEL,
+		currentSprite: {x:9,y:4},
+		sprite: {
+			spriteSheet: playerSprite,
+			size: {
+				x: 0.5,
+				y: 0.5
+			},
+			y_padding: 4,
+			frames: [
+				{ x: 9, y: 4 },
+				{ x: 9, y: 4.5 }		
+			],
+			animations: [
+				[ 3000, [2750, 2800, 2850, 2900, 2950, 3000], [0, 1, 0, 1, 0, 1] ]
+			]
+		},
+		box: {
+			width: 8, 
+			height: 4,
+			type: EnumBoxtype.PICKUP
+		},
+		pickup: function() {
+			if(!this.vars.collected) {
+				this.vars.collected = true;
+				// gameEffects.play('exitKey');
+				session.score += 200;
+				gameEffects.play('gem4');
+				console.log("Picking up red jewel!");
+				game.items.splice(game.items.indexOf(this), 1);
+				return true;
+			}
+		}
+	}	
 ];
 
 function addPlayerHelmet(helmetType) {
@@ -613,6 +823,7 @@ function addPlayerHelmet(helmetType) {
 	//	Pick up helmet and update player's lode
 	player.helmet = new Helmet(helmetTemplates[helmetType]);
 	player.lode = player.helmet.lode;
+	gameEffects.play('playerItem');
 }
 
 
@@ -702,26 +913,29 @@ function switchPlayerWeapon(newWeaponType, newWeaponLode) {
 	player.weapon = new Weapon(playerWeapons[newWeaponType], player);								//	Assign starting weapon
 	player.weapon.type = newWeaponType;
 	player.weapon.setUpLode(newWeaponLode);
+	gameEffects.play('playerItem');
 }
 
 
 function Effect(type) {
 	this.applied = false;
+	this.good = true;
 	switch(type) {
 		case EnumItem.GREEN_MUSHROOM: {
 			this.color = EnumColor.GREEN;
-			var rand = Math.floor(Math.random() * 4);
+			var rand = Math.floor(Math.random() * 6);
 			switch(rand) {
 				case 0: {
 					this.name = "Extra Invulnerability time";
-					this.message1 = "Not bad! A bit like chicken.";
-					this.message2 = "Your peripheral vision seems sharper, somehow...";
+					this.message1 = "Not bad! Tastes a bit like chicken.";
+					this.message2 = "You feel ready to take on the world.";
 					this.message3 = "";
 					this.apply = function() {
-						player.vars.invulnerableTime = player.vars.invulnerableTime * 5;
+						player.vars.storeInvulnerableTime = player.vars.invulnerableTime;
+						player.vars.invulnerableTime = 5000;
 					};
 					this.remove = function() {
-						player.vars.invulnerableTime = player.vars.invulnerableTime / 5;
+						player.vars.invulnerableTime = player.vars.storeInvulnerableTime;
 					}
 					break;
 				}
@@ -730,9 +944,10 @@ function Effect(type) {
 					this.message1 = "A peculiar, strong, yeasty flavour...";
 					this.message2 = "You either love it or hate it.";
 					this.message3 = "";
-					this.duration = 1000;
+					this.duration = 5000;
 					this.apply = function() {
 						if(player.vars.currentHP === player.vars.maxHP) {
+							this.good = false;
 							player.vars.currentHP -= 5;
 						} else {
 							var rand = Math.floor(Math.random() * 5) + 1;
@@ -750,7 +965,7 @@ function Effect(type) {
 				case 2: {
 					this.name = "Increase death drop frequency";
 					this.message1 = "Not a bad taste, considering the colour...";
-					this.message2 = "";
+					this.message2 = "You must have got lucky.";
 					this.message3 = "";
 					this.apply = function() {
 						session.vars.defaultDropFrequency = 2;
@@ -765,11 +980,38 @@ function Effect(type) {
 					this.message1 = "The mushroom tastes rancid and bitter.";
 					this.message2 = "You feel drained and listless.";
 					this.message3 = "";
+					this.good = false;
 					this.apply = function() {
 						player.vars.attackRate = player.vars.attackRate * 2;
 					};
 					this.remove = function() {
 						player.vars.attackRate = player.vars.attackRate / 2;
+					}
+					break;
+				}
+				case 4: {
+					this.name = "Attack lode lottery";
+					this.message1 = "The mushroom has an incredibly complex flavour.";
+					this.message2 = "You're really not sure what to make of it.";
+					this.message3 = "";
+					this.apply = function() {
+						player.vars.attackLodeLottery = true;
+					};
+					this.remove = function() {
+						player.vars.attackLodeLottery = false;
+					}
+					break;
+				}
+				case 5: {
+					this.name = "Charmed";
+					this.message1 = "The mushroom is strangely delicious.";
+					this.message2 = "You feel invincible!";
+					this.message3 = "";
+					this.apply = function() {
+						player.vars.charmed = true;
+					};
+					this.remove = function() {
+						player.vars.charmed = false;
 					}
 					break;
 				}
@@ -788,6 +1030,7 @@ function Effect(type) {
 					this.message1 = "The mushroom doesn't taste great.";
 					this.message2 = "You feel woozy...";
 					this.message3 = "";
+					this.good = false;
 					this.apply = function() {
 						player.vars.speed = player.vars.speed * 0.75;
 					};
@@ -813,14 +1056,14 @@ function Effect(type) {
 				}
 				case 2: {		
 					this.name = "Increased speed";
-					this.message1 = "The mushroom tastes slightly lemony.";
+					this.message1 = "The mushroom has a slight lemon flavour.";
 					this.message2 = "It seems to have given you an energy boost.";
 					this.message3 = "";
 					this.apply = function() {
-						player.vars.speed = player.vars.speed * 1.1;
+						player.vars.speed = player.vars.speed * 1.15;
 					};
 					this.remove = function() {
-						player.vars.speed = player.vars.speed / 1.1;
+						player.vars.speed = player.vars.speed / 1.15;
 					}
 					break;
 				}
@@ -829,6 +1072,7 @@ function Effect(type) {
 					this.message1 = "The mushroom tastes foul and acidic.";
 					this.message2 = "You feel utterly disoriented!";
 					this.message3 = "";
+					this.good = false;
 					this.duration = Math.random() * 5000 + 5000;
 					this.apply = function() {
 						player.vars.speed = -player.vars.speed * 0.7;
@@ -840,9 +1084,10 @@ function Effect(type) {
 				}
 				case 4: {		
 					this.name = "No effect";
-					this.message1 = "The mushroom tastes pretty horrible.";
+					this.message1 = "The mushroom tastes horrible.";
 					this.message2 = "Maybe eating random dungeon fungus isn't a smart move...";
 					this.message3 = "";
+					this.good = false;
 					this.apply = function() {
 					};
 					this.remove = function() {
@@ -850,26 +1095,12 @@ function Effect(type) {
 					break;
 				}
 				case 5: {
-					this.name = "Increase max HP";
-					this.message1 = "That was surprisingly tasty!";
-					this.message2 = "A most benevolent mushroom...";
-					this.message3 = "";
-					this.duration = 1000;
-					this.apply = function() {
-						player.vars.maxHP++;
-						player.vars.currentHP++;
-						$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
-					};
-					this.remove = function() {
-					}
-					break;
-				}
-				case 6: {
-					this.name = "Clear effects";
+					this.name = "Clear mushroom effects";
 					this.message1 = "Wow, that tasted bland.";
 					this.message2 = "...";
 					this.message3 = "";
 					this.duration = 1000;
+					this.good = false;
 					this.apply = function() {
 						player.effects.forEach(function(effect) {
 							effect.endTime = performance.now() + 1;
@@ -879,12 +1110,146 @@ function Effect(type) {
 					}
 					break;				
 				}
+				case 6: {
+					this.name = "Increase max HP";
+					this.message1 = "That was surprisingly tasty!";
+					this.message2 = "A most benevolent mushroom...";
+					this.message3 = "";
+					this.duration = 5000;
+					this.apply = function() {
+						player.vars.maxHP++;
+						player.vars.currentHP++;
+						$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+					};
+					this.remove = function() {
+					}
+					break;
+				}
 				default: {
 					break;
 				}
 			}
+			break;
 		}
-		break;
+		case EnumItem.ORANGE_MUSHROOM: {
+			this.color = EnumColor.ORANGE;
+			var rand = Math.floor(Math.random() * 7);
+			switch(rand) {
+				case 0: {
+					this.name = "Increase max HP";
+					this.message1 = "Pretty, pretty good!";
+					this.message2 = "You feel reinvigorated.";
+					this.message3 = "";
+					this.duration = 5000;
+					this.apply = function() {
+						player.vars.maxHP++;
+						player.vars.currentHP++;
+						$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 1: {		
+					this.name = "Perm increase to speed";
+					this.message1 = "The mushroom tastes like cabbage.";
+					this.message2 = "You feel a bit perkier.";
+					this.message3 = "";
+					this.duration = 5000;
+					this.apply = function() {
+						if(player.vars.speed < 1.75) {
+							player.vars.speed = player.vars.speed * 1.05;
+						}
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 2: {		
+					this.name = "Decrease max HP";
+					this.message1 = "The mushroom tastes foul.";
+					this.message2 = "You wonder if there's a bathroom nearby...";
+					this.message3 = "";
+					this.good = false;
+					this.duration = 5000;
+					this.apply = function() {
+						player.vars.maxHP--;
+						if(player.vars.currentHP > player.vars.maxHP) {
+							player.vars.currentHP = player.vars.maxHP;
+						};
+						$('.healthSpan').text(player.vars.currentHP + ' / ' + player.vars.maxHP);
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 3: {		
+					this.name = "Perm extra invulnerability time";
+					this.message1 = "A pleasant, cheesy flavour.";
+					this.message2 = "You begin to think you might survive all this!";
+					this.message3 = "";
+					this.duration = 5000;
+					this.apply = function() {
+						if(player.vars.invulnerableTime < 3000) {
+							player.vars.invulnerableTime = player.vars.invulnerableTime += 1000;
+						}
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 4: {		
+					this.name = "Perm reduced invulnerability time";
+					this.message1 = "The mushroom has a nasty aftertaste.";
+					this.message2 = "Maybe you should have stayed in bed this morning...";
+					this.message3 = "";
+					this.good = false;
+					this.duration = 5000;
+					this.apply = function() {
+						if(player.vars.invulnerableTime > 1500) {
+							player.vars.invulnerableTime = player.vars.invulnerableTime -= 1000;
+						} else {
+							player.vars.invulnerableTime = 500;
+						}
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 5: {		
+					this.name = "Add red jewels to dungeon";
+					this.message1 = "You've never tasted anything quite like it!";
+					this.message2 = "Maybe now things will start going your way.";
+					this.message3 = "";
+					this.duration = 5000;
+					this.apply = function() {
+						session.vars.dropFrequency.push([EnumItem.LOOT_RED_JEWEL, 1]);
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				case 6: {
+					this.name = "Perm increase death drop frequency";
+					this.message1 = "The mushroom tastes like bean curd.";
+					this.message2 = "You feel like luck is on your side.";
+					this.message3 = "";
+					this.duration = 5000;
+					this.apply = function() {
+						if(session.vars.defaultDropFrequency > 2) {
+							session.vars.defaultDropFrequency -= 1;
+						}
+					};
+					this.remove = function() {
+					}
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+			break;
+		}
 		default: {
 			break;
 		}
@@ -892,5 +1257,10 @@ function Effect(type) {
 	displayMessage(3000, this.message1, this.message2, this.message3);
 	if(!this.duration) {
 		this.duration = Math.random() * session.vars.defaultMushroomFactor + session.vars.defaultMushroomMin;
+	}
+	if(this.good) {
+		gameEffects.play('goodMushroom');
+	} else {
+		gameEffects.play('badMushroom');
 	}
 }

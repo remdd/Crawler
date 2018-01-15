@@ -15,6 +15,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		}
 		case EnumObstacle.SKULL_SPIKE:
 		case EnumObstacle.FLAG_SPIKE:
+		case EnumObstacle.FLAME_POT:
 		{
 			this.sprite.size = {y: 1, x: 0.5}
 			break;
@@ -28,6 +29,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.STONE_PILLAR:
 		case EnumObstacle.BLUE_SPHERE:
 		case EnumObstacle.RED_SPHERE:
+		case EnumObstacle.COLUMN:
 		{
 			this.sprite.size = {y: 2, x: 1}
 			break;
@@ -48,6 +50,10 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.EXIT_STAIRS:
 		case EnumObstacle.BOOKCASE_WIDE:
 		case EnumObstacle.BOOKCASE:
+		case EnumObstacle.WEAPON_RACK:
+		case EnumObstacle.DIRT_PILE:
+		case EnumObstacle.SMASHED_TABLE:
+		case EnumObstacle.BARRELS_AND_SACKS_2:
 		{
 			this.sprite.size = {y: 2, x: 2}
 			 break;
@@ -56,6 +62,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.ZOMBI_MASTER_DESK: 
 		case EnumObstacle.WIZ_DESK:
 		case EnumObstacle.WIZ_DESK_2:
+		case EnumObstacle.BARRELS_AND_SACKS_1:
 		{
 			this.sprite.size = {y: 2, x: 3}
 			break;
@@ -70,6 +77,9 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.sprite.size = {y: 3, x: 2}
 			break;
 		}
+
+
+
 		default: {
 			this.sprite.size = {y: 1, x: 1}
 			break;
@@ -125,6 +135,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.WARRIOR_STATUE:
 		case EnumObstacle.BLUE_SPHERE:
 		case EnumObstacle.RED_SPHERE:
+		case EnumObstacle.COLUMN:
 		{
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			break;
@@ -141,6 +152,10 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.DRAGON_STATUE:
 		case EnumObstacle.BOOKCASE_WIDE:
 		case EnumObstacle.BOOKCASE:
+		case EnumObstacle.DIRT_PILE:
+		case EnumObstacle.WEAPON_RACK:
+		case EnumObstacle.SMASHED_TABLE:
+		case EnumObstacle.BARRELS_AND_SACKS_2:
 		{
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			level.obstacleArray[this.grid.y][this.grid.x+1] = 1;
@@ -151,6 +166,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.ZOMBI_MASTER_DESK: 
 		case EnumObstacle.WIZ_DESK:
 		case EnumObstacle.WIZ_DESK_2:
+		case EnumObstacle.BARRELS_AND_SACKS_1:
 		{
 			for(var i = 0; i < 2; i++) {
 				for(var j = 0; j < 3; j++) {
@@ -177,6 +193,9 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			}
 			break;
 		}
+
+
+
 		default: {
 			break;
 		}
@@ -222,6 +241,12 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			}
 			this.interact = function() {
 				if(!this.open) {
+					var snd = Math.floor(Math.random() * 2);
+					if(snd < 1) {
+						gameEffects.play('door1');
+					} else {
+						gameEffects.play('door2');
+					}
 					this.open = true;
 					this.animated = true;
 					this.vars.animStart = performance.now();
@@ -256,6 +281,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				}
 				// hasKey = true;
 				if(!this.open && hasKey) {
+					gameEffects.play('trapdoor');
 					displayMessage(3000, "Your key unlocks the trapdoor!");
 					this.open = true;
 					this.animated = true;
@@ -282,6 +308,31 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.position = {
 				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
 				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			}
+			break;
+		}
+		case EnumObstacle.SIGNPOST: {
+			this.currentSprite = level.obstacleTiles[64];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 2,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 3,
+				x: this.grid.x * TILE_SIZE + TILE_SIZE * 14/16
+			}
+			this.interact = function() {
+				displayMessage(6000, "The sign reads:", "Welcome to the Baron's dungeons, victim!", "The only way out is down...");
+			}
+			this.interactionEnd = function() {
+			}
+			this.vars.drawOffset = {
+				y: -8,
+				x: 0
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE / 2),
+				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE / 2)
 			}
 			break;
 		}
@@ -738,7 +789,10 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				y: (this.grid.y * TILE_SIZE + TILE_SIZE / 2),
 				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
 			}
-			this.maxOffset = {y:0,x:2}
+			this.maxOffset = {y:0,x:2};
+			if(!modifier) {
+				modifier = Math.floor(session.prng.nextFloat() * 3) + 1;
+			}
 			if(modifier === 1) {										//	R facing
 				this.currentSprite = level.obstacleTiles[27];
 				this.box.topLeft = {
@@ -749,7 +803,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 					y: this.grid.y * TILE_SIZE + 11,
 					x: this.grid.x * TILE_SIZE + 13
 				}
-			} else {
+			} else if(modifier === 2) {
 				this.currentSprite = level.obstacleTiles[28];
 				this.box.topLeft = {
 					y: this.grid.y * TILE_SIZE + 5,
@@ -760,6 +814,18 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 					x: this.grid.x * TILE_SIZE + 10
 				}
 				this.maxOffset.x = 3;
+			} else {
+				this.currentSprite = level.obstacleTiles[67];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 5,
+					x: this.grid.x * TILE_SIZE
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 7,
+					x: this.grid.x * TILE_SIZE + 6
+				}
+				this.maxOffset.x = 1;
+				this.maxOffset.y = 3;
 			}
 			break;
 		}
@@ -1242,6 +1308,133 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.maxOffset = {y:0,x:7}
 			break;
 		}
+		case EnumObstacle.COLUMN: {
+			this.currentSprite = level.obstacleTiles[63];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 14,
+				x: this.grid.x * TILE_SIZE + 1
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 24,
+				x: this.grid.x * TILE_SIZE + 13
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+			}
+			this.maxOffset = {y:1,x:0}
+			break;
+		}
+		case EnumObstacle.WEAPON_RACK: {
+			this.currentSprite = level.obstacleTiles[65];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 13,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 17,
+				x: this.grid.x * TILE_SIZE + 28
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {y:9,x:1}
+			break;
+		}
+		case EnumObstacle.DIRT_PILE: {
+			this.currentSprite = level.obstacleTiles[66];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 6,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 9,
+				x: this.grid.x * TILE_SIZE + 30
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {y:14,x:0}
+			break;
+		}
+		case EnumObstacle.BARRELS_AND_SACKS_1: {
+			this.currentSprite = level.obstacleTiles[68];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 8,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 22,
+				x: this.grid.x * TILE_SIZE + 43
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + 3 * TILE_SIZE / 2)
+			}
+			this.maxOffset = {y:0,x:1}
+			break;
+		}
+		case EnumObstacle.BARRELS_AND_SACKS_2: {
+			this.currentSprite = level.obstacleTiles[69];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 8,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 17,
+				x: this.grid.x * TILE_SIZE + 23
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {y:9,x:7}
+			break;
+		}
+		case EnumObstacle.SMASHED_TABLE: {
+			this.currentSprite = level.obstacleTiles[70];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 6,
+				x: this.grid.x * TILE_SIZE + 1
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 26,
+				x: this.grid.x * TILE_SIZE + 10
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + TILE_SIZE)
+			}
+			this.maxOffset = {y:14,x:0}
+			this.drawY = this.box.topLeft.y + 2;
+			break;
+		}
+		case EnumObstacle.FLAME_POT: {
+			this.currentSprite = level.tiles.flamePot[0];
+			this.sprite.frames = [level.tiles.flamePot[0], level.tiles.flamePot[1], level.tiles.flamePot[2],level.tiles.flamePot[3], level.tiles.flamePot[4], level.tiles.flamePot[5]];
+			// this.sprite.animations = [[1000, [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000], [0,1,2,3,4,5,1,4,3,0,4,5,2,3,1,5,0,2,1,4]]];
+			this.sprite.animations = [[900, [75, 150, 225, 300, 375, 450, 525, 600, 675, 750, 825, 900], [0,1,2,3,4,5,1,4,3,0,4,5]]];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 10,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 12,
+				x: this.grid.x * TILE_SIZE + 7
+			}
+			this.animated = true;
+			this.vars.animStart = performance.now();
+			this.vars.animation = 0;
+			this.vars.pointInAnimLoop = 0;
+			this.position = {				//	Centre of sprite
+				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 4)
+			}
+			break;
+		}
+
 
 
 		default: {

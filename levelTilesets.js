@@ -56,7 +56,10 @@ var levelTilesets = [
 			{y: 0, x: 11, height: 3, offset_y: -1}			//	Red fountain face
 		],
 		door: [
-			{y:8,x:0}, {y:8,x:1}, {y:8,x:2}, {y:10,x:0}, {y:10,x:1}, {y:10,x:2}, {y:12,x:0}, {y:12,x:1}, {y:12,x:2} 
+			{y:8,x:0}, {y:8,x:1}, {y:8,x:2}, 
+			{y:10,x:0}, {y:10,x:1}, {y:10,x:2}, 
+			{y:12,x:0}, {y:12,x:1}, {y:12,x:2}, 
+			{y:14,x:0}, {y:14,x:1}, {y:14,x:2} 
 		],
 		exitStairs: [
 			{y:10,x:3}, {y:10,x:5}, {y:10,x:7}
@@ -136,7 +139,14 @@ var levelTilesets = [
 		],
 		parquetFloor: [
 			{y:10,x:10}, {y:11,x:10}, {y:12,x:10}
-		] 
+		],
+		flamePot: [
+			{y:4,x:12},{y:4,x:12.5},{y:4,x:13},{y:4,x:13.5},{y:4,x:14},{y:4,x:14.5}
+		],
+		uniqueWallDecor: [
+			[{y:10,x:14}],	//	Black Wiz portrait
+			[{y:10,x:15}]	//	Red Wiz portrait
+		]
 	}
 ];
 
@@ -205,31 +215,51 @@ var obstacleTiles = [
 		{y:7,x:11},	//	59	Blue Sphere
 		{y:7,x:12},	//	60	Red Sphere
 		{y:8,x:7},	//	61	Wiz Desk 2
-		{y:9,x:10}	//	62	Wiz Desk 3
+		{y:9,x:10},	//	62	Wiz Desk 3
+		{y:10,x:0},	//	63	Column
+		{y:0,x:0},	//	64	Signpost
+		{y:10,x:1},	//	65	Weapon Rack
+		{y:10,x:3},	//	66	Dirt Pile
+		{y:11,x:5},	//	67	Tipped Chair
+		{y:9,x:12},	//	68	Barrels & Sacks 1
+		{y:11,x:12},	//	69	Barrels & Sacks 2
+		{y:10,x:7}	//	70	Smashed table
 	]
 ];
 
 var floorDecorTiles = [
 	[
 		//	0	Filth
+		{y:0,x:0, maxOffset: {y:8,x:0}}, 
+		{y:0,x:1, maxOffset: {y:11,x:2}}, 
+		{y:0,x:2, maxOffset: {y:9,x:1}}, 
+		{y:0,x:3, maxOffset: {y:7,x:0}}, 
+		{y:0,x:4, maxOffset: {y:6,x:2}}, 
+		{y:0,x:5, maxOffset: {y:9,x:0}}, 
+		{y:0,x:6, maxOffset: {y:10,x:7}}, 
+		{y:0,x:7, maxOffset: {y:0,x:0}}, 
+		{y:0,x:8, maxOffset: {y:11,x:4}}, 
+		{y:0,x:9, maxOffset: {y:5,x:1}},
 		{y:1,x:0, maxOffset: {y:11,x:9}}, 
 		{y:1,x:1, maxOffset: {y:11,x:6}}, 
 		{y:1,x:2, maxOffset: {y:12,x:0}}, 
 		{y:1,x:3, maxOffset: {y:8,x:0}}, 
 		{y:1,x:4, maxOffset: {y:11,x:5}}, 
-		{y:1,x:5, maxOffset: {y:1,x:0}},
-		{y:0,x:0, maxOffset: {y:8,x:0}}, 
-		{y:0,x:1, maxOffset: {y:11,x:2}}, 
-		{y:0,x:2, maxOffset: {y:9,x:1}}, 
-		{y:0,x:3, maxOffset: {y:7,x:0}}, 
-		{y:0,x:4, maxOffset: {y:6,x:2}} 
+		{y:1,x:5, maxOffset: {y:1,x:0}}
 	],
 	[
 		//	1	Splats
 		{y:2,x:0, maxOffset: {y:10,x:2}}, 
 		{y:2,x:1, maxOffset: {y:5,x:0}}, 
 		{y:2,x:2, maxOffset: {y:3,x:0}}, 
-		{y:2,x:3, maxOffset: {y:0,x:1}}
+		{y:2,x:3, maxOffset: {y:0,x:1}},
+		{y:2,x:4, maxOffset: {y:4,x:2}},
+		{y:2,x:5, maxOffset: {y:13,x:8}},
+		{y:2,x:6, maxOffset: {y:5,x:0}},
+		{y:2,x:7, maxOffset: {y:2,x:0}},
+		{y:2,x:8, maxOffset: {y:5,x:2}},
+		{y:2,x:9, maxOffset: {y:13,x:6}},
+		{y:2,x:10, maxOffset: {y:2,x:2}},
 	],
 	[
 		//	2	Plants
@@ -242,7 +272,8 @@ var floorDecorTiles = [
 		{y:3,x:6, maxOffset: {y:4,x:8}},
 		{y:3,x:7, maxOffset: {y:3,x:5}},
 		{y:3,x:8, maxOffset: {y:1,x:0}},
-		{y:3,x:9, maxOffset: {y:10,x:12}}
+		{y:3,x:9, maxOffset: {y:10,x:12}},
+		{y:3,x:10, maxOffset: {y:1,x:0}}
 	],
 	[
 		//	3	Bones
@@ -251,11 +282,47 @@ var floorDecorTiles = [
 		{y:4,x:2, maxOffset: {y:4,x:2}}, 
 		{y:4,x:3, maxOffset: {y:9,x:9}}, 
 		{y:4,x:4, maxOffset: {y:12,x:4}}, 
-		{y:4,x:5, maxOffset: {y:11,x:3}}
+		{y:4,x:5, maxOffset: {y:11,x:3}},
+		{y:4,x:6, maxOffset: {y:1,x:0}},
+		{y:4,x:7, maxOffset: {y:10,x:7}}
 	],
 	[
 		//	4	Misc
-		{y:5,x:0, maxOffset: {y:8,x:3}}
+		{y:5,x:0, maxOffset: {y:8,x:3}},
+		{y:5,x:1, maxOffset: {y:3,x:1}},
+		{y:5,x:2, maxOffset: {y:1,x:5}},
+		{y:5,x:3, maxOffset: {y:2,x:2}},
+		{y:5,x:4, maxOffset: {y:6,x:1}},
+		{y:5,x:5, maxOffset: {y:10,x:9}},
+		{y:5,x:6, maxOffset: {y:8,x:7}},
+		{y:5,x:7, maxOffset: {y:12,x:8}},
+		{y:5,x:8, maxOffset: {y:2,x:0}}
+	]
+];
+
+var largeFloorDecor = [
+	[	//	Chasm 1
+		{y:10,x:0},
+		{y:11,x:0},
+		{y:12,x:0}
+	],
+	[	//	Chasm 2
+		{y:10,x:1},
+		{y:11,x:1},
+		{y:12,x:1},
+		{y:10,x:2},
+		{y:11,x:2},
+		{y:12,x:2}
+	],
+	[	//	Chasm 3
+		{y:10,x:3},
+		{y:10,x:4}
+	],
+	[	//	Big Grille
+		{y:11,x:3},
+		{y:11,x:4},
+		{y:12,x:3},
+		{y:12,x:4}
 	]
 ];
 
@@ -291,3 +358,4 @@ var uniqueFloorDecor = [
 		{y:15,x:3}
 	]
 ]
+

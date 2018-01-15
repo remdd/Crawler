@@ -5,8 +5,8 @@ var playerTemplates = [
 		currentSprite: { x: 0, y: 0 },
 		vars: {
 			speed: 1.2,
-			maxHP: 15,
-			currentHP: 15,
+			maxHP: 150,
+			currentHP: 150,
 			restingWeaponAnimation: true,
 			invulnerableTime: 1000,						//	Time that player remains immune after taking damage
 			invulnerableTo: 0,							//	Time at which player stops being invulnerable
@@ -77,8 +77,16 @@ var playerTemplates = [
 			bounceOff: false
 		},
 		inflictDamage: function(damage) {
-			if(performance.now() > this.vars.invulnerableTo) {
-				playerDamage.play();
+			var hit = true;
+			if(player.vars.charmed) {
+				var charm = Math.floor(Math.random() * 2);
+				if(charm < 1) {
+					hit = false;
+					gameEffects.play('charmed');
+				}
+			}
+			if(hit && performance.now() > this.vars.invulnerableTo) {
+				gameEffects.play('playerDamage');
 				this.vars.currentHP -= damage;
 				this.vars.invulnerableTo = performance.now() + this.vars.invulnerableTime;
 				$('.healthSpan').text(this.vars.currentHP + ' / ' + this.vars.maxHP);
@@ -91,10 +99,10 @@ var playerTemplates = [
 				if(this.vars.currentHP <= 0) {
 					this.deathResponse();
 				}
-				// console.log(this.name + " has " + this.vars.currentHP + " HP remaining.");
 			}
 		},
 		deathResponse: function() {	
+			gameEffects.play('playerDeath');
 			playerDeath();
 		}
 	}
@@ -126,6 +134,15 @@ function colorPlayer(color) {
 				for(var j = 0; j < 6; j++) {
 					player.sprite.frames[j+i*6].x = j+10;
 					player.sprite.frames[j+i*6].y = i+2;
+				}
+			}
+			break;
+		}
+		case EnumColor.ORANGE: {
+			for(var i = 0; i < 2; i++) {
+				for(var j = 0; j < 6; j++) {
+					player.sprite.frames[j+i*6].x = j+10;
+					player.sprite.frames[j+i*6].y = i+4;
 				}
 			}
 			break;

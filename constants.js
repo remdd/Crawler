@@ -64,7 +64,9 @@ var EnumCreature = {
 	GREY_GOBLIN: 27,
 	ALBINO_URK: 28,
 	MINI_KOB: 29,
-	GIGA_KOB: 30
+	GIGA_KOB: 30,
+	BADBUG: 31,
+	WRONGWRAITH: 32
 }
 
 var EnumAi = {
@@ -94,7 +96,9 @@ var EnumAi = {
 	GRIMLIN: 24,
 	ELEMENTAL: 25,
 	YELLOW_SLUDGIE: 26,
-	GREY_GOBLIN: 27
+	GREY_GOBLIN: 27,
+	BADBUG: 28,
+	WRONGWRAITH: 29
 }
 
 var EnumCreatureWeapon = {
@@ -119,7 +123,9 @@ var EnumCreatureWeapon = {
 	FIRE_ELEMENTAL_WEAPON: 19,
 	WATER_ELEMENTAL_WEAPON: 20,
 	ALBINO_URK_SWORD: 21,
-	MINI_KOB_KNIFE: 22
+	MINI_KOB_KNIFE: 22,
+	BADBUG_BITE: 23,
+	GIGA_KOB_AXE: 24
 }
 
 var EnumCreatureProjectile = {
@@ -159,7 +165,14 @@ var EnumItem = {
 	SHADOW_HELMET: 22,
 	FIRE_HELMET: 23,
 	WATER_HELMET: 24,
-	LIGHTNING_HELMET: 25
+	LIGHTNING_HELMET: 25,
+
+	GOLD_HEART: 26,
+	GOLD_KEY: 27,
+	LOOT_NECKLACE: 28,
+	LOOT_GREEN_JEWEL: 29,
+	LOOT_BLUE_JEWEL: 30,
+	LOOT_RED_JEWEL: 31
 }
 
 var EnumPlayerWeapon = {
@@ -278,7 +291,16 @@ var EnumObstacle = {
 	BLUE_SPHERE: 48,
 	RED_SPHERE: 49,
 	WIZ_DESK_2: 50,
-	WIZ_DESK_3: 51
+	WIZ_DESK_3: 51,
+	COLUMN: 52,
+	SIGNPOST: 53,
+	WEAPON_RACK: 54,
+	DIRT_PILE: 55,
+	TIPPED_CHAIR: 56,
+	BARRELS_AND_SACKS_1: 57,
+	BARRELS_AND_SACKS_2: 58,
+	SMASHED_TABLE: 59,
+	FLAME_POT: 60
 }
 
 var EnumDecortype = {
@@ -298,6 +320,8 @@ var EnumObstacletype = {
 
 var playerSprite = document.getElementById('playerSpriteImg');
 var monsterSprites = document.getElementById('monsterSprites');
+
+$('#background').width(CANVAS_WIDTH);
 
 var bgCanvas = $('<canvas id="bgCanvas" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '"></canvas>');
 var bgCtx = bgCanvas.get(0).getContext('2d');
@@ -324,6 +348,12 @@ interfaceCtx.imageSmoothingEnabled = false;			//	Preserve crisp edges of pixel a
 interfaceCtx.font = "10pt dpcomic";
 interfaceCtx.fillStyle = "white";
 interfaceCanvas.appendTo('body');
+
+var background = $('<div id="background">');
+background.css('background', '#1c1117');
+background.css('width', CANVAS_WIDTH * SCALE_FACTOR);
+background.css('height', CANVAS_HEIGHT * SCALE_FACTOR);
+background.appendTo('body');
 
 //	Deep clone an array of objects
 function cloneArray(existingArray) {

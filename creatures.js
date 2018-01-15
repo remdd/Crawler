@@ -144,7 +144,10 @@ var creatureTemplates = [
 		},
 		inflictDamage: function(damage, lode) {
 			if(lode !== EnumLode.CRYSTAL) {
-				this.ai.nextAction = 1;
+				if(!this.vars.invisible) {
+					this.ai.nextAction = 1;
+					clearAiAction(this);
+				}
 			} else {
 				this.vars.currentHP -= damage;
 				if(this.vars.currentHP <= 0) {
@@ -387,6 +390,14 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else if(!this.vars.isBat) {
+				var snd = Math.floor(Math.random() * 3);
+				if(snd < 1) {
+					campVampNoises.play('noise4')
+				} else if(snd < 2) {
+					campVampNoises.play('noise5')
+				} else {
+					campVampNoises.play('noise6')
+				}
 				this.ai.nextAction = 3;
 				clearAiAction(this);
 			} else {
@@ -395,6 +406,7 @@ var creatureTemplates = [
 			}
 		},
 		deathResponse: function() {
+			campVampNoises.play('death')
 			this.kill();
 		},
 		addWeapon: function() {
@@ -463,25 +475,13 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				var rand = Math.floor(Math.random() * 3);
-				if(rand < 1) {
-					urkGrunts.play('grunt5');
-				} else if(rand < 2) {
-					urkGrunts.play('grunt6');
-				} else {
-					urkGrunts.play('grunt7');
-				}
+				playUrkGrunt();
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
-			var rand = Math.floor(Math.random() * 2);
-			if(rand < 1) {
-				urkGrunts.play('death1');
-			} else {
-				urkGrunts.play('death2');
-			}
+			playUrkGrunt(true);
 			this.kill();
 		},
 		addWeapon: function() {
@@ -548,25 +548,13 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				var rand = Math.floor(Math.random() * 3);
-				if(rand < 1) {
-					urkGrunts.play('grunt5');
-				} else if(rand < 2) {
-					urkGrunts.play('grunt6');
-				} else {
-					urkGrunts.play('grunt7');
-				}
+				playUrkGrunt();
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
-			var rand = Math.floor(Math.random() * 2);
-			if(rand < 1) {
-				urkGrunts.play('death1');
-			} else {
-				urkGrunts.play('death2');
-			}
+			playUrkGrunt(true);
 			this.kill();
 		},
 		addWeapon: function() {
@@ -793,6 +781,7 @@ var creatureTemplates = [
 			}
 		},
 		deathResponse: function() {
+			creatureSounds1.play('mumiDeath');
 			this.kill();
 		},
 		addWeapon: function() {
@@ -1170,6 +1159,12 @@ var creatureTemplates = [
 			return EnumCreatureWeapon.WATER_ELEMENTAL_WEAPON;
 		},
 		deathResponse: function() {
+			var snd = Math.floor(Math.random() * 2);
+			if(snd < 1) {
+				creatureSounds1.play('elementalDeath1');
+			} else {
+				creatureSounds1.play('elementalDeath2');
+			}
 			this.kill();
 		}
 	},
@@ -1233,25 +1228,13 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				var rand = Math.floor(Math.random() * 3);
-				if(rand < 1) {
-					urkGrunts.play('grunt5');
-				} else if(rand < 2) {
-					urkGrunts.play('grunt6');
-				} else {
-					urkGrunts.play('grunt7');
-				}
+				playUrkGrunt();
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
-			var rand = Math.floor(Math.random() * 2);
-			if(rand < 1) {
-				urkGrunts.play('death1');
-			} else {
-				urkGrunts.play('death2');
-			}
+			playUrkGrunt(true);
 			this.kill();
 		},
 		addWeapon: function() {
@@ -1318,25 +1301,13 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				var rand = Math.floor(Math.random() * 3);
-				if(rand < 1) {
-					urkGrunts.play('grunt5');
-				} else if(rand < 2) {
-					urkGrunts.play('grunt6');
-				} else {
-					urkGrunts.play('grunt7');
-				}
+				playUrkGrunt();
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
-			var rand = Math.floor(Math.random() * 2);
-			if(rand < 1) {
-				urkGrunts.play('death1');
-			} else {
-				urkGrunts.play('death2');
-			}
+			playUrkGrunt(true);
 			this.kill();
 		},
 		addWeapon: function() {
@@ -1483,11 +1454,24 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
+				var snd = Math.floor(Math.random() * 5);
+				if(snd < 1) {
+					ogrNoises.play('noise1')
+				} else if(snd < 2) {
+					ogrNoises.play('noise2')
+				} else if(snd < 3) {
+					ogrNoises.play('noise3')
+				} else if(snd < 4) {
+					ogrNoises.play('noise4')
+				} else {
+					ogrNoises.play('noise5')
+				}
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
+			ogrNoises.play('death')
 			this.kill();
 		},
 		addWeapon: function() {
@@ -1708,8 +1692,8 @@ var creatureTemplates = [
 		currentSprite: { x: -1, y: -1},
 		vars: {
 			speed: 1.4,
-			maxHP: 1,
-			currentHP: 1,
+			maxHP: 2,
+			currentHP: 2,
 			restingWeaponAnimation: false,
 			score: 0
 		},
@@ -2015,6 +1999,12 @@ var creatureTemplates = [
 			}
 		},
 		deathResponse: function() {
+			var snd = Math.floor(Math.random() * 2);
+			if(snd < 1) {
+				creatureSounds1.play('elementalDeath1');
+			} else {
+				creatureSounds1.play('elementalDeath2');
+			}
 			if(this.summoner) {
 				this.summoner.vars.summoned--;				
 			}
@@ -2208,25 +2198,13 @@ var creatureTemplates = [
 			if(this.vars.currentHP <= 0) {
 				this.deathResponse();
 			} else {
-				var rand = Math.floor(Math.random() * 3);
-				if(rand < 1) {
-					urkGrunts.play('grunt5');
-				} else if(rand < 2) {
-					urkGrunts.play('grunt6');
-				} else {
-					urkGrunts.play('grunt7');
-				}
+				playUrkGrunt();
 				this.ai.nextAction = 2;
 				clearAiAction(this);
 			}
 		},
 		deathResponse: function() {
-			var rand = Math.floor(Math.random() * 2);
-			if(rand < 1) {
-				urkGrunts.play('death1');
-			} else {
-				urkGrunts.play('death2');
-			}
+			playUrkGrunt(true);
 			this.kill();
 		},
 		addWeapon: function() {
@@ -2348,8 +2326,8 @@ var creatureTemplates = [
 			animations: [
 				[ 800, [500, 800], [ 0, 1] ],											//	Resting, facing R
 				[ 800, [500, 800], [ 13,14] ],											//	Resting, facing L
-				[ 750, [150, 300, 450, 600, 750], [ 2, 3, 4, 5, 1 ] ],							//	Moving, facing R
-				[ 750, [150, 300, 450, 600, 750], [ 15,16,17,18,13] ],							//	Moving, facing L
+				[ 600, [150, 300, 450, 600], [ 2, 3, 4, 5 ] ],							//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [ 15,16,17,18] ],							//	Moving, facing L
 				[ 2100, [300, 600, 900, 1200, 1500, 1800, 2100], [6, 7, 8, 9, 10,11,12] ],		//	Death, facing R
 				[ 2100, [300, 600, 900, 1200, 1500, 1800, 2100], [19,20,21,22,23,24,25] ]		//	Death, facing L
 			]
@@ -2359,7 +2337,7 @@ var creatureTemplates = [
 			height: 30
 		},
 		ai: {
-			type: EnumAi.KOB,
+			type: EnumAi.URK_VETERAN,
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -2374,8 +2352,183 @@ var creatureTemplates = [
 			this.kill();
 		},
 		addWeapon: function() {
-			return EnumCreatureWeapon.OGR_SWORD;
+			return EnumCreatureWeapon.GIGA_KOB_AXE;
 		}	
 	},
+
+	//	31	BADBUG
+	{
+		name: 'Badbug',
+		lode: EnumLode.CRYSTAL,
+		currentSprite: { x: 0, y: 30},
+		vars: {
+			speed: 1.2,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			score: 100
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 30 },	//	Resting facing R 1
+				{ x: 1, y: 30 },	//	Resting facing R 2
+				{ x: 2, y: 30 },	//	Moving facing R 1
+				{ x: 3, y: 30 },	//	Moving facing R 2
+				{ x: 4, y: 30 },	//	Moving facing R 3
+				{ x: 5, y: 30 },	//	Moving facing R 4
+				{ x: 6, y: 30 },	//	Death facing R 1
+				{ x: 7, y: 30 },	//	Death facing R 2
+				{ x: 8, y: 30 },	//	Death facing R 3
+				{ x: 9, y: 30 },	//	Death facing R 4
+				{ x: 10, y: 30 },	//	Biting facing R 1
+				{ x: 11, y: 30 },	//	Biting facing R 2
+
+				{ x: 0, y: 31 },	//	Resting facing L 1
+				{ x: 1, y: 31 },	//	Resting facing L 2
+				{ x: 2, y: 31 },	//	Moving facing L 1
+				{ x: 3, y: 31 },	//	Moving facing L 2
+				{ x: 4, y: 31 },	//	Moving facing L 3
+				{ x: 5, y: 31 },	//	Moving facing L 4
+				{ x: 6, y: 31 },	//	Death facing L 1
+				{ x: 7, y: 31 },	//	Death facing L 2
+				{ x: 8, y: 31 },	//	Death facing L 3
+				{ x: 9, y: 31 },	//	Death facing L 4
+				{ x: 10, y: 31 },	//	Biting facing L 1
+				{ x: 11, y: 31 },	//	Biting facing L 2
+
+			],
+			animations: [
+				[ 200, [100, 200], [ 0, 1] ],							//	Resting, facing R
+				[ 200, [100, 200], [ 12, 13] ],							//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 5 ] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 14,15,16,17 ] ],			//	Moving, facing L
+				[ 800, [200, 400, 600, 800], [6, 7, 8, 9 ] ],			//	Death, facing R
+				[ 800, [200, 400, 600, 800], [18,19,20,21] ],			//	Death, facing L
+				[ 400, [100, 200, 400], [10,11,0 ] ],					//	Biting, facing R
+				[ 400, [100, 200, 400], [22,23,12] ]					//	Biting, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 13
+		},
+		ai: {
+			type: EnumAi.BADBUG,
+		},
+		movement: {
+			bounceOff: true
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 1;
+				// clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BADBUG_BITE;
+		}	
+	},
+
+	//	32	WRONGWRAITH
+	{
+		name: 'Wrongwraith',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: 0, y: 32},
+		vars: {
+			speed: 0.5,
+			maxHP: 5,
+			currentHP: 5,
+			moveThroughColliders: true,
+			touchDamage: true,
+			foreground: true,
+			score: 200
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 2, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 32 },		//	70%	1 R
+				{ x: 2, y: 32 },		//	70% 2 R
+				{ x: 4, y: 32 },		//	40% 1 R
+				{ x: 6, y: 32 },		//	40% 2 R
+				{ x: 8, y: 32 },		//	20% 1 R
+				{ x: 10, y: 32 },		//	20% 2 R
+				{ x: 12, y: 32 },		//	Eyes 1 R
+				{ x: 14, y: 32 },		//	Eyes 2 R
+				{ x: 16, y: 32 },		//	Death R 1
+				{ x: 18, y: 32 },		//	Death R 2
+				{ x: 20, y: 32 },		//	Death R 3
+
+				{ x: 0, y: 34 },		//	70%	1 L
+				{ x: 2, y: 34 },		//	70% 2 L
+				{ x: 4, y: 34 },		//	40% 1 L
+				{ x: 6, y: 34 },		//	40% 2 L
+				{ x: 8, y: 34 },		//	20% 1 L
+				{ x: 10, y: 34 },		//	20% 2 L
+				{ x: 12, y: 34 },		//	Eyes 1 L
+				{ x: 14, y: 34 },		//	Eyes 2 L
+				{ x: 16, y: 34 },		//	Death L 1
+				{ x: 18, y: 34 },		//	Death L 2
+				{ x: 20, y: 34 },		//	Death L 3
+
+				{ x: -2, y: -2 },			//	Empty frame!
+			],
+			animations: [
+				[ 200, [100, 200], [6, 7] ],						//	Resting, facing R (eyes)
+				[ 200, [100, 200], [17, 18] ],						//	Resting, facing L (eyes)
+				[ 200, [100, 200], [6, 7] ],						//	Moving, facing R (eyes)
+				[ 200, [100, 200], [17, 18] ],						//	Moving, facing L (eyes)
+				[ 800, [200, 400, 600, 800], [8, 9, 10,22] ],		//	Death, facing R
+				[ 800, [200, 400, 600, 800], [19,20,21,22] ],		//	Death, facing L
+				[ 600, [100, 200, 300, 400, 500, 600], [0, 1, 2, 3, 4, 5]],		//	Fade out, facing R
+				[ 600, [100, 200, 300, 400, 500, 600], [11,12,13,14,15,16]]		//	Fade out, facing L
+			]
+		},
+		box: {
+			width: 12, 
+			height: 16,
+			base_offset: -10
+		},
+		ai: {
+			type: EnumAi.WRONGWRAITH,
+		},
+		movement: {
+			bounceRandom: true
+		},
+		touchDamage: function() {
+			var touchDamage = {
+				baseDamage: 3,
+				criticalMax: 3,
+				lode: EnumLode.SHADOW
+			}
+			this.ai.nextAction = 1;
+			clearAiAction(this);
+			return touchDamage;
+		},
+		inflictDamage: function(damage, lode) {
+			if(lode === EnumLode.CRYSTAL || lode === EnumLode.SHADOW || lode === EnumLode.LIGHTNING) {
+				this.ai.nextAction = 1;
+				clearAiAction(this);
+				this.vars.currentHP -= damage;
+				if(this.vars.currentHP <= 0) {
+					this.deathResponse();
+				}
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		}
+	}
 
 ];

@@ -12,62 +12,126 @@
 	<img class="tileSet" id="obstacleSprites" src="Obstacles.png">
 	<img class="tileSet" id="floorDecorSprites" src="Decor.png">
 
-	<div id="gameMenuDiv">
-		<div id="startScreen" class="gameMenuScreen">
-			<h5>Red Mars Digital presents...</h5>
-			<h5>The</h5>
-			<h1>DEADLY DUNGEONS</h1>
-			<h5>of</h5>
-			<h1>BARON BACKSLASH!</h1>
-			<hr class="symbol">
-			<h5>Insert 1 gold coin to play!<h5>
-			<hr class="symbol">
-			<h3 class="startBtn">New Game</h3>
-			<h3>Controls</h3>
-		</div>
-		<div id="deathScreen" class="gameMenuScreen" hidden>
-			<h1>You have died!</h1>
-			<h3>You scored <span class="finalScoreSpan">0</span> points.</h3>
-			<hr class="symbol">
-			<h3 class="startBtn">New Game</h3>
-		</div>
-		<div id="endLevelScreen" class="gameMenuScreen" hidden>
-			<h1>Level <span id="completedLevelSpan">X</span> complete!</h1>
-			<h3>Our hero descends into the dark stairwell.</h3>
-			<h3>What fresh horrors lie in wait below...?</h3>
-			<hr class="symbol">
-			<h3 class="nextLevelBtn">Start level <span id="nextLevelSpan">X</span>!</h3>
-		</div>
-	</div>
+	<div id="container">
+		<div id="gameMenuDiv">
+			<div id="startScreen" class="gameMenuScreen" hidden>
+				<h5>Red Mars Digital presents...</h5>
+				<h5>The</h5>
+				<h1>DEADLY DUNGEONS</h1>
+				<h5>of</h5>
+				<h1>BARON BACKSLASH</h1>
+				<hr class="symbol">
+				<h5>Insert 1 gold coin to play!</h5>
+				<hr class="symbol">
+   				<button class="newGameBtn selected" autofocus="true">
+					<h3>New Game</h3>
+				</button>
+				<button class="howToPlayBtn">
+					<h3>How to play</h3>
+				</button>
 
-	<div id="interfaceDivLeft">
-		<div id="scoreDiv">
-			<p>
-				<img src="img/heart.png"> 
-				<span class="healthSpan"></span>
-				<img id="exitkeyimg" src="img/exitkey.png" hidden> 
-			</p>
-			<p class="itemSpan">
-				
-			</p>
-			<p class="fpsSpan" id="fps"></p>
+ 			</div>
+			<div id="controlsScreen" class="gameMenuScreen" hidden>
+				<h3>Controls</h3>
+				<div class="keyContainer">
+					<div class="leftKeys">
+						<div class="key">W</div>
+						<div class="3keys">
+							<div class="key">A</div>
+							<div class="key">S</div>
+							<div class="key">D</div>
+						</div>
+					</div>			
+					<div class="rightKeys">
+						<div class="key">&#8679;</div>
+						<div class="3keys">
+							<div class="key">&#8678;</div>
+							<div class="key">&#8681;</div>
+							<div class="key">&#8680;</div>
+						</div>
+					</div>			
+				</div>
+				<div class="keyContainer">
+					<div>
+						<p>Move in direction</p>
+					</div>
+					<div>
+						<p>Attack in direction</p>
+					</div>
+				</div>
+				<div class="keyContainer">
+					<div class="spacebar"></div>
+				</div>
+				<div class="keyContainer">
+					Hit space to open doors and pick up special items
+				</div>
+				<hr class="symbol">
+				<div class="keyContainer pickupText">
+					<div>
+						<img src="img/pickupHeart.png">
+					</div>
+					<div>
+						Collect pickups and eat mushrooms by walking over them
+					</div>
+					<div>
+						<img src="img/pickupMushroom.png">
+					</div>
+				</div>
+				<button class="mainMenuBtn" autofocus="true">
+					<h3>Main menu</h3>
+				</button>
+			</div>
+			<div id="deathScreen" class="gameMenuScreen" hidden>
+				<h1>You have died!</h1>
+				<h3>You scored <span class="finalScoreSpan">0</span> points.</h3>
+				<hr class="symbol">
+				<button class="newGameBtn" autofocus="true">
+					<h3>Play again</h3>
+				</button>
+				<button class="mainMenuBtn">
+					<h3>Main menu</h3>
+				</button>
+			</div>
+			<div id="endLevelScreen" class="gameMenuScreen" hidden>
+				<h1>Level <span id="completedLevelSpan">X</span> complete!</h1>
+				<h3>Our hero descends into the dark stairwell.</h3>
+				<h3>What fresh horrors lie in wait below...?</h3>
+				<hr class="symbol">
+				<button class="nextLevelBtn selected" autofocus="true">
+					<h3>Start level <span id="nextLevelSpan">X</span></h3>
+				</button>
+			</div>
 		</div>
-	</div>
 
-	<div id="messageDiv" hidden>
-		<span id="messageSpan"></span>
-	</div>
+		<div id="interfaceDivLeft" hidden>
+			<div id="scoreDiv">
+				<p>
+					<img src="img/heart.png"> 
+					<span class="healthSpan"></span>
+					<img id="exitkeyimg" src="img/exitkey.png" hidden> 
+				</p>
+				<p class="itemSpan">
+					
+				</p>
+				<p class="fpsSpan" id="fps"></p>
+			</div>
+		</div>
 
-	<div id="interfaceDivRight">
-		<div id="scoreDiv">
-			<p class="scoreSpan"></p>
+		<div id="messageDiv" hidden>
+			<span id="messageSpan"></span>
+		</div>
+
+		<div id="interfaceDivRight">
+			<div id="scoreDiv">
+				<p class="scoreSpan"></p>
+			</div>
 		</div>
 	</div>
 
 	<script type="text/javascript" src="constants.js"></script>
 	<script type="text/javascript" src="lib/mainloop.js"></script>
 	<script type="text/javascript" src="lib/prng.js"></script>
-	<script type="text/javascript" src="lib/howler.js"></script>
+	<script type="text/javascript" src="lib/howler.core.js"></script>
 	<script type="text/javascript" src="levelTilesets.js"></script>
 	<script type="text/javascript" src="levels.js"></script>
 	<script type="text/javascript" src="obstacles.js"></script>
@@ -76,6 +140,7 @@
 	<script type="text/javascript" src="creatures.js"></script>
 	<script type="text/javascript" src="creatureWeapons.js"></script>
 	<script type="text/javascript" src="gear.js"></script>
+	<script type="text/javascript" src="menuScreens.js"></script>
 	<script type="text/javascript" src="crawler.js"></script>
 	<script type="text/javascript" src="ai.js"></script>
 	<script type="text/javascript" src="audio.js"></script>

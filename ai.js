@@ -228,6 +228,16 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 1: {
+						var rand = Math.floor(Math.random() * 3);
+						if(rand < 1) {
+							skeltonNoises.play('noise1');
+						} else if(rand < 2) {
+							skeltonNoises.play('noise2');
+						} else if(rand < 3) {
+							skeltonNoises.play('noise3');
+						} else {
+							skeltonNoises.play('noise4');
+						}
 						ai.rest(creature, 0, 600, 4);
 						creature.ai.type = EnumAi.SKELTON;
 						creature.ai.nextAction = 1;
@@ -266,7 +276,7 @@ setAiAction = function(creature) {
 						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, 0);					//	...attack in player's compass direction...
 						var rand = Math.floor(Math.random() * 3);
 						if(rand < 2) {
-							creature.ai.nextAction = 1;
+							creature.ai.nextAction = 4;
 						} else {
 							creature.ai.nextAction = 2;
 						}
@@ -291,6 +301,11 @@ setAiAction = function(creature) {
 						}
 						break;
 					}
+					case 4: {
+						ai.moveTowardsPlayer(creature, 0, 200, 1.5);
+						creature.ai.nextAction = 1;
+						break;
+					}
 					default: {
 						break;
 					}
@@ -299,7 +314,6 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.GREEN_SLUDGIE: {
-				creature.vars.touchDamage = false;								//	Reset to stop touch damage
 				switch(creature.ai.nextAction) {
 					case 0: {
 						if(getPlayerDistance(creature) > TILE_SIZE * 5) {
@@ -1036,6 +1050,12 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 4: {	//	Teleport
+						var snd = Math.floor(Math.random() * 2);
+						if(snd < 1) {
+							creatureSounds1.play('teleport1');
+						} else {
+							creatureSounds1.play('teleport2');
+						}
 						ai.rest(creature, 0, 150, 8);
 						creature.ai.nextAction = 1;
 						break;
@@ -1106,6 +1126,12 @@ setAiAction = function(creature) {
 						break;
 					}
 					case 4: {	//	Teleport
+						var snd = Math.floor(Math.random() * 2);
+						if(snd < 1) {
+							creatureSounds1.play('teleport1');
+						} else {
+							creatureSounds1.play('teleport2');
+						}
 						ai.rest(creature, 0, 150, 8);
 						creature.ai.nextAction = 1;
 						break;
@@ -1255,7 +1281,6 @@ setAiAction = function(creature) {
 			}
 
 			case EnumAi.YELLOW_SLUDGIE: {
-				creature.vars.touchDamage = false;								//	Reset to stop touch damage
 				switch(creature.ai.nextAction) {
 					case 0: {
 						if(getPlayerDistance(creature) > TILE_SIZE * 6) {
@@ -1322,6 +1347,76 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.BADBUG: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE && creature.hasClearPathToPlayer()) {
+							var direction = getPlayerDirection(creature);
+							creature.setFacing(direction);
+							if(creature.vars.facingRight) {
+								ai.attack(creature, 0, 400, direction, Math.PI / 8, 6);	//	...attack in player's general direction...
+							} else {
+								ai.attack(creature, 0, 400, direction, Math.PI / 8, 7);	//	...attack in player's general direction...
+							}
+						} else {
+							var action = Math.floor(Math.random() * 3);
+							if(action < 1) {
+								ai.moveRandomVector(creature, 0, 400, 1);
+							} else {
+								ai.rest(creature, 0, 400);
+							}
+						}
+						break;
+					}
+					case 1: {
+						game.creatures.forEach(function(creature2) {
+							if(creature2 !== creature && creature2.name === "Badbug") {
+								clearAiAction(creature2);
+								creature2.ai.nextAction = 2;
+							}
+						});
+						ai.moveAwayFromPlayer(creature, 0, 400, 1.5);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					case 2: {
+						ai.moveTowardsPlayer(creature, 400, 400, 1.5);
+						creature.ai.nextAction = 0;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
+			case EnumAi.WRONGWRAITH: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 8 && creature.hasClearPathToPlayer()) {
+							ai.moveTowardsPlayer(creature, 0, 200, 1);
+						} else {
+							ai.moveRandomVector(creature, 0, 200, 1);
+						}
+						break;
+					}
+					case 1: {
+						// debugger;
+						if(creature.vars.facingRight) {
+							ai.moveAwayFromPlayer(creature, 0, 600, 3, 6);
+						} else {
+							ai.moveAwayFromPlayer(creature, 0, 600, 3, 7);
+						}
+						creature.ai.nextAction = 0;
+						break;						
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
 
 
 
@@ -1378,6 +1473,11 @@ summon = function(summoner, newCreature) {
 		summoned.type = newCreature;
 		if(!summoned.checkIfCollides()) {
 			summoner.vars.summoned ++;
+			if(summoned.name === "Black Imp") {
+				creatureSounds1.play('summonImp')
+			} else if(summoned.name === "Fire Elemental") {
+				creatureSounds1.play('summonElemental')
+			}
 			game.creatures.push(summoned);
 		}
 	}
@@ -1395,22 +1495,6 @@ var ai = {
 				creature.vars.animation = EnumState.RESTING_R;
 			} else {
 				creature.vars.animation = EnumState.RESTING_L;
-			}
-		}
-	},
-	moveRandomVector: function(creature, duration_factor, duration_min, speed_multiplier, animation) {
-		var duration = Math.random() * duration_factor + duration_min;
-		setAiTiming(creature, duration);
-		creature.movement.direction = Math.random() * Math.PI * 2;
-		creature.movement.speed = creature.vars.speed * speed_multiplier;
-		creature.setFacing(creature.movement.direction);
-		if(animation) {
-			creature.vars.animation = animation;
-		} else {
-			if(creature.vars.facingRight) {
-				creature.vars.animation = EnumState.MOVING_R;
-			} else {
-				creature.vars.animation = EnumState.MOVING_L;
 			}
 		}
 	},
@@ -1449,6 +1533,22 @@ var ai = {
 			}
 		}
 	},
+	moveRandomVector: function(creature, duration_factor, duration_min, speed_multiplier, animation) {
+		var duration = Math.random() * duration_factor + duration_min;
+		setAiTiming(creature, duration);
+		creature.movement.direction = Math.random() * Math.PI * 2;
+		creature.movement.speed = creature.vars.speed * speed_multiplier;
+		creature.setFacing(creature.movement.direction);
+		if(animation) {
+			creature.vars.animation = animation;
+		} else {
+			if(creature.vars.facingRight) {
+				creature.vars.animation = EnumState.MOVING_R;
+			} else {
+				creature.vars.animation = EnumState.MOVING_L;
+			}
+		}
+	},
 	moveAwayFromPlayer: function(creature, duration_factor, duration_min, speed_multiplier, animation) {
 		var duration = Math.random() * duration_factor + duration_min;
 		setAiTiming(creature, duration);
@@ -1456,7 +1556,7 @@ var ai = {
 		creature.movement.speed = creature.vars.speed * speed_multiplier;
 		creature.setFacing(creature.movement.direction);
 		if(animation) {
-			creature.vars.animation;
+			creature.vars.animation = animation;
 		} else {
 			if(creature.vars.facingRight) {
 				creature.vars.animation = EnumState.MOVING_R;
