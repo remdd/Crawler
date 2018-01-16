@@ -133,7 +133,8 @@ var EnumCreatureWeapon = {
 	MINI_KOB_KNIFE: 22,
 	BADBUG_BITE: 23,
 	GIGA_KOB_AXE: 24,
-	DEEMON_BITE: 25
+	DEEMON_BITE: 25,
+	BARON_SWORD: 26
 }
 
 var EnumCreatureProjectile = {
@@ -312,7 +313,8 @@ var EnumObstacle = {
 	FLAME_POT: 60,
 	END_GAME_DOOR: 61,
 	BARONS_THRONE: 62,
-	BARON_BARRIER: 63
+	BARON_BARRIER: 63,
+	GOLD_KEY_DOOR: 64
 }
 
 var EnumDecortype = {

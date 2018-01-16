@@ -1289,7 +1289,127 @@ var creatureWeapons = [
 			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
 		}
 	},
-
+	{
+		name: 'Deemon Bite',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: -1, y: -1},
+		use: function(direction) {
+			if(this.holder.vars.facingRight) {
+				this.currentSprite = this.sprite.frames[0];
+			} else {
+				this.currentSprite = this.sprite.frames[0];
+			}
+			this.swipe(direction);
+			return this.attack;
+		},
+		reset: function() {
+			delete this.vars.rotation;
+			// this.vars.hidden = true;
+			this.vars.attacking = false;
+		},
+		vars: {
+			hidden: true,
+			animTime: 100,								//	Length of time the weapon stays animated after attack
+			attackRate: 400,
+			drawOffset: { x: 0, y: 0 },
+			foreground: false
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 1
+			},
+			frames: [
+				{ x: -1, y: -1},							//	Resting - no sprite
+				{ x: -1, y: -1}							//	Resting - no sprite
+			],
+			restingDrawOffset: {
+				x: 0,
+				y: 0
+			},
+			attackDrawOffset: {
+				x: 0,
+				y: TILE_SIZE * -0.6
+			}
+		},
+		attack: {
+			reach: TILE_SIZE * 0.75,						//	Reach of attack from centre of creature position
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			swipeThickness: 0.85,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: Math.PI / 4,							//	90 degree swipe
+			maxHits: 1									//	Number of contact points per swipe that can successfully resolve as hits
+		}
+	},
+	{
+		name: "The Baron's Sword",
+		lode: EnumLode.FIRE,
+		currentSprite: { x: 26, y: 30},
+		use: function(direction) {
+			playSwish('big');
+			console.log("Attacking!");
+			this.position.y -= 8;
+			this.chop(direction);
+			return this.attack;
+		},
+		reset: function() {
+			this.position.y += 8;
+			delete this.vars.rotation;
+			this.vars.attacking = false;
+		},
+		vars: {
+			animTime: 100,								//	Length of time the weapon stays animated after attack
+			attackRate: 500,							//	Time to rest after attack
+			drawOffset: { x: 0, y: 0 },
+			foreground: true
+		},
+		position: {},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: {
+				x: 0.5,
+				y: 2
+			},
+			frames: [
+				{ x: 26, y: 30 },							//	Right facing
+				{ x: 26.5, y: 30 }						//	Left facing
+			],
+			restingDrawOffset: {
+				x: TILE_SIZE * -5/16,
+				y: TILE_SIZE * -3/16
+			},
+			attackDrawOffset: {
+				x: TILE_SIZE * -0/16,
+				y: TILE_SIZE * -2/16
+			},
+			attackPositionOffset: {
+				x: TILE_SIZE * 0/16,
+				y: TILE_SIZE * 8/16
+			}
+		},
+		attack: {
+			reach: TILE_SIZE,							//	Reach of attack from centre of player object position
+			baseDamage: 2,
+			criticalMax: 3,
+			damagePlayer: true,
+			damageCreatures: false,
+			type: EnumAttack.SWIPE,
+			displayTime: 100,
+			swipeThickness: 0.7,						//	0 -> 1 : 0: thick, 1: thin (nb values must be >0 and <1)
+			lifespan: 1,
+			arc: 1 * Math.PI / 2,
+			maxHits: 1,									//	Number of contact points per swipe that can successfully resolve as hits
+			attackPositionOffset: {
+				x: TILE_SIZE * 0/16,
+				y: TILE_SIZE * 8/16
+			}
+		}
+	},
 
 ];
 

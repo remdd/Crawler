@@ -2537,9 +2537,10 @@ var creatureTemplates = [
 		currentSprite: { x: 12, y: 30},
 		vars: {
 			speed: 1,
-			maxHP: 3,
-			currentHP: 3,
+			maxHP: 5,
+			currentHP: 5,
 			restingWeaponAnimation: true,
+			baronOrbs: 5,
 			score: 1000
 		},
 		sprite: {
@@ -2603,9 +2604,23 @@ var creatureTemplates = [
 			}
 		},
 		deathResponse: function() {
+			session.vars.regenerateBaronDeemons = false;
+			game.creatures.forEach(function(creature) {
+				if(creature.ai.type === EnumAi.DEEMON) {
+					creature.deathResponse();
+				}
+			});
 			this.kill();
 		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BARON_SWORD;
+		},
 		deathDrop: function() {
+			var item = new Item(itemTemplates[EnumItem.GOLD_KEY], this.grid.x, this.grid.y);
+			item.position.x = this.position.x;
+			item.position.y = this.position.y + 2;
+			item.movement.speed = 1;
+			item.movement.direction = getPlayerDirection(this) + Math.PI;
 		}	
 	},
 	{
@@ -2617,7 +2632,8 @@ var creatureTemplates = [
 			maxHP: 1,
 			currentHP: 1,
 			restingWeaponAnimation: false,
-			score: 0
+			score: 0,
+			corpseBox: true
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -2635,12 +2651,14 @@ var creatureTemplates = [
 				{ x: 30, y: 32 },	//	Death 3
 			],
 			animations: [
-				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
-				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
-				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
-				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 4000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 4000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 4000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 4000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
 				[ 600, [200, 400, 600], [6, 7, 8 ] ],									//	Death, facing R
-				[ 600, [200, 400, 600], [6, 7, 8 ] ]									//	Death, facing L
+				[ 600, [200, 400, 600], [6, 7, 8 ] ],									//	Death, facing L
+				[ 1000, [1000], [8]],						//	Dead
+				[ 1000, [1000], [8]]						//	Dead
 			]
 		},
 		box: {
@@ -2656,19 +2674,25 @@ var creatureTemplates = [
 				this.deathResponse();
 			}
 		},
-		deathDrop: function() {
-		},
 		deathResponse: function() {
-			this.kill();
+			if(!this.vars.destroyed) {
+				this.vars.destroyed = true;
+				clearAiAction(this);
+				this.ai.nextAction = 1;														//	Prevent further AI actions
+				session.vars.baronOrbs--;
+				if(session.vars.baronOrbs < 1) {
+					baronEncounter3();
+				}
+			}
 		}
 	},
 	//	DEEMON 1
 	{
 		name: 'Deemon 1',
 		lode: EnumLode.SHADOW,
-		currentSprite: { x: 0, y: 36},
+		currentSprite: { x: -1, y: -1},
 		vars: {
-			speed: 1.5,
+			speed: 1.7,
 			maxHP: 3,
 			currentHP: 3,
 			restingWeaponAnimation: false,
@@ -2710,7 +2734,14 @@ var creatureTemplates = [
 				{ x: 12, y: 37 },	//	Death facing L 4
 				{ x: 13, y: 37 },	//	Death facing L 5
 
-				{ x: -1, y: -1}		//	Dead
+				{ x: -1, y: -1},	//	Dead
+
+				{ x: 14, y: 36 },	//	Appearing, facing R 1
+				{ x: 15, y: 36 },	//	Appearing, facing R 2
+				{ x: 16, y: 36 },	//	Appearing, facing R 3
+				{ x: 14, y: 37 },	//	Appearing, facing L 1
+				{ x: 15, y: 37 },	//	Appearing, facing L 2
+				{ x: 16, y: 37 }	//	Appearing, facing L 3
 			],
 			animations: [
 				[ 200, [100, 200], [ 0, 1] ],							//	Resting, facing R
@@ -2720,7 +2751,11 @@ var creatureTemplates = [
 				[ 600, [100, 200, 300, 400, 500, 600 ], [ 9,10,11,12,13,28 ] ],			//	Death, facing R
 				[ 600, [100, 200, 300, 400, 500, 600 ], [23,24,25,26,27,28 ] ],			//	Death, facing L
 				[ 400, [100, 200, 400], [6 ,7 ,8 ] ],					//	Biting, facing R
-				[ 400, [100, 200, 400], [20,21,22] ]					//	Biting, facing L
+				[ 400, [100, 200, 400], [20,21,22] ],					//	Biting, facing L
+				[ 400, [100, 200, 300, 400], [29,30,31,0 ]],			//	Appearing, facing R				
+				[ 400, [100, 200, 300, 400], [32,33,34,14]],			//	Appearing, facing L				
+				[ 100, [100], [28]],									//	Invisible, facing R		
+				[ 100, [100], [28]]										//	Invisible, facing L		
 			]
 		},
 		box: {
@@ -2745,20 +2780,54 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
+			if(session.vars.regenerateBaronDeemons) {
+				var rand = Math.floor(Math.random() * 2);
+				var deemonType;
+				if(rand < 1) {
+					deemonType = EnumCreature.DEEMON_1;
+				} else {
+					deemonType = EnumCreature.DEEMON_2;
+				}
+				var newDeemon = new Creature(creatureTemplates[deemonType]);
+				var isBlocked = true;
+				while(isBlocked) {
+					var y = 16;
+					var side = Math.floor(Math.random() * 2);
+					if(side < 1) {
+						var x = Math.floor(Math.random() * 6) + 8;
+					} else {
+						var x = Math.floor(Math.random() * 6) + 19;
+					}
+					newDeemon.position.x = x * TILE_SIZE + TILE_SIZE / 2;
+					newDeemon.position.y = y * TILE_SIZE + TILE_SIZE / 2;
+					newDeemon.grid.x = x;
+					newDeemon.grid.y = y;
+					newDeemon.updateBox();
+					if(!(newDeemon.checkIfCollides())) {
+						isBlocked = false;
+					}
+				}
+				newDeemon.type = deemonType;
+				newDeemon.ai.nextAction = 1;
+				newDeemon.ai.endTime = performance.now() + 1;
+				console.log(newDeemon);
+				creatureSounds1.play('summonImp')
+				game.creatures.push(newDeemon);
+			}
 		},
 		deathDrop: function() {
 		},
 		addWeapon: function() {
-			return EnumCreatureWeapon.BADBUG_BITE;
+			return EnumCreatureWeapon.DEEMON_BITE;
 		}	
 	},
 	//	DEEMON 2
 	{
 		name: 'Deemon 2',
 		lode: EnumLode.SHADOW,
-		currentSprite: { x: 0, y: 38},
+		currentSprite: { x: -1, y: -1},
 		vars: {
-			speed: 1.5,
+			speed: 1.7,
 			maxHP: 3,
 			currentHP: 3,
 			restingWeaponAnimation: false,
@@ -2800,7 +2869,14 @@ var creatureTemplates = [
 				{ x: 12, y: 39 },	//	Death facing L 4
 				{ x: 13, y: 39 },	//	Death facing L 5
 
-				{ x: -1, y: -1}		//	Dead
+				{ x: -1, y: -1},	//	Dead
+
+				{ x: 14, y: 38 },	//	Appearing, facing R 1
+				{ x: 15, y: 38 },	//	Appearing, facing R 2
+				{ x: 16, y: 38 },	//	Appearing, facing R 3
+				{ x: 14, y: 39 },	//	Appearing, facing L 1
+				{ x: 15, y: 39 },	//	Appearing, facing L 2
+				{ x: 16, y: 39 }	//	Appearing, facing L 3
 			],
 			animations: [
 				[ 200, [100, 200], [ 0, 1] ],							//	Resting, facing R
@@ -2810,7 +2886,11 @@ var creatureTemplates = [
 				[ 600, [100, 200, 300, 400, 500, 600 ], [ 9,10,11,12,13,28 ] ],			//	Death, facing R
 				[ 600, [100, 200, 300, 400, 500, 600 ], [23,24,25,26,27,28 ] ],			//	Death, facing L
 				[ 400, [100, 200, 400], [6 ,7 ,8 ] ],					//	Biting, facing R
-				[ 400, [100, 200, 400], [20,21,22] ]					//	Biting, facing L
+				[ 400, [100, 200, 400], [20,21,22] ],					//	Biting, facing L
+				[ 400, [100, 200, 300, 400], [29,30,31,0 ]],			//	Appearing, facing R				
+				[ 400, [100, 200, 300, 400], [32,33,34,14]],			//	Appearing, facing L		
+				[ 100, [100], [28]],									//	Invisible, facing R		
+				[ 100, [100], [28]]										//	Invisible, facing L		
 			]
 		},
 		box: {
@@ -2835,11 +2915,45 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
+			if(session.vars.regenerateBaronDeemons) {
+				var rand = Math.floor(Math.random() * 2);
+				var deemonType;
+				if(rand < 1) {
+					deemonType = EnumCreature.DEEMON_1;
+				} else {
+					deemonType = EnumCreature.DEEMON_2;
+				}
+				var newDeemon = new Creature(creatureTemplates[deemonType]);
+				var isBlocked = true;
+				while(isBlocked) {
+					var y = 16;
+					var side = Math.floor(Math.random() * 2);
+					if(side < 1) {
+						var x = Math.floor(Math.random() * 6) + 8;
+					} else {
+						var x = Math.floor(Math.random() * 6) + 19;
+					}
+					newDeemon.position.x = x * TILE_SIZE + TILE_SIZE / 2;
+					newDeemon.position.y = y * TILE_SIZE + TILE_SIZE / 2;
+					newDeemon.grid.x = x;
+					newDeemon.grid.y = y;
+					newDeemon.updateBox();
+					if(!(newDeemon.checkIfCollides())) {
+						isBlocked = false;
+					}
+				}
+				newDeemon.type = deemonType;
+				newDeemon.ai.nextAction = 1;
+				newDeemon.ai.endTime = performance.now() + 1;
+				console.log(newDeemon);
+				creatureSounds1.play('summonImp')
+				game.creatures.push(newDeemon);
+			}
 		},
 		deathDrop: function() {
 		},
 		addWeapon: function() {
-			return EnumCreatureWeapon.BADBUG_BITE;
+			return EnumCreatureWeapon.DEEMON_BITE;
 		}	
 	},
 

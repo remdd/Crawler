@@ -388,7 +388,7 @@ levelGen.generateLastLevel = function() {
 	level.exit.x = 16;
 
 	level.exitRoomContents = function() {
-		new Obstacle(EnumObstacle.DOOR, null, this.origin.y + this.height + 1, this.origin.x + 2);
+		new Obstacle(EnumObstacle.GOLD_KEY_DOOR, null, this.origin.y + this.height + 1, this.origin.x + 2);
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
 		for(var i = 0; i < this.width; i++) {
 			level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.wallFace[4];
@@ -475,6 +475,16 @@ levelGen.generateLastLevel = function() {
 	new Decor(uniqueFloorDecor[3][12].y, uniqueFloorDecor[3][12].x, 20, 16, 0, 0);
 	new Decor(uniqueFloorDecor[3][13].y, uniqueFloorDecor[3][13].x, 45, 16, 0, 0);
 
+	//	Add rug
+	var rug_y = 15;
+	var rug_x = 13;
+	for(var i = 0; i < 5; i++) {
+		for(var j = 0; j < 7; j++) {
+			new Decor(uniqueFloorDecor[4][(7*i)+j].y, uniqueFloorDecor[4][(7*i)+j].x, rug_y + i, rug_x + j, 0, 0);
+		}
+	}
+
+
 	//	Round off corners of Baron's room
 	level.terrainArray[10][5] = 1;
 	level.terrainArray[10][6] = 1;
@@ -512,10 +522,10 @@ levelGen.generateLastLevel = function() {
 	level.creatureArray[12][6] = EnumCreature.BARON_ORB;
 	level.creatureArray[12][26] = EnumCreature.BARON_ORB;
 	level.creatureArray[11][16] = EnumCreature.BARON_ORB;
-	// level.creatureArray[17][13] = EnumCreature.DEEMON_1;
-	// level.creatureArray[17][19] = EnumCreature.DEEMON_1;
-	// level.creatureArray[18][12] = EnumCreature.DEEMON_2;
-	// level.creatureArray[18][20] = EnumCreature.DEEMON_2;
+	level.creatureArray[17][13] = EnumCreature.DEEMON_1;
+	level.creatureArray[17][19] = EnumCreature.DEEMON_1;
+	level.creatureArray[18][12] = EnumCreature.DEEMON_2;
+	level.creatureArray[18][20] = EnumCreature.DEEMON_2;
 
 
 	levelGen.addBasicOverlays();
@@ -537,16 +547,33 @@ levelGen.generateLastLevel = function() {
 }
 
 
-
 baronEncounter = function() {
 	player.vars.immobilized = true;
 
-	game.viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.5);
-	game.viewport_offset_y = Math.floor(player.position.x - CANVAS_HEIGHT * 0.35);
+	fadeOutCanvases(function() {
+		game.viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.5);
+		game.viewport_offset_y = Math.floor(player.position.x - CANVAS_HEIGHT * 0.3);
+		game.redrawBackground = true;
+		fadeInCanvases();
+		reDraw();
+		var line1 = "You have made it!";
+		var line2 = "The Baron stands before you.";
+		var line3 = "You steel yourself for one last fight..."
 
-	var line1 = "You have made it!";
-	var line2 = "The Baron stands before you.";
-	var line3 = "You steel yourself for one last fight..."
+		displayMessage(5000, line1, line2, line3, function() {
+			//	Re-enable player controls on message hide
+			player.vars.immobilized = false;
+		}); 
+	});
+
+}
+
+baronEncounter2 = function() {
+	player.vars.immobilized = true;
+
+	var line1 = "The Baron roars with laughter.";
+	var line2 = '"Did you really think you were going to beat me!?"';
+	var line3 = "It seems he has one more trick up his sleeve..."
 
 	displayMessage(5000, line1, line2, line3, function() {
 		//	Re-enable player controls on message hide
@@ -578,11 +605,30 @@ baronEncounter = function() {
 				obstacle.drawY = obstacle.box.bottomRight.y;
 			}
 		});
+
+		game.creatures.forEach(function(creature) {
+			if(creature.name === "Deemon 1" || creature.name === "Deemon 2") {
+				creature.ai.nextAction = 1;
+			}
+		});
 	}); 
 }
 
-
-
+baronEncounter3 = function() {
+	session.vars.regenerateBaronDeemons = false;
+	level.obstacles.forEach(function(obstacle) {
+		if(obstacle.type === EnumObstacle.BARON_BARRIER) {
+			obstacle.destroy();
+		}
+	});
+	var line1 = "Inconceivable!! But now you will die...";
+	displayMessage(2000, line1);
+	game.creatures.forEach(function(creature) {
+		if (creature.name === "The Baron") {
+			creature.ai.nextAction = 1;
+		}
+	});
+}
 
 
 

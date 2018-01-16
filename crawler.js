@@ -26,6 +26,8 @@ var session = {
 	score: 0,
 	vars: {
 		metBaron: false,
+		baronOrbs: 5,
+		regenerateBaronDeemons: true,
 		musicVol: 0.4,
 		soundVol: 1
 	}
@@ -90,6 +92,23 @@ inViewport = function(x, y) {
 	}
 }
 
+fadeOutCanvases = function(callback) {
+	if(callback && typeof callback === 'function') {
+		$.when($('canvas').fadeOut('slow')).then(function() {
+			callback()
+		});
+	} else {
+		$('canvas').fadeOut('slow');
+	}
+}
+
+fadeInCanvases = function(callback) {
+	if(callback && typeof callback === 'function') {
+		$.when($('canvas').fadeIn('slow')).then(callback());
+	} else {
+		$('canvas').fadeIn('slow');
+	}
+}
 
 //	Player controls
 //	Keyboard input helper object to manage held down keys
@@ -212,7 +231,7 @@ function setUpPlayer() {
 		}
 	}
 	// player.lode = EnumLode.WATER;
-	// new Item(itemTemplates[EnumItem.CRYSTAL_SWORD], player.grid.x-1,player.grid.y);
+	new Item(itemTemplates[EnumItem.CRYSTAL_SWORD], player.grid.x-1,player.grid.y);
 	// new Item(itemTemplates[EnumItem.ACID_HELMET], player.grid.x+1,player.grid.y+1);
 	// new Item(itemTemplates[EnumItem.CRYSTAL_HELMET], player.grid.x+1,player.grid.y+2);
 	// new Item(itemTemplates[EnumItem.SHADOW_HELMET], player.grid.x+1,player.grid.y+3);
@@ -1336,6 +1355,9 @@ function updatePlayer() {
 	if(level.levelNumber === 99 && !session.vars.metBaron && player.grid.y <= 24) {
 		session.vars.metBaron = true;
 		baronEncounter();
+	} else if(level.levelNumber === 99 && !session.vars.metBaron2 && (player.grid.y <= 19 || (player.grid.y <=24 && player.grid.x <= 11) || (player.grid.y <=24 && player.grid.x >= 22))) {
+		session.vars.metBaron2 = true;
+		baronEncounter2();
 	}
 }
 
@@ -2139,6 +2161,21 @@ function draw(interpolationPercentage) {
 	$('#fps').text("FPS: " + MainLoop.getFPS().toFixed(4));
 }
 
+function reDraw() {
+	bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	drawOverlays();
+	drawDecor();
+	drawableCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	drawDrawables();
+	attackCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	drawAttacks();
+	if(master.debugs) {
+		debugCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+		drawDebugCanvas();
+	}
+	$('#fps').text("FPS: " + MainLoop.getFPS().toFixed(4));
+}
+
 function clearCanvases() {
 	$('#exitkeyimg').hide();
 	bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -2238,7 +2275,8 @@ function start(newGame) {
 		session.vars.defaultMushroomFactor = master.defaultMushroomFactor;
 		session.vars.dropFrequency = cloneArray(master.dropFrequency);
 		session.vars.metBaron = false;
-		console.log(session.vars.dropFrequency);
+		session.vars.baronOrbs = 5;
+		session.vars.regenerateBaronDeemons = true;
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
 		// session.prng = new Random(617547);

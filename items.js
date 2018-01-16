@@ -625,6 +625,7 @@ var itemTemplates = [
 		pickup: function() {
 			if(!this.vars.collected) {
 				this.vars.collected = true;
+				player.addItem(this);
 				gameEffects.play('exitKey');
 				console.log("Picking up gold key!");
 				// player.addItem(this);

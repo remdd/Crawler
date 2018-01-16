@@ -1421,6 +1421,20 @@ setAiAction = function(creature) {
 			case EnumAi.DEEMON: {
 				switch(creature.ai.nextAction) {
 					case 0: {
+						ai.rest(creature, 0, 100, 10);		//	Stay invisible
+						break;
+					}
+					case 1: {
+						var rand = Math.floor(Math.random() * 2);
+						if(rand < 1) {
+							ai.rest(creature, 0, 400, 8);		//	Reappear facing R
+						} else {
+							ai.rest(creature, 0, 400, 9);		//	Reappear facing L
+						}
+						creature.ai.nextAction = 2;
+						break;
+					}
+					case 2: {
 						if(getPlayerDistance(creature) < TILE_SIZE * 1 && creature.hasClearPathToPlayer()) {
 							var direction = getPlayerCompassDirection(creature);
 							creature.setFacing(direction);
@@ -1437,38 +1451,12 @@ setAiAction = function(creature) {
 						}
 						break;
 					}
-					case 1: {
-						if(creature.vars.facingRight) {
-							ai.rest(creature, 0, 200, 8);
-						} else {
-							ai.rest(creature, 0, 200, 9);
-						}
-						break;
-					}
-					case 2: {
-						console.log("Reanimating");
-						if(creature.checkIfCollides()) {
-							creature.ai.nextAction = 3;
-						} else {
-							creature.vars.moveThroughColliders = false;
-							creature.vars.dead = false;
-							creature.vars.currentHP = creature.vars.maxHP;
-							if(creature.vars.facingRight) {
-								ai.rest(creature, 0, 600, 10);
-							} else {
-								ai.rest(creature, 0, 600, 11);
-							}
-							creature.ai.nextAction = 0;
-						}
-						break;
-					}
 					case 3: {
 						if(creature.vars.facingRight) {
 							ai.rest(creature, 0, 200, 8);
 						} else {
 							ai.rest(creature, 0, 200, 9);
 						}
-						creature.ai.nextAction = 2;
 						break;
 					}
 					default: {
@@ -1478,7 +1466,71 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.BARON: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						ai.rest(creature, 0, 400);
+						break;
+					}
+					case 1: {
+						//	Next action not specified
+						if(getPlayerDistance(creature) < creature.weapon.attack.reach * 2 && creature.hasClearPathToPlayer()) {						//	If player is within 3x attack reach...
+							ai.moveTowardsPlayer(creature, 100, 100, 2.5);
+							creature.ai.nextAction = 3;
+						} else {
+							var rand = Math.floor(Math.random() * 2);
+							var direction;
+							if(rand < 1) {
+								direction = getPlayerDirection(creature) + Math.PI / 4;
+							} else {
+								direction = getPlayerDirection(creature) - Math.PI / 4;
+							}
+							ai.moveInDirection(creature, 250, 250, 1, direction);
+						}
+						break;
+					}
+					case 2: {
+						ai.moveAwayFromPlayer(creature, 250, 250, 1.5);												//	...move away from player for 250-500ms, at 1.5x speed
+						creature.ai.nextAction = 1;
+						break;
+					}
+					case 3: {
+						var direction = getPlayerDirection(creature);
+						ai.attack(creature, 0, creature.weapon.vars.attackRate, direction, Math.PI / 8);
+						if(rand < 1) {
+							creature.ai.nextAction = 1;
+						} else {
+							creature.ai.nextAction = 2;
+						}
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
 
+			case EnumAi.BARON_ORB: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						ai.rest(creature, 0, 4000);
+						break;
+					}
+					case 1: {
+						ai.rest(creature, 0, 600, 4);
+						creature.ai.nextAction = 2;
+						break;
+					}
+					case 2: {
+						ai.rest(creature, 0, 1000, 6);
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
 
 			default: {
 				break;
