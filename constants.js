@@ -223,7 +223,8 @@ var EnumBoxtype = {
 	OBSTACLE: 3,
 	ITEM: 4,
 	PICKUP: 5,
-	FIREBALL: 6
+	FIREBALL: 6,
+	TALL_OBSTACLE: 7
 }
 
 var EnumRoomtype = {
@@ -314,7 +315,9 @@ var EnumObstacle = {
 	END_GAME_DOOR: 61,
 	BARONS_THRONE: 62,
 	BARON_BARRIER: 63,
-	GOLD_KEY_DOOR: 64
+	GOLD_KEY_DOOR: 64,
+	ENTRANCE_STAIRS: 65,
+	KEY_DOOR: 66
 }
 
 var EnumDecortype = {

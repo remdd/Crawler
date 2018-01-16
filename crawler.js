@@ -2,7 +2,7 @@ var level;											//	Current level object, loaded from levels.js
 
 var master = {
 	interactDistance: 15,							//	Distance at which player can interact with interactables
-	defaultDropFrequency: 5,						//	Average number of default death drops per pickup drop
+	defaultDropFrequency: 4,						//	Average number of default death drops per pickup drop
 	defaultMushroomFactor: 90000,					//	Multiplier for default mushroom effect duration
 	defaultMushroomMin: 30000,						//	Base minimum default mushroom effect duration
 	dropFrequency: [
@@ -14,7 +14,16 @@ var master = {
 		[EnumItem.LOOT_BLUE_JEWEL, 2],
 		[EnumItem.LOOT_GREEN_JEWEL, 1]
 	],
-	debugs: false
+	debugs: false,
+	flags: {
+		metBaron: false,
+		baronOrbs: 5,
+		regenerateBaronDeemons: true,
+		lastLevelUrks: 0,
+		lastLevelSkeltons: 0,
+		lastLevelKobs: 0,
+		lastLevelOgrs: 0
+	}
 }
 
 var session = {
@@ -25,11 +34,8 @@ var session = {
 	loadingLevel: false,
 	score: 0,
 	vars: {
-		metBaron: false,
-		baronOrbs: 5,
-		regenerateBaronDeemons: true,
 		musicVol: 0.4,
-		soundVol: 1
+		soundVol: 1,
 	}
 }
 
@@ -920,6 +926,9 @@ Creature.prototype.setFacing = function(direction) {
 	}
 }
 Creature.prototype.kill = function() {
+	if(level.levelNumber === 99) {
+		checkIfDropsExitKey();
+	}
 	if(!this.vars.dead) {
 		this.vars.dead = true;
 		addScore(this.vars.score);
@@ -943,7 +952,68 @@ Creature.prototype.kill = function() {
 		}
 		this.vars.deathTime = performance.now() + this.sprite.animations[this.vars.animation][0] - 100;		//	Set deathTime to be current time plus duration of death animation minus 100ms
 	}
+	//	On final level, check whether to give exit key death drop to a surviving creature
 }
+
+function checkIfDropsExitKey() {
+	session.flags.lastLevelUrks = 0;
+	session.flags.lastLevelSkeltons = 0;
+	session.flags.lastLevelKobs = 0;
+	session.flags.lastLevelOgrs = 0;
+	game.creatures.forEach(function(creature) {
+		if(creature.grid.y >= level.urk_y -2) {
+			session.flags.lastLevelUrks++;
+		}
+		if(creature.grid.y >= level.skelton_y -2) {
+			session.flags.lastLevelSkeltons++;
+		}
+		if(creature.grid.y >= level.kob_y -2) {
+			session.flags.lastLevelKobs++;
+		}
+		if(creature.grid.y >= level.ogr_y -2) {
+			session.flags.lastLevelOgrs++;
+		}
+	});
+	if(session.flags.lastLevelUrks < 2 && !session.flags.lastLevelUrkKey) {
+		game.creatures.forEach(function(creature) {
+			if(creature.grid.y >= level.urk_y -2) {
+				creature.deathDrop = keyDrop;
+			}
+			session.flags.lastLevelUrkKey = true;
+		});
+	} else if(session.flags.lastLevelSkeltons < 2 && !session.flags.lastLevelSkeltonKey) {
+		game.creatures.forEach(function(creature) {
+			if(creature.grid.y >= level.skelton_y -2) {
+				creature.deathDrop = keyDrop;
+			}
+			session.flags.lastLevelSkeltonKey = true;
+		});
+	} else if(session.flags.lastLevelKobs < 2 && !session.flags.lastLevelKobKey) {
+		game.creatures.forEach(function(creature) {
+			if(creature.grid.y >= level.kob_y -2) {
+				creature.deathDrop = keyDrop;
+			}
+			session.flags.lastLevelKobKey = true;
+		});
+	} else if(session.flags.lastLevelOgrs < 2 && !session.flags.lastLevelOgrKey) {
+		game.creatures.forEach(function(creature) {
+			if(creature.grid.y >= level.ogr_y -2) {
+				creature.deathDrop = keyDrop;
+			}
+			session.flags.lastLevelOgrKey = true;
+		});
+	}
+}
+
+function keyDrop() {
+	var item = new Item(itemTemplates[EnumItem.EXIT_KEY], this.grid.x, this.grid.y);
+	item.position.x = this.position.x;
+	item.position.y = this.position.y + 2;
+	item.movement.speed = 1;
+	item.movement.direction = getPlayerDirection(this) + Math.PI;
+}
+
+
 Creature.prototype.hasClearPathToPlayer = function() {
 	var x1, x2, y1, y2;
 	if(this.grid.x > player.grid.x) {
@@ -1352,11 +1422,11 @@ function updatePlayer() {
 	}
 	player.animate();
 	player.updateGear();
-	if(level.levelNumber === 99 && !session.vars.metBaron && player.grid.y <= 24) {
-		session.vars.metBaron = true;
+	if(level.levelNumber === 99 && !session.flags.metBaron && player.grid.y <= 24) {
+		session.flags.metBaron = true;
 		baronEncounter();
-	} else if(level.levelNumber === 99 && !session.vars.metBaron2 && (player.grid.y <= 19 || (player.grid.y <=24 && player.grid.x <= 11) || (player.grid.y <=24 && player.grid.x >= 22))) {
-		session.vars.metBaron2 = true;
+	} else if(level.levelNumber === 99 && !session.flags.metBaron2 && (player.grid.y <= 19 || (player.grid.y <=24 && player.grid.x <= 11) || (player.grid.y <=24 && player.grid.x >= 22))) {
+		session.flags.metBaron2 = true;
 		baronEncounter2();
 	}
 }
@@ -2190,11 +2260,6 @@ function endLevel() {
 	player.effects.forEach(function(effect) {
 		effect.endTime = 1;
 	});
-	//	Get index of exit key in player's items and remove it
-	var keyIndex = player.items.map(function(item) { 
-		return item.name;
-	}).indexOf('Exit Key');
-	player.items.splice(keyIndex, 1);
 	//	Stop main loop
 	MainLoop.stop();
  	bgMusic.fade(session.vars.musicVol, 0, 2000);
@@ -2270,13 +2335,12 @@ function start(newGame) {
 	if(newGame) {
 		session.levelNumber = 1;
 		session.score = 0;
+		session.flags = {};
+		Object.assign(session.flags, master.flags);
 		session.vars.defaultDropFrequency = master.defaultDropFrequency;
 		session.vars.defaultMushroomMin = master.defaultMushroomMin;
 		session.vars.defaultMushroomFactor = master.defaultMushroomFactor;
 		session.vars.dropFrequency = cloneArray(master.dropFrequency);
-		session.vars.metBaron = false;
-		session.vars.baronOrbs = 5;
-		session.vars.regenerateBaronDeemons = true;
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
 		// session.prng = new Random(617547);

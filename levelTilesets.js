@@ -152,6 +152,9 @@ var levelTilesets = [
 		],
 		baronBarrier: [
 			{y:12,x:3},{y:12,x:4},{y:12,x:5},{y:12,x:6},{y:12,x:7},{y:12,x:8},{y:12,x:9}
+		],
+		entranceStairs: [
+			{y:12,x:3}
 		]
 	}
 ];

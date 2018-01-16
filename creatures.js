@@ -47,7 +47,8 @@ var creatureTemplates = [
 			type: EnumAi.GREEN_GOBLIN,
 		},
 		movement: {
-			bounceOff: true
+			bounceOff: true,
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -380,7 +381,7 @@ var creatureTemplates = [
 			height: 16
 		},
 		movement: {
-			bounceOff: true
+			bounceRandom: true
 		},
 		ai: {
 			type: EnumAi.CAMP_VAMP,
@@ -538,7 +539,7 @@ var creatureTemplates = [
 			height: 15
 		},
 		movement: {
-			bounceOff: true
+			bounceRandom: true
 		},
 		ai: {
 			type: EnumAi.URK,
@@ -702,6 +703,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.KOB,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -770,6 +774,9 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumAi.MUMI,
+		},
+		movement: {
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -841,6 +848,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.SNEAKY_SKELTON,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -904,11 +914,14 @@ var creatureTemplates = [
 			]
 		},
 		box: {
-			width: 16, 
+			width: 10, 
 			height: 14
 		},
 		ai: {
 			type: EnumAi.BLUE_SQUARK,
+		},
+		movement: {
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -1075,6 +1088,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.ZOMBI_MASTER,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		addWeapon: function() {
 			return EnumCreatureWeapon.ZOMBI_MASTER_STAFF;
 		},
@@ -1223,6 +1239,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.URK_VETERAN,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -1295,6 +1314,9 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumAi.URK_SHAMAN,
+		},
+		movement: {
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -1431,15 +1453,23 @@ var creatureTemplates = [
 				{ x: 26, y: 14 },	//	Death facing L 1
 				{ x: 27.5, y: 14 },	//	Death facing L 2
 				{ x: 29, y: 14 },	//	Death facing L 3
-				{ x: 30.5, y: 14 }	//	Death facing L 4
+				{ x: 30.5, y: 14 },	//	Death facing L 4
+
+				{ x: 28, y: 16 },	//	Roaring facing R 1
+				{ x: 29.5, y: 16 },	//	Roaring facing R 2
+				{ x: 28, y: 18 },	//	Roaring facing L 1
+				{ x: 29.5, y: 18 },	//	Roaring facing L 2
+
 			],
 			animations: [
 				[ 1000, [600, 1000], [0, 1] ],								//	Resting, facing R
 				[ 1000, [600, 1000], [10, 11] ],							//	Resting, facing L
-				[ 600, [150, 300, 450, 600], [2, 3, 4, 5 ] ],				//	Moving, facing R
-				[ 600, [150, 300, 450, 600], [12,13,14,15] ],				//	Moving, facing L
+				[ 600, [150, 300, 450, 600], [2, 5, 3, 4 ] ],				//	Moving, facing R
+				[ 600, [150, 300, 450, 600], [12,15,13,14] ],				//	Moving, facing L
 				[ 2500, [400, 1400, 2000, 2500], [6, 7, 8, 9] ],			//	Death, facing R
-				[ 2500, [400, 1400, 2000, 2500], [16,17,18,19] ]			//	Death, facing L
+				[ 2500, [400, 1400, 2000, 2500], [16,17,18,19] ],			//	Death, facing L
+				[ 1000, [600, 1000], [20, 21] ],							//	Roaring, facing R
+				[ 1000, [600, 1000], [22, 23] ]								//	Roaring, facing L
 			]
 		},
 		box: {
@@ -1448,6 +1478,9 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumAi.URK_VETERAN,
+		},
+		movement: {
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -1567,6 +1600,9 @@ var creatureTemplates = [
 		ai: {
 			type: EnumAi.BLACK_WIZ,
 		},
+		movement: {
+			bounceRandom: true
+		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
 			if(this.vars.currentHP <= 0) {
@@ -1667,6 +1703,9 @@ var creatureTemplates = [
 		},
 		ai: {
 			type: EnumAi.RED_WIZ,
+		},
+		movement: {
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -1908,7 +1947,7 @@ var creatureTemplates = [
 			type: EnumAi.GRIMLIN,
 		},
 		movement: {
-			bounceOff: true
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -2120,7 +2159,7 @@ var creatureTemplates = [
 			type: EnumAi.GREY_GOBLIN,
 		},
 		movement: {
-			bounceOff: true
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -2188,7 +2227,7 @@ var creatureTemplates = [
 			height: 15
 		},
 		movement: {
-			bounceOff: true
+			bounceRandom: true
 		},
 		ai: {
 			type: EnumAi.URK_VETERAN,
@@ -2258,6 +2297,9 @@ var creatureTemplates = [
 		box: {
 			width: 8, 
 			height: 11
+		},
+		movement: {
+			bounceRandom: true
 		},
 		ai: {
 			type: EnumAi.KOB,
@@ -2335,6 +2377,9 @@ var creatureTemplates = [
 		box: {
 			width: 20, 
 			height: 30
+		},
+		movement: {
+			bounceRandom: true
 		},
 		ai: {
 			type: EnumAi.URK_VETERAN,
@@ -2420,7 +2465,7 @@ var creatureTemplates = [
 			type: EnumAi.BADBUG,
 		},
 		movement: {
-			bounceOff: true
+			bounceRandom: true
 		},
 		inflictDamage: function(damage) {
 			this.vars.currentHP -= damage;
@@ -2541,7 +2586,7 @@ var creatureTemplates = [
 			currentHP: 5,
 			restingWeaponAnimation: true,
 			baronOrbs: 5,
-			score: 1000
+			score: 2500
 		},
 		sprite: {
 			spriteSheet: monsterSprites,
@@ -2591,6 +2636,9 @@ var creatureTemplates = [
 			width: 10, 
 			height: 14
 		},
+		movement: {
+			bounceRandom: true
+		},
 		ai: {
 			type: EnumAi.BARON,
 		},
@@ -2604,7 +2652,7 @@ var creatureTemplates = [
 			}
 		},
 		deathResponse: function() {
-			session.vars.regenerateBaronDeemons = false;
+			session.flags.regenerateBaronDeemons = false;
 			game.creatures.forEach(function(creature) {
 				if(creature.ai.type === EnumAi.DEEMON) {
 					creature.deathResponse();
@@ -2679,8 +2727,8 @@ var creatureTemplates = [
 				this.vars.destroyed = true;
 				clearAiAction(this);
 				this.ai.nextAction = 1;														//	Prevent further AI actions
-				session.vars.baronOrbs--;
-				if(session.vars.baronOrbs < 1) {
+				session.flags.baronOrbs--;
+				if(session.flags.baronOrbs < 1) {
 					baronEncounter3();
 				}
 			}
@@ -2780,7 +2828,7 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
-			if(session.vars.regenerateBaronDeemons) {
+			if(session.flags.regenerateBaronDeemons) {
 				var rand = Math.floor(Math.random() * 2);
 				var deemonType;
 				if(rand < 1) {
@@ -2915,7 +2963,7 @@ var creatureTemplates = [
 		},
 		deathResponse: function() {
 			this.kill();
-			if(session.vars.regenerateBaronDeemons) {
+			if(session.flags.regenerateBaronDeemons) {
 				var rand = Math.floor(Math.random() * 2);
 				var deemonType;
 				if(rand < 1) {

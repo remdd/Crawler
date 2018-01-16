@@ -387,6 +387,11 @@ levelGen.generateLastLevel = function() {
 	level.exit.y = 3;
 	level.exit.x = 16;
 
+	level.urk_y = 107;
+	level.skelton_y = 88;
+	level.kob_y = 71;
+	level.ogr_y = 52;
+
 	level.exitRoomContents = function() {
 		new Obstacle(EnumObstacle.GOLD_KEY_DOOR, null, this.origin.y + this.height + 1, this.origin.x + 2);
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
@@ -396,24 +401,171 @@ levelGen.generateLastLevel = function() {
 		new Obstacle(EnumObstacle.END_GAME_DOOR, null, this.origin.y -2, this.origin.x + 2);
 	};
 
-	level.playerStart.y = 34;
-	level.playerStart.x = 16;
+	// level.playerStart.y = 76;
 
 
 	//	Set up special rooms
-	var startRoom = new Room(123, 14, 5, 5, 'start', level.startRoomContents);
+	var startRoom = new Room(123, 14, 5, 5, 'start', function() {
+		new Obstacle(EnumObstacle.ENTRANCE_STAIRS, null, this.origin.y-1, this.origin.x);
+		new Obstacle(EnumObstacle.DOOR, null, this.origin.y-2, 16);
+	});
 	var bossRoom = new Room(10, 5, 15, 23, 'boss', level.bossRoomContents);
 	var exitRoom = new Room(3, 14, 4, 5, 'exit', level.exitRoomContents);
 
-	var skeltonRoom = new Room(107, 10, 9, 13, 'skeltonRoom');
-	var urkRoom = new Room(88, 10, 11, 13, 'urkRoom');
-	var kobRoom = new Room(71, 11, 9, 11, 'kobRoom');
-	var ogrRoom = new Room(52, 9, 11, 15, 'ogrRoom');
+	var urkRoom = new Room(level.urk_y, 10, 9, 13, 'urkRoom', function() {
+		new Obstacle(EnumObstacle.DOOR, null, this.origin.y + this.height, 16);
+		new Obstacle(EnumObstacle.KEY_DOOR, null, this.origin.y - 2, 16);
+		new Obstacle(EnumObstacle.WEAPON_RACK, this);
+		new Obstacle(EnumObstacle.MEAT_RACK, this);
+		new Obstacle(EnumObstacle.SPIT, this);
+		new Obstacle(EnumObstacle.FILTH_BUCKET, this);
+		new Obstacle(EnumObstacle.FILTH_BUCKET, this);
+		this.addFloorPatch(EnumFloorpatch.MUD_POOL);
+		this.addStoreRoomObstacles(4);
+		this.addFloorDecor(5);
+		this.addCreature(EnumCreature.URK_SHAMAN);
+		this.addCreature(EnumCreature.HULKING_URK);
+		this.addCreature(EnumCreature.URK_VETERAN);
+		this.addCreature(EnumCreature.URK);
+		this.addCreature(EnumCreature.URK_WARRIOR);
+		this.addCreature(EnumCreature.GREEN_GOBLIN);
+	});
+	var skeltonRoom = new Room(level.skelton_y, 10, 11, 13, 'skeltonRoom', function() {
+		this.addFloor(level.tiles.greyPavedFloor);
+		this.replaceWalls(level.tiles.greyWall, 4);
+		new Obstacle(EnumObstacle.DOOR, null, this.origin.y + this.height, 16);
+		new Obstacle(EnumObstacle.KEY_DOOR, null, this.origin.y - 2, 16);
+		new Obstacle(EnumObstacle.WARRIOR_STATUE, null, this.origin.y + 1, 12, 1, true);
+		new Obstacle(EnumObstacle.WARRIOR_STATUE, null, this.origin.y + 1, 20, 2, true);
+		new Obstacle(EnumObstacle.STONE_PILLAR, null, this.origin.y + 3, 14, 1, true);
+		new Obstacle(EnumObstacle.STONE_PILLAR, null, this.origin.y + 3, 18, 1, true);
+		new Obstacle(EnumObstacle.DRAGON_STATUE, null, this.origin.y + 5, 12, 2, true);
+		new Obstacle(EnumObstacle.DRAGON_STATUE, null, this.origin.y + 5, 19.5, 1, true);
+		new Obstacle(EnumObstacle.STONE_PILLAR, null, this.origin.y + 6, 14, 1, true);
+		new Obstacle(EnumObstacle.STONE_PILLAR, null, this.origin.y + 6, 18, 1, true);
+		new Obstacle(EnumObstacle.WARRIOR_STATUE, null, this.origin.y + this.height - 3, 12, 1, true);
+		new Obstacle(EnumObstacle.WARRIOR_STATUE, null, this.origin.y + this.height - 3, 20, 2, true);
+		new Obstacle(EnumObstacle.COFFIN, null, this.origin.y + 4, 16);
+		this.addFloorDecor(5, [EnumDecortype.BONES]);
+		this.addCreature(EnumCreature.CAMP_VAMP);
+		this.addCreature(EnumCreature.SNEAKY_SKELTON);
+		this.addCreature(EnumCreature.SNEAKY_SKELTON);
+		this.addCreature(EnumCreature.SNEAKY_SKELTON);
+		this.addCreature(EnumCreature.MUMI);
+		this.addCreature(EnumCreature.MUMI);
+	});
+	var kobRoom = new Room(level.kob_y, 11, 9, 11, 'kobRoom', function() {
+		this.addFloor(level.tiles.pavedFloor);
+		this.addFloorDecor(4);
+		new Obstacle(EnumObstacle.DOOR, null, this.origin.y + this.height, 16);
+		new Obstacle(EnumObstacle.KEY_DOOR, null, this.origin.y - 2, 16);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 1, 13);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 1, 19);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 5, 13);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 5, 19);
+		this.addCreature(EnumCreature.WATER_ELEMENTAL);
+		this.addCreature(EnumCreature.FIRE_ELEMENTAL);
+		this.addCreature(EnumCreature.GIGA_KOB);
+		this.addCreature(EnumCreature.KOB);
+		this.addCreature(EnumCreature.KOB);
+		this.addCreature(EnumCreature.MINI_KOB);
+		this.addCreature(EnumCreature.MINI_KOB);
+		this.addCreature(EnumCreature.MINI_KOB);
+	});
+	var ogrRoom = new Room(level.ogr_y, 9, 11, 15, 'ogrRoom', function() {
+		this.addFloorDecor(4);
+		this.addFloorPatch(EnumFloorpatch.LIGHT_RED, 3, 5, 8, 5);
+		new Obstacle(EnumObstacle.DOOR, null, this.origin.y + this.height, 16);
+		new Obstacle(EnumObstacle.KEY_DOOR, null, this.origin.y - 2, 16);
+		new Obstacle(EnumObstacle.MONOLITH, null, this.origin.y + 5, 16);
+		new Obstacle(EnumObstacle.MONOLITH, null, this.origin.y + 5, 6);
+		new Obstacle(EnumObstacle.MONOLITH, null, this.origin.y + 5, 26);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 1, 13);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 1, 19);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 4, 13);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 4, 19);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 7, 13);
+		new Obstacle(EnumObstacle.COLUMN, null, this.origin.y + 7, 19);
+		new Obstacle(EnumObstacle.FLAME_POT, null, this.origin.y, 9.75, null, true);
+		new Obstacle(EnumObstacle.FLAME_POT, null, this.origin.y, 23, null, true);
+		new Obstacle(EnumObstacle.FILTH_BUCKET, null, this.origin.y + 3, 16);
+		this.addCreature(EnumCreature.OGR);
+		this.addCreature(EnumCreature.OGR);
+		this.addCreature(EnumCreature.BLUE_SQUARK);
+		this.addCreature(EnumCreature.BLUE_SQUARK);
+	});
 
+	//	Add items
+	level.itemArray[120][16] = EnumItem.GOLD_HEART;
+	level.itemArray[103][16] = EnumItem.GOLD_HEART;
+	level.itemArray[84][16] = EnumItem.GOLD_HEART;
+	level.itemArray[67][16] = EnumItem.GOLD_HEART;
+	level.itemArray[48][16] = EnumItem.GOLD_HEART;
 
+	//	Set up central corridor through level
 	for(var i = 3; i < level.terrainArray.length - 2; i++) {
 		level.terrainArray[i][16] = 0;
 	}
+
+	//	Carve out Kob room annexes
+	level.terrainArray[level.kob_y+2][10] = 0;
+	level.terrainArray[level.kob_y+2][9] = 0;
+	level.terrainArray[level.kob_y+3][9] = 0;
+	level.terrainArray[level.kob_y+4][9] = 0;
+	level.terrainArray[level.kob_y+5][9] = 0;
+	level.terrainArray[level.kob_y+6][9] = 0;
+	level.terrainArray[level.kob_y+3][8] = 0;
+	level.terrainArray[level.kob_y+4][8] = 0;
+	level.terrainArray[level.kob_y+5][8] = 0;
+	level.terrainArray[level.kob_y+6][10] = 0;
+	level.terrainArray[level.kob_y+2][22] = 0;
+	level.terrainArray[level.kob_y+2][23] = 0;
+	level.terrainArray[level.kob_y+3][23] = 0;
+	level.terrainArray[level.kob_y+4][23] = 0;
+	level.terrainArray[level.kob_y+5][23] = 0;
+	level.terrainArray[level.kob_y+6][23] = 0;
+	level.terrainArray[level.kob_y+3][24] = 0;
+	level.terrainArray[level.kob_y+4][24] = 0;
+	level.terrainArray[level.kob_y+5][24] = 0;
+	level.terrainArray[level.kob_y+6][22] = 0;
+	//	Carve out Ogr room annexes
+	level.terrainArray[level.ogr_y+4][5] = 0;
+	level.terrainArray[level.ogr_y+4][6] = 0;
+	level.terrainArray[level.ogr_y+4][7] = 0;
+	level.terrainArray[level.ogr_y+5][5] = 0;
+	level.terrainArray[level.ogr_y+5][6] = 0;
+	level.terrainArray[level.ogr_y+5][7] = 0;
+	level.terrainArray[level.ogr_y+6][5] = 0;
+	level.terrainArray[level.ogr_y+6][6] = 0;
+	level.terrainArray[level.ogr_y+6][7] = 0;
+	level.terrainArray[level.ogr_y+7][5] = 0;
+	level.terrainArray[level.ogr_y+7][6] = 0;
+	level.terrainArray[level.ogr_y+7][7] = 0;
+	level.terrainArray[level.ogr_y+8][6] = 0;
+	level.terrainArray[level.ogr_y+8][7] = 0;
+	level.terrainArray[level.ogr_y+8][8] = 0;
+	level.terrainArray[level.ogr_y+9][6] = 0;
+	level.terrainArray[level.ogr_y+9][7] = 0;
+	level.terrainArray[level.ogr_y+9][8] = 0;
+
+	level.terrainArray[level.ogr_y+4][27] = 0;
+	level.terrainArray[level.ogr_y+4][26] = 0;
+	level.terrainArray[level.ogr_y+4][25] = 0;
+	level.terrainArray[level.ogr_y+5][27] = 0;
+	level.terrainArray[level.ogr_y+5][26] = 0;
+	level.terrainArray[level.ogr_y+5][25] = 0;
+	level.terrainArray[level.ogr_y+6][27] = 0;
+	level.terrainArray[level.ogr_y+6][26] = 0;
+	level.terrainArray[level.ogr_y+6][25] = 0;
+	level.terrainArray[level.ogr_y+7][27] = 0;
+	level.terrainArray[level.ogr_y+7][26] = 0;
+	level.terrainArray[level.ogr_y+7][25] = 0;
+	level.terrainArray[level.ogr_y+8][26] = 0;
+	level.terrainArray[level.ogr_y+8][25] = 0;
+	level.terrainArray[level.ogr_y+8][24] = 0;
+	level.terrainArray[level.ogr_y+9][26] = 0;
+	level.terrainArray[level.ogr_y+9][25] = 0;
+	level.terrainArray[level.ogr_y+9][24] = 0;
 
 	//	Set up stair corridor leading to Baron's room
 	for(var i = 25; i < 45; i++) {
@@ -484,7 +636,6 @@ levelGen.generateLastLevel = function() {
 		}
 	}
 
-
 	//	Round off corners of Baron's room
 	level.terrainArray[10][5] = 1;
 	level.terrainArray[10][6] = 1;
@@ -513,8 +664,7 @@ levelGen.generateLastLevel = function() {
 	new Obstacle(EnumObstacle.COLUMN, null, 12, 22, null, true);
 	new Obstacle(EnumObstacle.COLUMN, null, 12, 10, null, true);
 	new Obstacle(EnumObstacle.COLUMN, null, 11, 19, null, true);
-	new Obstacle(EnumObstacle.COLUMN, null, 11, 13, null, true);
-	
+	new Obstacle(EnumObstacle.COLUMN, null, 11, 13, null, true);	
 	//	Add Baron, Baron Orbs, Deemons
 	level.creatureArray[17][16] = EnumCreature.BARON;
 	level.creatureArray[21][6] = EnumCreature.BARON_ORB;
@@ -526,7 +676,6 @@ levelGen.generateLastLevel = function() {
 	level.creatureArray[17][19] = EnumCreature.DEEMON_1;
 	level.creatureArray[18][12] = EnumCreature.DEEMON_2;
 	level.creatureArray[18][20] = EnumCreature.DEEMON_2;
-
 
 	levelGen.addBasicOverlays();
 
@@ -615,7 +764,7 @@ baronEncounter2 = function() {
 }
 
 baronEncounter3 = function() {
-	session.vars.regenerateBaronDeemons = false;
+	session.flags.regenerateBaronDeemons = false;
 	level.obstacles.forEach(function(obstacle) {
 		if(obstacle.type === EnumObstacle.BARON_BARRIER) {
 			obstacle.destroy();
@@ -2140,13 +2289,30 @@ Room.prototype.checkIfFits = function() {
 	return true;
 }
 //	Adds a variable-sized patch to the floor, leaving at least 1 tile of clearance at top, left & right 
-Room.prototype.addFloorPatch = function(type) {
+Room.prototype.addFloorPatch = function(type, origin_y, origin_x, size_y, size_x) {
 	var minHeight = 2;
 	var minWidth = 2;
-	var height = Math.floor(session.prng.nextFloat() * (this.height - 3)) + minHeight;
-	var width = Math.floor(session.prng.nextFloat() * (this.width - 4)) + minWidth;
-	var offset_y = Math.floor(session.prng.nextFloat() * (this.height - 2 - height)) + 2;
-	var offset_x = Math.floor(session.prng.nextFloat() * (this.width - 2 - width)) + 1;
+	var height, width, offset_y, offset_x;
+	if(size_y) {
+		height = size_y;
+	} else {
+		height = Math.floor(session.prng.nextFloat() * (this.height - 3)) + minHeight;
+	}
+	if(size_x) {
+		width = size_x;
+	} else {
+		width = Math.floor(session.prng.nextFloat() * (this.width - 4)) + minWidth;
+	}
+	if(origin_y) {
+		offset_y = origin_y;
+	} else {
+		offset_y = Math.floor(session.prng.nextFloat() * (this.height - 2 - height)) + 2;
+	}
+	if(origin_x) {
+		offset_x = origin_x;
+	} else {
+		offset_x = Math.floor(session.prng.nextFloat() * (this.width - 2 - width)) + 1;
+	}
 	var origin = {
 		y: this.origin.y + offset_y,
 		x: this.origin.x + offset_x
