@@ -25,6 +25,7 @@ var session = {
 	loadingLevel: false,
 	score: 0,
 	vars: {
+		metBaron: false,
 		musicVol: 0.4,
 		soundVol: 1
 	}
@@ -226,7 +227,8 @@ function setUpCreatures() {
 	// 		level.creatureArray[i][j] = undefined;
 	// 	}
 	// };
-	// level.creatureArray[player.grid.y+2][player.grid.x+1] = EnumCreature.GIGA_KOB;
+	// level.creatureArray[player.grid.y+2][player.grid.x] = EnumCreature.DEEMON_1;
+	// level.creatureArray[player.grid.y+2][player.grid.x+1] = EnumCreature.DEEMON_2;
 	// level.creatureArray[player.grid.y][player.grid.x+1] = EnumCreature.BADBUG;
 	// level.creatureArray[player.grid.y][player.grid.x+2] = EnumCreature.BADBUG;
 	// level.creatureArray[player.grid.y+1][player.grid.x+1] = EnumCreature.BADBUG;
@@ -1206,6 +1208,7 @@ function updateDrawables() {
 	game.drawOnTop.length = 0;
 	game.drawables.push(player);
 	game.creatures.forEach(function(creature) {
+		creature.drawY = creature.box.bottomRight.y;
 		if(inViewport(creature.position.x, creature.position.y)) {
 			if(creature.vars.foreground) {
 				game.drawOnTop.push(creature);
@@ -1272,15 +1275,20 @@ function updatePlayer() {
 		}
 	} else {
 		var moving = player.vars.moving;
-		if(Key.isDown(Key.MOVE_UP)) { player.move(Math.PI * 1.5, player.vars.speed); player.vars.moving = true; };
-		if(Key.isDown(Key.MOVE_DOWN)) { player.move(Math.PI * 0.5, player.vars.speed); player.vars.moving = true; }
-		if(Key.isDown(Key.MOVE_LEFT)) { player.move(Math.PI * 1, player.vars.speed); player.vars.moving = true; if(player.vars.facingRight) { player.vars.facingRight = false }}
-		if(Key.isDown(Key.MOVE_RIGHT)) { player.move(0, player.vars.speed); player.vars.moving = true; if(!player.vars.facingRight) { player.vars.facingRight = true }}
 
-		if(Key.isDown(Key.ATTACK_UP)) { player.attack(Math.PI * 1.5); }
-		if(Key.isDown(Key.ATTACK_DOWN)) { player.attack(Math.PI / 2); }
-		if(Key.isDown(Key.ATTACK_LEFT)) { player.attack(Math.PI); }
-		if(Key.isDown(Key.ATTACK_RIGHT)) { player.attack(0); }
+		if(!player.vars.immobilized) {
+			if(Key.isDown(Key.MOVE_UP)) { player.move(Math.PI * 1.5, player.vars.speed); player.vars.moving = true; };
+			if(Key.isDown(Key.MOVE_DOWN)) { player.move(Math.PI * 0.5, player.vars.speed); player.vars.moving = true; }
+			if(Key.isDown(Key.MOVE_LEFT)) { player.move(Math.PI * 1, player.vars.speed); player.vars.moving = true; if(player.vars.facingRight) { player.vars.facingRight = false }}
+			if(Key.isDown(Key.MOVE_RIGHT)) { player.move(0, player.vars.speed); player.vars.moving = true; if(!player.vars.facingRight) { player.vars.facingRight = true }}
+
+			if(Key.isDown(Key.ATTACK_UP)) { player.attack(Math.PI * 1.5); }
+			if(Key.isDown(Key.ATTACK_DOWN)) { player.attack(Math.PI / 2); }
+			if(Key.isDown(Key.ATTACK_LEFT)) { player.attack(Math.PI); }
+			if(Key.isDown(Key.ATTACK_RIGHT)) { player.attack(0); }
+		} else {
+			player.vars.moving = false;
+		}
 
 		if(Key.isDown(Key.INTERACT)) { interact(); }
 
@@ -1325,6 +1333,10 @@ function updatePlayer() {
 	}
 	player.animate();
 	player.updateGear();
+	if(level.levelNumber === 99 && !session.vars.metBaron && player.grid.y <= 24) {
+		session.vars.metBaron = true;
+		baronEncounter();
+	}
 }
 
 Creature.prototype.updateGear = function() {
@@ -1733,7 +1745,7 @@ function checkTerrainCollision(obj, tryX, tryY) {
 		returnCoords.y = obj.position.y;																				//	...and set return Y coord to current position.
 	} else {
 		if(tryY >= obj.position.y) {																					//	Else if obj is trying to move down...
-			if(obj.box.type === EnumBoxtype.PROJECTILE) {																//	...and is a projectile...
+			if(obj.box.type === EnumBoxtype.PROJECTILE || obj.box.type === EnumBoxtype.FIREBALL) {						//	...and is a projectile...
 				tryTerY = Math.floor(tryY / TILE_SIZE);																	//	...set tryTerY.
 				if(level.terrainArray[tryTerY][obj.grid.x] === 1 && level.terrainArray[tryTerY+1][obj.grid.x] === 0) {
 					okY = true;
@@ -1797,17 +1809,24 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 			obj.vars.moveThroughColliders ||
 			game.nearbyColliders[i].vars.moveThroughColliders ||
 			game.nearbyColliders[i] === obj.vars.shooter ||
-			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE ||
 			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
 			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.PLAYER ||
 			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
 			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.PROJECTILE ||
+			obj.box.type === EnumBoxtype.ITEM && game.nearbyColliders[i].box.type === EnumBoxtype.FIREBALL ||
 			obj.box.type === EnumBoxtype.PLAYER && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
 			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
 			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
+			obj.box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].box.type === EnumBoxtype.FIREBALL ||
+			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE ||
 			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
 			obj.box.type === EnumBoxtype.PROJECTILE && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
+			obj.box.type === EnumBoxtype.FIREBALL && game.nearbyColliders[i].box.type === EnumBoxtype.OBSTACLE ||
+			obj.box.type === EnumBoxtype.FIREBALL && game.nearbyColliders[i].box.type === EnumBoxtype.PICKUP ||
+			obj.box.type === EnumBoxtype.FIREBALL && game.nearbyColliders[i].box.type === EnumBoxtype.ITEM ||
+			obj.box.type === EnumBoxtype.FIREBALL && game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE ||
 			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.PROJECTILE ||
+			obj.box.type === EnumBoxtype.PICKUP && game.nearbyColliders[i].box.type === EnumBoxtype.FIREBALL ||
 			game.nearbyColliders[i].box.type === EnumBoxtype.CREATURE && game.nearbyColliders[i].vars.dead
 		) {
 			pass = true;
@@ -1815,7 +1834,7 @@ function checkColliderCollision(obj, tryX, tryY, collidedWith) {
 
 		//	If it is, perform collision check
 		if(!pass) {
-			if(obj.box.type === EnumBoxtype.PROJECTILE) {
+			if(obj.box.type === EnumBoxtype.PROJECTILE || obj.box.type === EnumBoxtype.FIREBALL) {
 				var newTop = returnCoords.y - (obj.box.height / 2);
 				var newBtm = returnCoords.y + (obj.box.height / 2);
 				var newL = returnCoords.x - (obj.box.width / 2 );
@@ -1989,7 +2008,7 @@ function updateInterface() {
 	}
 }
 
-function displayMessage(duration, line1, line2, line3) {
+function displayMessage(duration, line1, line2, line3, callback) {
 	if(line3) {
 		$('#messageSpan').html(line1 + '<br>' + line2 + '<br>' + line3);
 	} else if(line2) {
@@ -2000,10 +2019,17 @@ function displayMessage(duration, line1, line2, line3) {
 	$('#messageDiv').fadeIn('fast');
 	game.displayedMessage = true;
 	game.messageHideTime = performance.now() + duration;
+	if(callback && typeof callback === 'function') {
+		game.callback = callback;
+	}
 }
 
 function hideMessage() {
 	$('#messageDiv').fadeOut('slow');
+	if(game.callback && typeof game.callback === 'function') {
+		game.callback();
+		game.callback = undefined;
+	}
 }
 
 function drawDebugCanvas() {
@@ -2211,6 +2237,7 @@ function start(newGame) {
 		session.vars.defaultMushroomMin = master.defaultMushroomMin;
 		session.vars.defaultMushroomFactor = master.defaultMushroomFactor;
 		session.vars.dropFrequency = cloneArray(master.dropFrequency);
+		session.vars.metBaron = false;
 		console.log(session.vars.dropFrequency);
 		$('.scoreSpan').text('');
 		session.prng = new Random(Math.floor(Math.random() * 2147483647));
@@ -2255,7 +2282,7 @@ function start(newGame) {
 			$('.finalScoreSpan').text('');
 		}
 		console.log("Starting game - level: " + level.levelNumber);
-		drawMap();
+		// drawMap();
 		$('canvas').fadeIn('slow', function() {
 			$('#interfaceDivLeft').fadeIn('slow');
 			$('.gameMenuScreen').hide();

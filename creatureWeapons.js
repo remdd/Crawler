@@ -1416,7 +1416,7 @@ var creatureProjectiles = [
 		box: {
 			width: 4,
 			height: 4,
-			type: EnumBoxtype.PROJECTILE
+			type: EnumBoxtype.FIREBALL
 		},
 		movement: {
 			speed: 2.5,
@@ -1471,7 +1471,7 @@ var creatureProjectiles = [
 		box: {
 			width: 4,
 			height: 4,
-			type: EnumBoxtype.PROJECTILE
+			type: EnumBoxtype.FIREBALL
 		},
 		movement: {
 			speed: 6,
@@ -1526,7 +1526,7 @@ var creatureProjectiles = [
 		box: {
 			width: 4,
 			height: 4,
-			type: EnumBoxtype.PROJECTILE
+			type: EnumBoxtype.FIREBALL
 		},
 		movement: {
 			speed: 3.5,
@@ -1581,7 +1581,7 @@ var creatureProjectiles = [
 		box: {
 			width: 4,
 			height: 4,
-			type: EnumBoxtype.PROJECTILE
+			type: EnumBoxtype.FIREBALL
 		},
 		movement: {
 			speed: 3.5,

@@ -223,13 +223,16 @@ levelGen.loadLevel = function(levelNumber) {
 	} else {
 		level.levelNumber = 99;
 	}
+
+	level.levelNumber = 99;
+
 	//	Copy session roomtypes to level roomtypes
 	level.roomTypes = sessionVars.roomTypes.slice();
 	//	Add boss room setup function
 	level.bossRoomContents = function() {
-		level.playerStart = {y: this.origin.y, x: this.origin.x};
+		// level.playerStart = {y: this.origin.y, x: this.origin.x};
 		// levelGen.bossRooms[level.bossRoomNumber](this);
-		levelGen.bossRooms[5](this);
+		// levelGen.bossRooms[5](this);
 	};
 	level.exitRoomContents = function() {
 		// level.playerStart = {y: this.origin.y, x: this.origin.x};
@@ -377,16 +380,6 @@ levelGen.generateLastLevel = function() {
 	this.clearLevel();
 	this.setupInitialGrid(level.height, level.width);
 
-	//	Set up special rooms
-	var startRoom = new Room(123, 14, 5, 5, 'start', level.startRoomContents);
-	var bossRoom = new Room(10, 2, 17, 29, 'boss', level.bossRoomContents);
-	var exitRoom = new Room(2, 14, 5, 5, 'exit', level.exitRoomContents);
-
-	var skeltonRoom = new Room(107, 10, 9, 13, 'skeltonRoom');
-	var urkRoom = new Room(88, 10, 11, 13, 'urkRoom');
-	var kobRoom = new Room(71, 11, 9, 11, 'kobRoom');
-	var ogrRoom = new Room(52, 9, 11, 15, 'ogrRoom');
-
 	level.playerStart.y = 124;
 	level.playerStart.x = 16;
 	level.bossStart.y = 12;
@@ -394,18 +387,136 @@ levelGen.generateLastLevel = function() {
 	level.exit.y = 3;
 	level.exit.x = 16;
 
-	for(var i = 2; i < level.terrainArray.length - 2; i++) {
+	level.exitRoomContents = function() {
+		new Obstacle(EnumObstacle.DOOR, null, this.origin.y + this.height + 1, this.origin.x + 2);
+		// level.playerStart = {y: this.origin.y, x: this.origin.x};
+		for(var i = 0; i < this.width; i++) {
+			level.overlayArray[this.origin.y-2][this.origin.x+i] = level.tiles.wallFace[4];
+		}
+		new Obstacle(EnumObstacle.END_GAME_DOOR, null, this.origin.y -2, this.origin.x + 2);
+	};
+
+	level.playerStart.y = 34;
+	level.playerStart.x = 16;
+
+
+	//	Set up special rooms
+	var startRoom = new Room(123, 14, 5, 5, 'start', level.startRoomContents);
+	var bossRoom = new Room(10, 5, 15, 23, 'boss', level.bossRoomContents);
+	var exitRoom = new Room(3, 14, 4, 5, 'exit', level.exitRoomContents);
+
+	var skeltonRoom = new Room(107, 10, 9, 13, 'skeltonRoom');
+	var urkRoom = new Room(88, 10, 11, 13, 'urkRoom');
+	var kobRoom = new Room(71, 11, 9, 11, 'kobRoom');
+	var ogrRoom = new Room(52, 9, 11, 15, 'ogrRoom');
+
+
+	for(var i = 3; i < level.terrainArray.length - 2; i++) {
 		level.terrainArray[i][16] = 0;
 	}
 
-	for(var i = 27; i < 45; i++) {
+	//	Set up stair corridor leading to Baron's room
+	for(var i = 25; i < 45; i++) {
 		level.terrainArray[i][13] = 0;
 		level.terrainArray[i][14] = 0;
 		level.terrainArray[i][15] = 0;
 		level.terrainArray[i][17] = 0;
 		level.terrainArray[i][18] = 0;
 		level.terrainArray[i][19] = 0;
+		//	Add stair decor
+		if(i % 5 === 0 && i < 42) {
+			for(var k = 0; k < 3; k++) {
+				for(var j = 0; j < 7; j++) {
+					if(j === 0) {
+						new Decor(uniqueFloorDecor[3][(3*k)].y, uniqueFloorDecor[3][(3*k)].x, i+k, 13+j, 0, 0);
+					} else if(j === 6) {
+						new Decor(uniqueFloorDecor[3][(3*k)+2].y, uniqueFloorDecor[3][(3*k)+2].x, i+k, 13+j, 0, 0);
+					} else {
+						new Decor(uniqueFloorDecor[3][(3*k)+1].y, uniqueFloorDecor[3][(3*k)+1].x, i+k, 13+j, 0, 0);
+					}
+				}
+			}
+			//	Add carpet
+			new Decor(uniqueFloorDecor[3][9].y, uniqueFloorDecor[3][9].x, i, 16, 0, 0);
+			new Decor(uniqueFloorDecor[3][10].y, uniqueFloorDecor[3][10].x, i+1, 16, 0, 0);
+			new Decor(uniqueFloorDecor[3][11].y, uniqueFloorDecor[3][11].x, i+2, 16, 0, 0);
+			new Decor(uniqueFloorDecor[3][9].y, uniqueFloorDecor[3][9].x, i+3, 16, 0, 0);
+			new Decor(uniqueFloorDecor[3][9].y, uniqueFloorDecor[3][9].x, i+4, 16, 0, 0);
+		}
+		if(i % 10 === 1 && i < 42) {	//	Add columns and flame pots
+			new Obstacle(EnumObstacle.STONE_PILLAR, null, i, 13, null, true);
+			new Obstacle(EnumObstacle.STONE_PILLAR, null, i, 19, null, true);
+		} else if(i % 10 === 2) {	//	Add columns and flame pots
+			new Obstacle(EnumObstacle.FLAME_POT, null, i, 15.25, 1, true);
+			new Obstacle(EnumObstacle.FLAME_POT, null, i, 17.5, 2, true);
+		} else if(i % 10 === 3) {	//	Add columns and flame pots
+			new Obstacle(EnumObstacle.WARRIOR_STATUE, null, i, 14, 2, true);
+			new Obstacle(EnumObstacle.WARRIOR_STATUE, null, i, 18, 1, true);
+		} else if(i % 10 === 4 && i < 42) {	//	Add columns and flame pots
+			new Obstacle(EnumObstacle.STONE_PILLAR, null, i, 13, null, true);
+			new Obstacle(EnumObstacle.STONE_PILLAR, null, i, 19, null, true);
+		} else if(i % 10 === 7) {
+			new Obstacle(EnumObstacle.STONE_PILLAR, null, i, 13, null, true);
+			new Obstacle(EnumObstacle.STONE_PILLAR, null, i, 19, null, true);
+			new Obstacle(EnumObstacle.FLAME_POT, null, i, 15.25, 1, true);
+			new Obstacle(EnumObstacle.FLAME_POT, null, i, 17.5, 2, true);
+		} else if(i % 10 === 8) {
+			new Obstacle(EnumObstacle.DRAGON_STATUE, null, i, 14, 2, true);
+			new Obstacle(EnumObstacle.DRAGON_STATUE, null, i, 17.5, 1, true);
+		} else if(i % 10 === 0 || i % 10 === 5) {
+			new Obstacle(EnumObstacle.FLAME_POT, null, i, 15.25, 2, true);
+			new Obstacle(EnumObstacle.FLAME_POT, null, i, 17.5, 1, true);
+		}
 	}
+	//	Add carpet ends
+	for(var i = 21; i < 25; i++) {
+		new Decor(uniqueFloorDecor[3][9].y, uniqueFloorDecor[3][9].x, i, 16, 0, 0);
+	}
+	new Decor(uniqueFloorDecor[3][12].y, uniqueFloorDecor[3][12].x, 20, 16, 0, 0);
+	new Decor(uniqueFloorDecor[3][13].y, uniqueFloorDecor[3][13].x, 45, 16, 0, 0);
+
+	//	Round off corners of Baron's room
+	level.terrainArray[10][5] = 1;
+	level.terrainArray[10][6] = 1;
+	level.terrainArray[11][5] = 1;
+	level.terrainArray[10][27] = 1;
+	level.terrainArray[10][26] = 1;
+	level.terrainArray[11][27] = 1;
+	level.terrainArray[24][5] = 1;
+	level.terrainArray[24][6] = 1;
+	level.terrainArray[23][5] = 1;
+	level.terrainArray[24][27] = 1;
+	level.terrainArray[24][26] = 1;
+	level.terrainArray[23][27] = 1;
+	//	Add columns & obstacles to Baron's room
+	new Obstacle(EnumObstacle.BARONS_THRONE, null, 15, 15, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 21, 19, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 21, 13, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 20, 22, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 20, 10, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 19, 25, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 19, 7, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 16, 25, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 16, 7, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 13, 25, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 13, 7, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 12, 22, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 12, 10, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 11, 19, null, true);
+	new Obstacle(EnumObstacle.COLUMN, null, 11, 13, null, true);
+	
+	//	Add Baron, Baron Orbs, Deemons
+	level.creatureArray[17][16] = EnumCreature.BARON;
+	level.creatureArray[21][6] = EnumCreature.BARON_ORB;
+	level.creatureArray[21][26] = EnumCreature.BARON_ORB;
+	level.creatureArray[12][6] = EnumCreature.BARON_ORB;
+	level.creatureArray[12][26] = EnumCreature.BARON_ORB;
+	level.creatureArray[11][16] = EnumCreature.BARON_ORB;
+	// level.creatureArray[17][13] = EnumCreature.DEEMON_1;
+	// level.creatureArray[17][19] = EnumCreature.DEEMON_1;
+	// level.creatureArray[18][12] = EnumCreature.DEEMON_2;
+	// level.creatureArray[18][20] = EnumCreature.DEEMON_2;
+
 
 	levelGen.addBasicOverlays();
 
@@ -417,11 +528,81 @@ levelGen.generateLastLevel = function() {
 	level.fillArray = cloneArray(level.terrainArray);
 	this.fill(level.fillArray, level.playerStart.y, level.playerStart.x, 0, 2);
 
-	// //	Add rooms
-	// for(var i = 0; i < levelGen.vars.roomAttempts; i++) {
-	// 	var room = new Room();
-	// }
+	//	Run each room's 'addContents' function
+	level.rooms.forEach(function(room) {
+		// if(room.type === 'start') {
+			room.addContents();
+		// }
+	});
 }
+
+
+
+baronEncounter = function() {
+	player.vars.immobilized = true;
+
+	game.viewport_offset_x = Math.floor(player.position.x - CANVAS_WIDTH * 0.5);
+	game.viewport_offset_y = Math.floor(player.position.x - CANVAS_HEIGHT * 0.35);
+
+	var line1 = "You have made it!";
+	var line2 = "The Baron stands before you.";
+	var line3 = "You steel yourself for one last fight..."
+
+	displayMessage(5000, line1, line2, line3, function() {
+		//	Re-enable player controls on message hide
+		player.vars.immobilized = false;
+		//	Add Baron Barrier
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 14, 14, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 14, 15, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 14, 16, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 14, 17, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 14, 18, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 14, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 15, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 16, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 17, null, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 18, null, true);
+
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 15, 14, 1, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 16, 14, 1, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 17, 14, 1, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 14, 1, true);
+
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 15, 18, 2, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 16, 18, 2, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 17, 18, 2, true);
+		new Obstacle(EnumObstacle.BARON_BARRIER, null, 18, 18, 2, true);
+
+		level.obstacles.forEach(function(obstacle) {
+			if(!obstacle.drawY) {
+				obstacle.drawY = obstacle.box.bottomRight.y;
+			}
+		});
+	}); 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

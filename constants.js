@@ -66,7 +66,11 @@ var EnumCreature = {
 	MINI_KOB: 29,
 	GIGA_KOB: 30,
 	BADBUG: 31,
-	WRONGWRAITH: 32
+	WRONGWRAITH: 32,
+	BARON: 33,
+	BARON_ORB: 34,
+	DEEMON_1: 35,
+	DEEMON_2: 36
 }
 
 var EnumAi = {
@@ -98,7 +102,10 @@ var EnumAi = {
 	YELLOW_SLUDGIE: 26,
 	GREY_GOBLIN: 27,
 	BADBUG: 28,
-	WRONGWRAITH: 29
+	WRONGWRAITH: 29,
+	BARON: 30,
+	BARON_ORB: 31,
+	DEEMON: 32
 }
 
 var EnumCreatureWeapon = {
@@ -125,7 +132,8 @@ var EnumCreatureWeapon = {
 	ALBINO_URK_SWORD: 21,
 	MINI_KOB_KNIFE: 22,
 	BADBUG_BITE: 23,
-	GIGA_KOB_AXE: 24
+	GIGA_KOB_AXE: 24,
+	DEEMON_BITE: 25
 }
 
 var EnumCreatureProjectile = {
@@ -213,7 +221,8 @@ var EnumBoxtype = {
 	PROJECTILE: 2,
 	OBSTACLE: 3,
 	ITEM: 4,
-	PICKUP: 5
+	PICKUP: 5,
+	FIREBALL: 6
 }
 
 var EnumRoomtype = {
@@ -300,7 +309,10 @@ var EnumObstacle = {
 	BARRELS_AND_SACKS_1: 57,
 	BARRELS_AND_SACKS_2: 58,
 	SMASHED_TABLE: 59,
-	FLAME_POT: 60
+	FLAME_POT: 60,
+	END_GAME_DOOR: 61,
+	BARONS_THRONE: 62,
+	BARON_BARRIER: 63
 }
 
 var EnumDecortype = {

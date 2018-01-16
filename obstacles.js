@@ -9,6 +9,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 	//	Initial type switch to determine size needed for placement - only needed if sprite is bigger than 1x1
 	switch(type) {
 		case EnumObstacle.DOOR:
+		case EnumObstacle.END_GAME_DOOR:
 		{
 			this.sprite.size = {y: 2, x: 1}
 			break;
@@ -63,6 +64,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.WIZ_DESK:
 		case EnumObstacle.WIZ_DESK_2:
 		case EnumObstacle.BARRELS_AND_SACKS_1:
+		case EnumObstacle.BARONS_THRONE:
 		{
 			this.sprite.size = {y: 2, x: 3}
 			break;
@@ -124,6 +126,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 	level.obstacleArray[this.grid.y][this.grid.x] = 1;
 	switch(type) {
 		case EnumObstacle.DOOR:
+		case EnumObstacle.END_GAME_DOOR:
 		{
 			level.obstacleArray[this.grid.y+1][this.grid.x] = 1;
 			break;
@@ -167,6 +170,7 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 		case EnumObstacle.WIZ_DESK:
 		case EnumObstacle.WIZ_DESK_2:
 		case EnumObstacle.BARRELS_AND_SACKS_1:
+		case EnumObstacle.BARONS_THRONE:
 		{
 			for(var i = 0; i < 2; i++) {
 				for(var j = 0; j < 3; j++) {
@@ -259,6 +263,48 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			this.interactionEnd = function() {
 				this.animated = false;
 				this.currentSprite = level.tiles.door[2 + this.doorType * 3];
+			}
+			this.position = {				//	Centre of sprite
+				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
+				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 2)
+			}
+			break;
+		}
+		case EnumObstacle.END_GAME_DOOR: {
+			this.sprite.spriteSheet = level.img;
+			this.closed = true;
+			this.currentSprite = level.tiles.endGameDoor[0];
+			this.sprite.frames = [level.tiles.endGameDoor[0], level.tiles.endGameDoor[1], level.tiles.endGameDoor[2]];
+			this.sprite.animations = [[1000, [1, 500, 1000], [0, 1, 2]]];
+			level.terrainArray[this.grid.y+1][this.grid.x] = 2;
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 1.2,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + TILE_SIZE * 1.2,
+				x: this.grid.x * TILE_SIZE
+			}
+			this.interact = function() {
+				if(!this.open) {
+					var snd = Math.floor(Math.random() * 2);
+					if(snd < 1) {
+						gameEffects.play('door1');
+					} else {
+						gameEffects.play('door2');
+					}
+					this.open = true;
+					this.animated = true;
+					this.vars.animStart = performance.now();
+					this.vars.animation = 0;
+					this.vars.pointInAnimLoop = 0;
+					this.animEnd = performance.now() + 1000;
+					level.terrainArray[this.grid.y+1][this.grid.x] = 0;
+				}
+			}
+			this.interactionEnd = function() {
+				this.animated = false;
+				this.currentSprite = level.tiles.endGameDoor[2];
 			}
 			this.position = {				//	Centre of sprite
 				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
@@ -1047,11 +1093,11 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				this.currentSprite = level.obstacleTiles[46];
 				this.box.topLeft = {
 					y: this.grid.y * TILE_SIZE + 18,
-					x: this.grid.x * TILE_SIZE + 0
+					x: this.grid.x * TILE_SIZE + 4
 				}
 				this.box.bottomRight = {
 					y: this.grid.y * TILE_SIZE + 22,
-					x: this.grid.x * TILE_SIZE + 7
+					x: this.grid.x * TILE_SIZE + 11
 				}
 			}
 			this.position = {
@@ -1066,28 +1112,20 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			}
 			this.position = {
 				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
-				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
+				x: (this.grid.x * TILE_SIZE + 12)
+			}
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 18,
+				x: this.grid.x * TILE_SIZE + 9
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 24,
+				x: this.grid.x * TILE_SIZE + 19
 			}
 			if(modifier < 2) {
 				this.currentSprite = level.obstacleTiles[47];
-				this.box.topLeft = {
-					y: this.grid.y * TILE_SIZE + 18,
-					x: this.grid.x * TILE_SIZE + 0
-				}
-				this.box.bottomRight = {
-					y: this.grid.y * TILE_SIZE + 24,
-					x: this.grid.x * TILE_SIZE + 12
-				}
 			} else {
 				this.currentSprite = level.obstacleTiles[48];
-				this.box.topLeft = {
-					y: this.grid.y * TILE_SIZE + 18,
-					x: this.grid.x * TILE_SIZE + 4
-				}
-				this.box.bottomRight = {
-					y: this.grid.y * TILE_SIZE + 24,
-					x: this.grid.x * TILE_SIZE + 16
-				}
 			}
 			break;
 		}
@@ -1115,36 +1153,20 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
 				x: (this.grid.x * TILE_SIZE + TILE_SIZE / 2)
 			}
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 20,
+				x: this.grid.x * TILE_SIZE + 3
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 25,
+				x: this.grid.x * TILE_SIZE + 12
+			}
 			if(modifier < 2) {
 				this.currentSprite = level.obstacleTiles[49];
-				this.box.topLeft = {
-					y: this.grid.y * TILE_SIZE + 20,
-					x: this.grid.x * TILE_SIZE + 0
-				}
-				this.box.bottomRight = {
-					y: this.grid.y * TILE_SIZE + 25,
-					x: this.grid.x * TILE_SIZE + 11
-				}
 			} else if(modifier < 3) {
 				this.currentSprite = level.obstacleTiles[50];
-				this.box.topLeft = {
-					y: this.grid.y * TILE_SIZE + 14,
-					x: this.grid.x * TILE_SIZE + 0
-				}
-				this.box.bottomRight = {
-					y: this.grid.y * TILE_SIZE + 19,
-					x: this.grid.x * TILE_SIZE + 14
-				}
 			} else {
 				this.currentSprite = level.obstacleTiles[51];
-				this.box.topLeft = {
-					y: this.grid.y * TILE_SIZE + 20,
-					x: this.grid.x * TILE_SIZE + 0
-				}
-				this.box.bottomRight = {
-					y: this.grid.y * TILE_SIZE + 25,
-					x: this.grid.x * TILE_SIZE + 9
-				}
 			}
 			break;
 		}
@@ -1422,15 +1444,76 @@ Obstacle = function(type, room, y, x, modifier, noOffset) {
 			}
 			this.box.bottomRight = {
 				y: this.grid.y * TILE_SIZE + 12,
-				x: this.grid.x * TILE_SIZE + 7
+				x: this.grid.x * TILE_SIZE + 5
 			}
 			this.animated = true;
-			this.vars.animStart = performance.now();
+			this.vars.animStart = performance.now() - Math.random() * 900;
 			this.vars.animation = 0;
 			this.vars.pointInAnimLoop = 0;
 			this.position = {				//	Centre of sprite
 				y: (this.grid.y * TILE_SIZE) + (TILE_SIZE * this.sprite.size.y / 2),
 				x: (this.grid.x * TILE_SIZE) + (TILE_SIZE * this.sprite.size.x / 4)
+			}
+			break;
+		}
+		case EnumObstacle.BARONS_THRONE: {
+			this.currentSprite = level.obstacleTiles[71];
+			this.box.topLeft = {
+				y: this.grid.y * TILE_SIZE + 15,
+				x: this.grid.x * TILE_SIZE + 15
+			}
+			this.box.bottomRight = {
+				y: this.grid.y * TILE_SIZE + 27,
+				x: this.grid.x * TILE_SIZE + 34
+			}
+			this.position = {
+				y: (this.grid.y * TILE_SIZE + TILE_SIZE),
+				x: (this.grid.x * TILE_SIZE + 3 * TILE_SIZE / 2)
+			}
+			this.maxOffset = {y:0,x:0}
+			break;
+		}
+		case EnumObstacle.BARON_BARRIER: {
+			if(modifier === 1) {
+				this.currentSprite = level.tiles.baronBarrier[5];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE,
+					x: this.grid.x * TILE_SIZE
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 12,
+					x: this.grid.x * TILE_SIZE + 2
+				}
+			} else if(modifier === 2) {
+				this.currentSprite = level.tiles.baronBarrier[6];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE,
+					x: this.grid.x * TILE_SIZE + 14
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 12,
+					x: this.grid.x * TILE_SIZE + 16
+				}
+			} else {
+				this.currentSprite = level.tiles.baronBarrier[0];
+				this.sprite.frames = [level.tiles.baronBarrier[0], level.tiles.baronBarrier[1], level.tiles.baronBarrier[2],level.tiles.baronBarrier[3], level.tiles.baronBarrier[4]];
+				this.sprite.animations = [[900, [75, 150, 225, 300, 375, 450, 525, 600, 675, 750, 825, 900], [0,1,2,3,4,2,1,4,3,0,4,1]]];
+				this.box.topLeft = {
+					y: this.grid.y * TILE_SIZE + 10,
+					x: this.grid.x * TILE_SIZE
+				}
+				this.box.bottomRight = {
+					y: this.grid.y * TILE_SIZE + 12,
+					x: this.grid.x * TILE_SIZE + 16
+				}
+				this.animated = true;
+				this.vars.animStart = performance.now() - Math.random() * 900;
+				this.vars.animation = 0;
+				this.vars.pointInAnimLoop = 0;
+				this.position = {				//	Centre of sprite
+					y: (this.grid.y * TILE_SIZE) + (TILE_SIZE / 2),
+					x: (this.grid.x * TILE_SIZE) + (TILE_SIZE / 2)
+				}
 			}
 			break;
 		}

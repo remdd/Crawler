@@ -5,7 +5,7 @@ var levelTilesets = [
 		floor: { y:0,x:0 },
 		solid: { y:1,x:0 },
 		solidColor: '#1c1117',
-		wallFace: [{ y:1,x:2 }, { y:1,x:1 }, { y:1,x:3 }, { y:1,x:4 }],					//	Wall arrays in order of no ends, left end, right end, both ends
+		wallFace: [{ y:1,x:2 }, { y:1,x:1 }, { y:1,x:3 }, { y:1,x:4 }, {y:12,x:8}],					//	Wall arrays in order of no ends, left end, right end, both ends, top level
 		wallTop: [{ y:0,x:2 }, { y:0,x:1 }, { y:0,x:3 }, { y:0,x:4 }],
 		//	Wall bottoms in order of wall-above *3, wall-left *3, wall-right *3, wall-above&left, wall-above&right, wall-l&r, wall-above&l&r
 		wallBtm: [{ y:2,x:1 }, { y:2,x:2 }, { y:2,x:3 }, { y:0,x:12}, { y:1,x:12}, { y:2,x:12}, { y:0,x:13}, { y:1,x:13}, { y:2,x:13}, 
@@ -146,6 +146,12 @@ var levelTilesets = [
 		uniqueWallDecor: [
 			[{y:10,x:14}],	//	Black Wiz portrait
 			[{y:10,x:15}]	//	Red Wiz portrait
+		],
+		endGameDoor: [
+			{y:12,x:5},{y:12,x:6},{y:12,x:7}
+		],
+		baronBarrier: [
+			{y:12,x:3},{y:12,x:4},{y:12,x:5},{y:12,x:6},{y:12,x:7},{y:12,x:8},{y:12,x:9}
 		]
 	}
 ];
@@ -223,7 +229,8 @@ var obstacleTiles = [
 		{y:11,x:5},	//	67	Tipped Chair
 		{y:9,x:12},	//	68	Barrels & Sacks 1
 		{y:11,x:12},	//	69	Barrels & Sacks 2
-		{y:10,x:7}	//	70	Smashed table
+		{y:10,x:7},	//	70	Smashed table
+		{y:12,x:0}	//	71	Baron's Throne
 	]
 ];
 
@@ -323,7 +330,7 @@ var largeFloorDecor = [
 		{y:11,x:4},
 		{y:12,x:3},
 		{y:12,x:4}
-	]
+	],
 ];
 
 var uniqueFloorDecor = [
@@ -356,6 +363,22 @@ var uniqueFloorDecor = [
 		{y:15,x:1},
 		{y:15,x:2},
 		{y:15,x:3}
+	],
+	[	//	Baron's corridor stairs
+		{y:13,x:8},
+		{y:13,x:9},
+		{y:13,x:10},
+		{y:14,x:8},
+		{y:14,x:9},
+		{y:14,x:10},
+		{y:15,x:8},
+		{y:15,x:9},
+		{y:15,x:10},
+		{y:13,x:11},
+		{y:14,x:11},
+		{y:15,x:11},
+		{y:13,x:12},
+		{y:14,x:12}
 	]
 ]
 

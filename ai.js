@@ -1418,6 +1418,66 @@ setAiAction = function(creature) {
 				break;
 			}
 
+			case EnumAi.DEEMON: {
+				switch(creature.ai.nextAction) {
+					case 0: {
+						if(getPlayerDistance(creature) < TILE_SIZE * 1 && creature.hasClearPathToPlayer()) {
+							var direction = getPlayerCompassDirection(creature);
+							creature.setFacing(direction);
+							if(creature.vars.facingRight) {
+								ai.attack(creature, 0, 400, direction, 0, 6);
+							} else {
+								ai.attack(creature, 0, 400, direction, 0, 7);
+							}
+						} else if(getPlayerDistance(creature) < TILE_SIZE * 10) {
+							var direction = getPlayerCompassDirection(creature);
+							ai.moveInDirection(creature, 0, 400, 1, direction, Math.PI / 2)
+						} else {
+							ai.moveRandomVector(creature, 0, 400, 1);
+						}
+						break;
+					}
+					case 1: {
+						if(creature.vars.facingRight) {
+							ai.rest(creature, 0, 200, 8);
+						} else {
+							ai.rest(creature, 0, 200, 9);
+						}
+						break;
+					}
+					case 2: {
+						console.log("Reanimating");
+						if(creature.checkIfCollides()) {
+							creature.ai.nextAction = 3;
+						} else {
+							creature.vars.moveThroughColliders = false;
+							creature.vars.dead = false;
+							creature.vars.currentHP = creature.vars.maxHP;
+							if(creature.vars.facingRight) {
+								ai.rest(creature, 0, 600, 10);
+							} else {
+								ai.rest(creature, 0, 600, 11);
+							}
+							creature.ai.nextAction = 0;
+						}
+						break;
+					}
+					case 3: {
+						if(creature.vars.facingRight) {
+							ai.rest(creature, 0, 200, 8);
+						} else {
+							ai.rest(creature, 0, 200, 9);
+						}
+						creature.ai.nextAction = 2;
+						break;
+					}
+					default: {
+						break;
+					}
+				}
+				break;
+			}
+
 
 
 			default: {

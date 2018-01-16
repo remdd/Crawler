@@ -2529,6 +2529,319 @@ var creatureTemplates = [
 		deathResponse: function() {
 			this.kill();
 		}
-	}
+	},
+	//	THE BARON
+	{
+		name: 'The Baron',
+		lode: EnumLode.NONE,
+		currentSprite: { x: 12, y: 30},
+		vars: {
+			speed: 1,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: true,
+			score: 1000
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 12, y: 30 },	//	Resting facing R 1
+				{ x: 13, y: 30 },	//	Resting facing R 2
+				{ x: 14, y: 30 },	//	Moving facing R 1
+				{ x: 15, y: 30 },	//	Moving facing R 2
+				{ x: 16, y: 30 },	//	Moving facing R 3
+				{ x: 17, y: 30 },	//	Moving facing R 3
+				{ x: 18, y: 30 },	//	Death facing R 1
+				{ x: 19, y: 30 },	//	Death facing R 2
+				{ x: 20, y: 30 },	//	Death facing R 3
+				{ x: 21, y: 30 },	//	Death facing R 4
+				{ x: 22, y: 30 },	//	Death facing R 5
+				{ x: 23, y: 30 },	//	Death facing R 6
+				{ x: 24, y: 30 },	//	Death facing R 7
+				{ x: 25, y: 30 },	//	Death facing R 8
+
+				{ x: 12, y: 31 },	//	Resting facing L 1
+				{ x: 13, y: 31 },	//	Resting facing L 2
+				{ x: 14, y: 31 },	//	Moving facing L 1
+				{ x: 15, y: 31 },	//	Moving facing L 2
+				{ x: 16, y: 31 },	//	Moving facing L 3
+				{ x: 17, y: 31 },	//	Moving facing L 3
+				{ x: 18, y: 31 },	//	Death facing L 1
+				{ x: 19, y: 31 },	//	Death facing L 2
+				{ x: 20, y: 31 },	//	Death facing L 3
+				{ x: 21, y: 31 },	//	Death facing L 4
+				{ x: 22, y: 31 },	//	Death facing L 5
+				{ x: 23, y: 31 },	//	Death facing L 6
+				{ x: 24, y: 31 },	//	Death facing L 7
+				{ x: 25, y: 31 }	//	Death facing L 8
+			],
+			animations: [
+				[ 400, [250, 400], [ 0, 1] ],											//	Resting, facing R
+				[ 400, [250, 400], [ 14,15] ],											//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 5 ] ],							//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 14,15,16,17 ] ],							//	Moving, facing L
+				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [6, 7, 8, 9,10,11,12,13 ] ],									//	Death, facing R
+				[ 2400, [300, 600, 900, 1200, 1500, 1800, 2100, 2400], [18,19,20,21,22,23,24,25] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 14
+		},
+		ai: {
+			type: EnumAi.BARON,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				this.ai.nextAction = 2;
+				clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		deathDrop: function() {
+		}	
+	},
+	{
+		name: 'Baron Orb',
+		lode: EnumLode.NONE,
+		currentSprite: { x: 22, y: 32},
+		vars: {
+			speed: 1,
+			maxHP: 1,
+			currentHP: 1,
+			restingWeaponAnimation: false,
+			score: 0
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 2 },
+			y_padding: 2,
+			frames: [
+				{ x: 22, y: 32 },	//	Resting 1
+				{ x: 23, y: 32 },	//	Resting 2
+				{ x: 24, y: 32 },	//	Resting 3
+				{ x: 25, y: 32 },	//	Sparking 1
+				{ x: 26, y: 32 },	//	Sparking 2
+				{ x: 27, y: 32 },	//	Sparking 3
+				{ x: 28, y: 32 },	//	Death 1
+				{ x: 29, y: 32 },	//	Death 2
+				{ x: 30, y: 32 },	//	Death 3
+			],
+			animations: [
+				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 5000, [200, 250, 350, 600, 700, 725, 750, 775, 850, 925, 950, 975, 1400, 2000, 3000, 3025, 3400, 3425, 3450, 4000], [0,1,2,0,3,4,5,1,0,5,3,2,0,1,2,1,2,3,5,0] ],		//	Resting, facing R
+				[ 600, [200, 400, 600], [6, 7, 8 ] ],									//	Death, facing R
+				[ 600, [200, 400, 600], [6, 7, 8 ] ]									//	Death, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 14,
+		},
+		ai: {
+			type: EnumAi.BARON_ORB,
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			}
+		},
+		deathDrop: function() {
+		},
+		deathResponse: function() {
+			this.kill();
+		}
+	},
+	//	DEEMON 1
+	{
+		name: 'Deemon 1',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: 0, y: 36},
+		vars: {
+			speed: 1.5,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			score: 0
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 36 },	//	Resting facing R 1
+				{ x: 1, y: 36 },	//	Resting facing R 2
+				{ x: 2, y: 36 },	//	Moving facing R 1
+				{ x: 3, y: 36 },	//	Moving facing R 2
+				{ x: 4, y: 36 },	//	Moving facing R 3
+				{ x: 5, y: 36 },	//	Moving facing R 4
+				{ x: 6, y: 36 },	//	Biting facing R 1
+				{ x: 7, y: 36 },	//	Biting facing R 2
+				{ x: 8, y: 36 },	//	Biting facing R 3
+				{ x: 9, y: 36 },	//	Death facing R 1
+				{ x: 10, y: 36 },	//	Death facing R 2
+				{ x: 11, y: 36 },	//	Death facing R 3
+				{ x: 12, y: 36 },	//	Death facing R 4
+				{ x: 13, y: 36 },	//	Death facing R 5
+
+				{ x: 0, y: 37 },	//	Resting facing L 1
+				{ x: 1, y: 37 },	//	Resting facing L 2
+				{ x: 2, y: 37 },	//	Moving facing L 1
+				{ x: 3, y: 37 },	//	Moving facing L 2
+				{ x: 4, y: 37 },	//	Moving facing L 3
+				{ x: 5, y: 37 },	//	Moving facing L 4
+				{ x: 6, y: 37 },	//	Biting facing L 1
+				{ x: 7, y: 37 },	//	Biting facing L 2
+				{ x: 8, y: 37 },	//	Biting facing L 3
+				{ x: 9, y: 37 },	//	Death facing L 1
+				{ x: 10, y: 37 },	//	Death facing L 2
+				{ x: 11, y: 37 },	//	Death facing L 3
+				{ x: 12, y: 37 },	//	Death facing L 4
+				{ x: 13, y: 37 },	//	Death facing L 5
+
+				{ x: -1, y: -1}		//	Dead
+			],
+			animations: [
+				[ 200, [100, 200], [ 0, 1] ],							//	Resting, facing R
+				[ 200, [100, 200], [ 14, 15] ],							//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 5 ] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 16,17,18,19 ] ],			//	Moving, facing L
+				[ 600, [100, 200, 300, 400, 500, 600 ], [ 9,10,11,12,13,28 ] ],			//	Death, facing R
+				[ 600, [100, 200, 300, 400, 500, 600 ], [23,24,25,26,27,28 ] ],			//	Death, facing L
+				[ 400, [100, 200, 400], [6 ,7 ,8 ] ],					//	Biting, facing R
+				[ 400, [100, 200, 400], [20,21,22] ]					//	Biting, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 13
+		},
+		ai: {
+			type: EnumAi.DEEMON,
+		},
+		movement: {
+			bounceOff: true,
+			bounceRandom: true
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				// this.ai.nextAction = 1;
+				// clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		deathDrop: function() {
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BADBUG_BITE;
+		}	
+	},
+	//	DEEMON 2
+	{
+		name: 'Deemon 2',
+		lode: EnumLode.SHADOW,
+		currentSprite: { x: 0, y: 38},
+		vars: {
+			speed: 1.5,
+			maxHP: 3,
+			currentHP: 3,
+			restingWeaponAnimation: false,
+			attackRate: 1,
+			score: 0
+		},
+		sprite: {
+			spriteSheet: monsterSprites,
+			size: { x: 1, y: 1 },
+			y_padding: 2,
+			frames: [
+				{ x: 0, y: 38 },	//	Resting facing R 1
+				{ x: 1, y: 38 },	//	Resting facing R 2
+				{ x: 2, y: 38 },	//	Moving facing R 1
+				{ x: 3, y: 38 },	//	Moving facing R 2
+				{ x: 4, y: 38 },	//	Moving facing R 3
+				{ x: 5, y: 38 },	//	Moving facing R 4
+				{ x: 6, y: 38 },	//	Biting facing R 1
+				{ x: 7, y: 38 },	//	Biting facing R 2
+				{ x: 8, y: 38 },	//	Biting facing R 3
+				{ x: 9, y: 38 },	//	Death facing R 1
+				{ x: 10, y: 38 },	//	Death facing R 2
+				{ x: 11, y: 38 },	//	Death facing R 3
+				{ x: 12, y: 38 },	//	Death facing R 4
+				{ x: 13, y: 38 },	//	Death facing R 5
+
+				{ x: 0, y: 39 },	//	Resting facing L 1
+				{ x: 1, y: 39 },	//	Resting facing L 2
+				{ x: 2, y: 39 },	//	Moving facing L 1
+				{ x: 3, y: 39 },	//	Moving facing L 2
+				{ x: 4, y: 39 },	//	Moving facing L 3
+				{ x: 5, y: 39 },	//	Moving facing L 4
+				{ x: 6, y: 39 },	//	Biting facing L 1
+				{ x: 7, y: 39 },	//	Biting facing L 2
+				{ x: 8, y: 39 },	//	Biting facing L 3
+				{ x: 9, y: 39 },	//	Death facing L 1
+				{ x: 10, y: 39 },	//	Death facing L 2
+				{ x: 11, y: 39 },	//	Death facing L 3
+				{ x: 12, y: 39 },	//	Death facing L 4
+				{ x: 13, y: 39 },	//	Death facing L 5
+
+				{ x: -1, y: -1}		//	Dead
+			],
+			animations: [
+				[ 200, [100, 200], [ 0, 1] ],							//	Resting, facing R
+				[ 200, [100, 200], [ 14, 15] ],							//	Resting, facing L
+				[ 400, [100, 200, 300, 400], [ 2, 3, 4, 5 ] ],			//	Moving, facing R
+				[ 400, [100, 200, 300, 400], [ 16,17,18,19 ] ],			//	Moving, facing L
+				[ 600, [100, 200, 300, 400, 500, 600 ], [ 9,10,11,12,13,28 ] ],			//	Death, facing R
+				[ 600, [100, 200, 300, 400, 500, 600 ], [23,24,25,26,27,28 ] ],			//	Death, facing L
+				[ 400, [100, 200, 400], [6 ,7 ,8 ] ],					//	Biting, facing R
+				[ 400, [100, 200, 400], [20,21,22] ]					//	Biting, facing L
+			]
+		},
+		box: {
+			width: 10, 
+			height: 13
+		},
+		ai: {
+			type: EnumAi.DEEMON,
+		},
+		movement: {
+			bounceOff: true,
+			bounceRandom: true
+		},
+		inflictDamage: function(damage) {
+			this.vars.currentHP -= damage;
+			if(this.vars.currentHP <= 0) {
+				this.deathResponse();
+			} else {
+				// this.ai.nextAction = 1;
+				// clearAiAction(this);
+			}
+		},
+		deathResponse: function() {
+			this.kill();
+		},
+		deathDrop: function() {
+		},
+		addWeapon: function() {
+			return EnumCreatureWeapon.BADBUG_BITE;
+		}	
+	},
+
 
 ];
